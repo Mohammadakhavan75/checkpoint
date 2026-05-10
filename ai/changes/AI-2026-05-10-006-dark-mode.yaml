@@ -1,0 +1,29 @@
+change_id: "AI-2026-05-10-006"
+task_id: "TASK-001"
+status: "complete"
+risk_level: "low"
+change_type: "feature"
+subsystems: ["web"]
+files_changed:
+  - "web/src/styles/app.css"
+  - "web/src/components/AppShell.tsx"
+  - "web/src/main.tsx"
+  - "web/src/lib/theme.tsx"
+  - "web/src/test-setup.ts"
+  - "web/src/components/AppShell.test.tsx"
+symbols_touched:
+  - "AppShell"
+  - "ThemeProvider"
+  - "useTheme"
+tests_added_or_modified:
+  - "web/src/components/AppShell.test.tsx"
+adrs_referenced: []
+invariants_reviewed: []
+feature_flags: []
+verification_commands:
+  - "cd web && npm run test"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

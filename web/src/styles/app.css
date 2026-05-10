@@ -13,6 +13,16 @@
   --amber: #c78518;
   --danger: #a23b3b;
   --shadow: 0 18px 50px rgba(18, 24, 31, 0.06);
+  --side-rail-bg: rgba(255, 255, 255, 0.96);
+  --avatar-bg: #d8e2e1;
+  --step-bg: #f0f2f2;
+  --button-text: #fff;
+  --text-muted-1: #3f474f;
+  --text-muted-2: #59636b;
+  --text-muted-3: #4e5961;
+  --text-label: #303841;
+  --input-bg: #fff;
+  --focus-ring: rgba(8, 108, 103, 0.18);
   color: var(--text);
   background: var(--bg);
   font-family:
@@ -20,6 +30,35 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
+
+:root.dark {
+  --bg: #111418;
+  --surface: #1a1e23;
+  --surface-quiet: #22272e;
+  --text: #e6ebf0;
+  --muted: #8b96a0;
+  --line: #343c45;
+  --line-soft: #272d35;
+  --teal: #3baea7;
+  --teal-dark: #4ddad1;
+  --teal-soft: #143534;
+  --green: #67b589;
+  --amber: #e6a735;
+  --danger: #d96262;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  
+  --side-rail-bg: rgba(17, 20, 24, 0.96);
+  --avatar-bg: #2d3742;
+  --step-bg: #22272e;
+  --button-text: #111418;
+  --text-muted-1: #a9b5bf;
+  --text-muted-2: #929ea8;
+  --text-muted-3: #929ea8;
+  --text-label: #d1dae3;
+  --input-bg: #1a1e23;
+  --focus-ring: rgba(59, 174, 167, 0.25);
+}
+
 
 * {
   box-sizing: border-box;
@@ -73,7 +112,7 @@ a {
   height: 100vh;
   flex-direction: column;
   border-right: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--side-rail-bg);
   padding: 28px 20px;
 }
 
@@ -208,7 +247,7 @@ a {
   height: 38px;
   place-items: center;
   border-radius: 999px;
-  background: #d8e2e1;
+  background: var(--avatar-bg);
   font-size: 0.84rem;
   font-weight: 700;
 }
@@ -290,7 +329,7 @@ a {
   height: 46px;
   place-items: center;
   border-radius: 999px;
-  background: #f0f2f2;
+  background: var(--step-bg);
   color: var(--text);
   font-size: 1.05rem;
   font-weight: 760;
@@ -298,7 +337,7 @@ a {
 
 .ritual-step.active span {
   background: var(--teal);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .ritual-step p {
@@ -386,7 +425,7 @@ a {
 
 .field-value {
   min-width: 0;
-  color: #3f474f;
+  color: var(--text-muted-1);
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -417,7 +456,7 @@ a {
 .primary-button {
   border: 1px solid var(--teal);
   background: var(--teal);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .primary-button:hover {
@@ -426,7 +465,7 @@ a {
 
 .secondary-button {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -439,7 +478,7 @@ a {
   min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--input-bg);
   color: var(--text);
   font-size: 0.9rem;
 }
@@ -448,7 +487,7 @@ a {
 .text-button {
   border: 0;
   background: transparent;
-  color: #59636b;
+  color: var(--text-muted-2);
   text-decoration: underline;
   text-underline-offset: 4px;
   cursor: pointer;
@@ -471,7 +510,7 @@ a {
   border-radius: 8px;
   background: var(--surface-quiet);
   padding: 14px 18px;
-  color: #4e5961;
+  color: var(--text-muted-3);
   text-decoration: none;
 }
 
@@ -516,7 +555,7 @@ a {
 
 .more-panel dd {
   margin: 0;
-  color: #3f474f;
+  color: var(--text-muted-1);
 }
 
 .empty-panel {
@@ -581,7 +620,7 @@ a {
 label {
   display: grid;
   gap: 8px;
-  color: #303841;
+  color: var(--text-label);
   font-weight: 650;
 }
 
@@ -590,7 +629,7 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--input-bg);
   color: var(--text);
   padding: 13px 14px;
   font-size: 1rem;
@@ -605,7 +644,7 @@ input:focus,
 textarea:focus,
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(8, 108, 103, 0.18);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

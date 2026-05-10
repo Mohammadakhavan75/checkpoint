@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "./AppShell";
 import { AuthProvider } from "../lib/auth";
+import { ThemeProvider } from "../lib/theme";
 import { api } from "../lib/api";
 
 vi.mock("../lib/api", async () => {
@@ -28,13 +29,15 @@ describe("AppShell", () => {
   it("renders a compact rail and persists expansion", async () => {
     render(
       <MemoryRouter initialEntries={["/today"]}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<AppShell />}>
-              <Route path="today" element={<div>Today content</div>} />
-            </Route>
-          </Routes>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<AppShell />}>
+                <Route path="today" element={<div>Today content</div>} />
+              </Route>
+            </Routes>
+          </AuthProvider>
+        </ThemeProvider>
       </MemoryRouter>,
     );
 

@@ -1,8 +1,9 @@
-import { Archive, ChevronLeft, ChevronRight, Home, Layers3, LogOut, Settings, UserRound } from "lucide-react";
+import { Archive, ChevronLeft, ChevronRight, Home, Layers3, LogOut, Settings, UserRound, Moon, Sun } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { useTheme } from "../lib/theme";
 
 const navItems = [
   { to: "/today", label: "Today", icon: Home },
@@ -13,6 +14,7 @@ const navItems = [
 
 export function AppShell() {
   const { user, preferences, setPreferences, logout } = useAuth();
+  const { isDark, setTheme } = useTheme();
   const navigate = useNavigate();
   const collapsed = preferences?.nav_collapsed ?? true;
 
@@ -57,6 +59,14 @@ export function AppShell() {
           <div className="top-meta">
             <span className="active-limit">Active limit: {preferences?.active_limit ?? 1}</span>
             <span className="info-dot">i</span>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             <div className="account-chip" aria-label="Current account">
               <span className="avatar">{user?.email.slice(0, 2).toUpperCase() ?? <UserRound size={16} />}</span>
               <span className="account-name">{user?.email.split("@")[0] ?? "Account"}</span>

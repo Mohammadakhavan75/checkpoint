@@ -1,12 +1,13 @@
-import { Archive, CheckCircle2, Circle, Plus } from "lucide-react";
+import { Archive, CheckCircle2, Circle, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { ApiError, api } from "../lib/api";
-import type { Mission } from "../lib/types";
+import type { Mission, ParkingItem } from "../lib/types";
 
 export function LifeIndexPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [parkingItems, setParkingItems] = useState<ParkingItem[]>([]);
   const [title, setTitle] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [error, setError] = useState("");
@@ -15,7 +16,9 @@ export function LifeIndexPage() {
   async function load() {
     setLoading(true);
     try {
-      setMissions(await api.missions());
+      const [loadedMissions, loadedParkingItems] = await Promise.all([api.missions(), api.parkingItems()]);
+      setMissions(loadedMissions);
+      setParkingItems(loadedParkingItems);
     } finally {
       setLoading(false);
     }
@@ -65,6 +68,16 @@ export function LifeIndexPage() {
     }
   }
 
+  async function removeMission(id: string) {
+    setError("");
+    try {
+      await api.deleteMission(id);
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not delete mission");
+    }
+  }
+
   return (
     <div className="page-shell">
       <section className="page-heading">
@@ -81,17 +94,20 @@ export function LifeIndexPage() {
           <div className="quiet-list">
             {active.length === 0 && <p className="muted">No active missions.</p>}
             {active.map((mission) => (
-              <MissionRow key={mission.id} mission={mission} actionLabel="Park" icon={<Archive size={18} />} onAction={() => park(mission.id)} />
+              <MissionRow key={mission.id} mission={mission} actionLabel="Park" icon={<Archive size={18} />} onAction={() => park(mission.id)} onDelete={() => removeMission(mission.id)} />
             ))}
           </div>
         </div>
 
         <div className="simple-panel">
-          <h2>Parked missions</h2>
+          <h2>Parking</h2>
           <div className="quiet-list">
-            {parked.length === 0 && <p className="muted">Nothing parked yet.</p>}
+            {parked.length === 0 && parkingItems.length === 0 && <p className="muted">Nothing parked yet.</p>}
             {parked.map((mission) => (
-              <MissionRow key={mission.id} mission={mission} actionLabel="Activate" icon={<CheckCircle2 size={18} />} onAction={() => activate(mission.id)} />
+              <MissionRow key={mission.id} mission={mission} actionLabel="Activate" icon={<CheckCircle2 size={18} />} onAction={() => activate(mission.id)} onDelete={() => removeMission(mission.id)} />
+            ))}
+            {parkingItems.map((item) => (
+              <ParkingItemRow key={item.id} item={item} />
             ))}
           </div>
         </div>
@@ -119,16 +135,30 @@ export function LifeIndexPage() {
   );
 }
 
+function ParkingItemRow({ item }: { item: ParkingItem }) {
+  return (
+    <div className="quiet-row">
+      <Circle size={10} className="parked-dot" />
+      <div>
+        <strong>{item.title}</strong>
+        <p>{item.note || "No note."}</p>
+      </div>
+    </div>
+  );
+}
+
 function MissionRow({
   mission,
   actionLabel,
   icon,
   onAction,
+  onDelete,
 }: {
   mission: Mission;
   actionLabel: string;
   icon: ReactNode;
   onAction: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="quiet-row">
@@ -137,10 +167,15 @@ function MissionRow({
         <strong>{mission.title}</strong>
         <p>{mission.next_action || mission.current_state || "No next action yet."}</p>
       </div>
-      <button className="small-button" type="button" onClick={onAction}>
-        {icon}
-        {actionLabel}
-      </button>
+      <div style={{ display: "flex", gap: "10px" }}>
+        <button className="small-button" type="button" onClick={onAction}>
+          {icon}
+          {actionLabel}
+        </button>
+        <button className="icon-button" type="button" onClick={onDelete} aria-label={`Delete ${mission.title}`}>
+          <Trash2 size={18} />
+        </button>
+      </div>
     </div>
   );
 }

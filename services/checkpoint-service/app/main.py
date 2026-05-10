@@ -173,6 +173,13 @@ def park_mission(mission_id: str, current_user_id: str = Depends(user_id), db: S
     return mission
 
 
+@app.delete("/missions/{mission_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> None:
+    mission = require_mission(db, current_user_id, mission_id)
+    db.delete(mission)
+    db.commit()
+
+
 @app.get("/missions/{mission_id}/checkpoints", response_model=list[CheckpointOut])
 def list_checkpoints(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> list[CheckpointOut]:
     require_mission(db, current_user_id, mission_id)

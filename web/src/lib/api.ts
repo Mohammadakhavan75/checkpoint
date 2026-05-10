@@ -57,6 +57,7 @@ export const api = {
   updateMission: (id: string, payload: Partial<Mission>) => request<Mission>(`/api/missions/${id}`, { method: "PATCH", json: payload }),
   activateMission: (id: string) => request<Mission>(`/api/missions/${id}/activate`, { method: "POST" }),
   parkMission: (id: string) => request<Mission>(`/api/missions/${id}/park`, { method: "POST" }),
+  deleteMission: (id: string) => request<void>(`/api/missions/${id}`, { method: "DELETE" }),
   checkpoints: (missionId: string) => request<Checkpoint[]>(`/api/missions/${missionId}/checkpoints`),
   createCheckpoint: (missionId: string, payload: Pick<Checkpoint, "changed" | "decision" | "where_stopped" | "next_action" | "do_not_rethink">) =>
     request<Checkpoint>(`/api/missions/${missionId}/checkpoints`, { method: "POST", json: payload }),

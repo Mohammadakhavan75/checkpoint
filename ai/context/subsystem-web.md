@@ -31,6 +31,7 @@ The web app does not authorize data access, persist durable domain data directly
 - The side rail defaults to compact icon-only navigation and persists through user preferences.
 - Start Ritual keeps history, blockers, full snapshots, and parked lists behind explicit disclosure.
 - Stop Ritual asks only the approved five checkpoint questions.
+- Parking views show both parked missions and standalone parking items so users see the same safe-for-later set from Life Index and Parking.
 
 ## Common failure modes
 
@@ -41,6 +42,8 @@ The web app does not authorize data access, persist durable domain data directly
 ## Tests
 
 - `web/src/pages/TodayPage.test.tsx`
+- `web/src/pages/LifeIndexPage.test.tsx`
+- `web/src/pages/ParkingPage.test.tsx`
 - `web/src/components/AppShell.test.tsx`
 - `web/e2e/checkpoint.spec.ts`
 

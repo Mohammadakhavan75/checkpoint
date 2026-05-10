@@ -27,6 +27,8 @@ CODE_PATHS = (
     "app/",
     "packages/",
     "services/",
+    "web/src/",
+    "web/e2e/",
 )
 
 TEST_PATHS = (
@@ -34,6 +36,9 @@ TEST_PATHS = (
     "test/",
     "spec/",
     "__tests__/",
+    "services/identity-service/tests/",
+    "services/checkpoint-service/tests/",
+    "web/e2e/",
 )
 
 DOC_ONLY_PATHS = (
@@ -120,7 +125,9 @@ def main() -> int:
         return 0
 
     code_files = files_under(files, CODE_PATHS)
-    tests_changed = has_changed_under(files, TEST_PATHS)
+    tests_changed = has_changed_under(files, TEST_PATHS) or any(
+        f.endswith((".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx", "_test.py")) for f in files
+    )
     context_pack_changed = has_changed_under(files, ("ai/context-packs/",))
     task_plan_changed = any(re.match(r"ai/tasks/.+/plan\.md$", f) for f in files)
     change_record_md_changed = any(re.match(r"ai/changes/.+\.md$", f) for f in files)

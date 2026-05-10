@@ -69,7 +69,6 @@ export function AppShell() {
             </button>
             <div className="account-chip" aria-label="Current account">
               <span className="avatar">{user?.email.slice(0, 2).toUpperCase() ?? <UserRound size={16} />}</span>
-              <span className="account-name">{user?.email.split("@")[0] ?? "Account"}</span>
             </div>
             <button className="icon-button" type="button" onClick={handleLogout} aria-label="Log out">
               <LogOut size={18} />

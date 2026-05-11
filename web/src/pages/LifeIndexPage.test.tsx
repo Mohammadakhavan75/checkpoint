@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../lib/api";
@@ -12,9 +13,12 @@ vi.mock("../lib/api", () => ({
   api: {
     missions: vi.fn(),
     parkingItems: vi.fn(),
+    domains: vi.fn(),
     createMission: vi.fn(),
     activateMission: vi.fn(),
+    promoteMission: vi.fn(),
     parkMission: vi.fn(),
+    deleteMission: vi.fn(),
   },
 }));
 
@@ -26,18 +30,38 @@ const parkingItem: ParkingItem = {
   updated_at: new Date().toISOString(),
 };
 
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <LifeIndexPage />
+    </MemoryRouter>,
+  );
+}
+
 describe("LifeIndexPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(api.missions).mockResolvedValue([]);
-    vi.mocked(api.parkingItems).mockResolvedValue([parkingItem]);
+    vi.mocked(api.parkingItems).mockResolvedValue([]);
+    vi.mocked(api.domains).mockResolvedValue([]);
   });
 
-  it("shows standalone parking items in the parking section", async () => {
-    render(<LifeIndexPage />);
+  it("shows parking count pill when there are parking items", async () => {
+    vi.mocked(api.parkingItems).mockResolvedValue([parkingItem]);
+    renderPage();
 
-    expect(await screen.findByText("Compare note tools later")).toBeInTheDocument();
-    expect(screen.getByText("Not today. Markdown is enough.")).toBeInTheDocument();
-    expect(screen.queryByText("Nothing parked yet.")).not.toBeInTheDocument();
+    expect(await screen.findByText(/1 parked/)).toBeInTheDocument();
+  });
+
+  it("shows empty parking message when nothing is parked", async () => {
+    renderPage();
+
+    expect(await screen.findByText(/Nothing parked yet/)).toBeInTheDocument();
+  });
+
+  it("shows empty primary message when no active missions", async () => {
+    renderPage();
+
+    expect(await screen.findByText(/Nothing active yet/)).toBeInTheDocument();
   });
 });

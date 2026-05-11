@@ -1,8 +1,8 @@
 import { Archive, ArrowRight, Clock3, ListPlus, RotateCcw, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { MissionCreateForm } from "../components/MissionCreateForm";
 import { QuietField } from "../components/QuietField";
 import { RitualSteps } from "../components/RitualSteps";
 import { ApiError, api } from "../lib/api";
@@ -77,7 +77,9 @@ export function TodayPage() {
       <section className="ritual-panel" aria-label="Start ritual">
         <div className="mission-title-block">
           <p>Primary mission</p>
-          <h2>{mission.title}</h2>
+          <h2>
+            <Link className="mission-title-link" to={`/missions/${mission.id}`}>{mission.title}</Link>
+          </h2>
         </div>
 
         <QuietField icon={<Clock3 size={22} />} label="Last checkpoint">
@@ -147,26 +149,7 @@ export function TodayPage() {
 }
 
 function EmptyToday() {
-  const [title, setTitle] = useState("");
-  const [nextAction, setNextAction] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    try {
-      await api.createMission({
-        title,
-        status: "active",
-        next_action: nextAction,
-        do_not_rethink: "Do not optimize the system today.",
-      });
-      window.location.reload();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not create mission");
-    }
-  }
 
   return (
     <div className="page-shell today-page">
@@ -179,20 +162,7 @@ function EmptyToday() {
       <section className="ritual-panel empty-panel">
         <h2>Create one primary mission</h2>
         <p className="muted">Checkpoint works best when Today has one clear place to return.</p>
-        <form className="form-stack compact-form" onSubmit={handleCreate}>
-          <label>
-            Mission
-            <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Finish anomaly detection direction" required />
-          </label>
-          <label>
-            Next physical action
-            <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder="Open notes.md and write three claims" required />
-          </label>
-          {error && <p className="form-error">{error}</p>}
-          <button className="primary-button" type="submit">
-            Create mission
-          </button>
-        </form>
+        <MissionCreateForm defaultStatus="active" onSuccess={() => window.location.reload()} />
         <button className="text-button" type="button" onClick={() => navigate("/parking")}>
           Park an idea instead
         </button>

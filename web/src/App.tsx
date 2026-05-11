@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AppShell } from "./components/AppShell";
 import { AuthPage } from "./pages/AuthPage";
 import { LifeIndexPage } from "./pages/LifeIndexPage";
+import { MissionSnapshotPage } from "./pages/MissionSnapshotPage";
 import { ParkingPage } from "./pages/ParkingPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { StopCheckpointPage } from "./pages/StopCheckpointPage";
@@ -38,7 +39,7 @@ export function App() {
         <Route path="today" element={<TodayPage />} />
         <Route path="today/checkpoint" element={<StopCheckpointPage />} />
         <Route path="life-index" element={<LifeIndexPage />} />
-        <Route path="missions/:missionId" element={<LifeIndexPage />} />
+        <Route path="missions/:missionId" element={<MissionSnapshotPage />} />
         <Route path="parking" element={<ParkingPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

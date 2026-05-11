@@ -84,6 +84,18 @@ def create_domain(payload: DomainCreate, current_user_id: str = Depends(user_id)
     return domain
 
 
+@app.delete("/domains/{domain_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_domain(domain_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> None:
+    domain = db.get(Domain, domain_id)
+    if domain is None or domain.user_id != current_user_id:
+        raise HTTPException(status_code=404, detail="Domain not found")
+    in_use = db.scalar(select(func.count()).select_from(Mission).where(Mission.domain_id == domain_id)) or 0
+    if in_use > 0:
+        raise HTTPException(status_code=409, detail="Domain is in use by one or more missions")
+    db.delete(domain)
+    db.commit()
+
+
 @app.patch("/domains/{domain_id}", response_model=DomainOut)
 def update_domain(domain_id: str, payload: DomainUpdate, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> DomainOut:
     domain = db.get(Domain, domain_id)
@@ -94,6 +106,11 @@ def update_domain(domain_id: str, payload: DomainUpdate, current_user_id: str = 
     db.commit()
     db.refresh(domain)
     return domain
+
+
+@app.get("/missions/{mission_id}", response_model=MissionOut)
+def get_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
+    return require_mission(db, current_user_id, mission_id)
 
 
 @app.get("/missions", response_model=list[MissionOut])
@@ -109,10 +126,32 @@ def list_missions(
     return list(db.scalars(stmt).all())
 
 
+ACTIVE_LIMIT = 3
+
+
+def _active_missions(db: Session, user_id_val: str) -> list[Mission]:
+    return list(
+        db.scalars(
+            select(Mission)
+            .where(Mission.user_id == user_id_val, Mission.status == "active")
+            .order_by(Mission.active_rank.asc().nullslast())
+        ).all()
+    )
+
+
+def _next_free_rank(actives: list[Mission]) -> int:
+    used = {m.active_rank for m in actives if m.active_rank is not None}
+    if 1 not in used:
+        return 1
+    for r in (2, 3):
+        if r not in used:
+            return r
+    return len(actives) + 1
+
+
 @app.post("/missions", response_model=MissionOut, status_code=status.HTTP_201_CREATED)
 def create_mission(
     payload: MissionCreate,
-    active_limit: int = Query(default=1, ge=1, le=5),
     current_user_id: str = Depends(user_id),
     db: Session = Depends(get_db),
 ) -> MissionOut:
@@ -120,10 +159,10 @@ def create_mission(
         raise HTTPException(status_code=404, detail="Domain not found")
     mission = Mission(user_id=current_user_id, **payload.model_dump())
     if mission.status == "active":
-        active_count = db.scalar(select(func.count()).select_from(Mission).where(Mission.user_id == current_user_id, Mission.status == "active")) or 0
-        if active_count >= active_limit:
-            raise HTTPException(status_code=409, detail="Active mission limit reached")
-        mission.active_rank = active_count + 1
+        actives = _active_missions(db, current_user_id)
+        if len(actives) >= ACTIVE_LIMIT:
+            raise HTTPException(status_code=409, detail="active_set_full")
+        mission.active_rank = _next_free_rank(actives)
     db.add(mission)
     db.commit()
     db.refresh(mission)
@@ -145,19 +184,56 @@ def update_mission(mission_id: str, payload: MissionUpdate, current_user_id: str
 
 
 @app.post("/missions/{mission_id}/activate", response_model=MissionOut)
-def activate_mission(
-    mission_id: str,
-    active_limit: int = Query(default=1, ge=1, le=5),
-    current_user_id: str = Depends(user_id),
-    db: Session = Depends(get_db),
-) -> MissionOut:
+def activate_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
     mission = require_mission(db, current_user_id, mission_id)
     if mission.status != "active":
-        active_count = db.scalar(select(func.count()).select_from(Mission).where(Mission.user_id == current_user_id, Mission.status == "active")) or 0
-        if active_count >= active_limit:
-            raise HTTPException(status_code=409, detail="Active mission limit reached")
-        mission.active_rank = active_count + 1
+        actives = _active_missions(db, current_user_id)
+        if len(actives) >= ACTIVE_LIMIT:
+            raise HTTPException(status_code=409, detail="active_set_full")
+        mission.active_rank = _next_free_rank(actives)
     mission.status = "active"
+    db.commit()
+    db.refresh(mission)
+    return mission
+
+
+@app.post("/missions/{mission_id}/promote", response_model=MissionOut)
+def promote_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
+    mission = require_mission(db, current_user_id, mission_id)
+    if mission.status != "active":
+        raise HTTPException(status_code=409, detail="Mission is not active")
+    if mission.active_rank == 1:
+        raise HTTPException(status_code=409, detail="Mission is already primary")
+    current_primary = db.scalar(
+        select(Mission).where(Mission.user_id == current_user_id, Mission.status == "active", Mission.active_rank == 1)
+    )
+    old_rank = mission.active_rank
+    mission.active_rank = 1
+    if current_primary:
+        current_primary.active_rank = old_rank
+    db.commit()
+    db.refresh(mission)
+    return mission
+
+
+@app.post("/missions/{mission_id}/demote", response_model=MissionOut)
+def demote_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
+    mission = require_mission(db, current_user_id, mission_id)
+    if mission.status != "active":
+        raise HTTPException(status_code=409, detail="Mission is not active")
+    if mission.active_rank != 1:
+        raise HTTPException(status_code=409, detail="Mission is not primary")
+    used_ranks = set(
+        db.scalars(
+            select(Mission.active_rank).where(
+                Mission.user_id == current_user_id,
+                Mission.status == "active",
+                Mission.active_rank != 1,
+            )
+        ).all()
+    )
+    new_rank = next(r for r in (2, 3) if r not in used_ranks)
+    mission.active_rank = new_rank
     db.commit()
     db.refresh(mission)
     return mission

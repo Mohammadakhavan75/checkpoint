@@ -20,7 +20,7 @@ def headers(user_id: str) -> dict[str, str]:
     return {"X-User-Id": user_id}
 
 
-def test_active_limit_checkpoint_and_user_isolation() -> None:
+def test_active_set_checkpoint_and_user_isolation() -> None:
     first = client.post(
         "/missions?active_limit=1",
         headers=headers("user-a"),
@@ -28,13 +28,35 @@ def test_active_limit_checkpoint_and_user_isolation() -> None:
     )
     assert first.status_code == 201
     mission_id = first.json()["id"]
+    assert first.json()["active_rank"] == 1
 
-    blocked = client.post(
+    second = client.post(
         "/missions?active_limit=1",
         headers=headers("user-a"),
         json={"title": "Second active mission", "status": "active", "next_action": "Do later"},
     )
+    assert second.status_code == 201
+    assert second.json()["active_rank"] == 2
+
+    third = client.post(
+        "/missions?active_limit=1",
+        headers=headers("user-a"),
+        json={"title": "Third active mission", "status": "active", "next_action": "Do third"},
+    )
+    assert third.status_code == 201
+    assert third.json()["active_rank"] == 3
+
+    blocked = client.post(
+        "/missions?active_limit=1",
+        headers=headers("user-a"),
+        json={"title": "Fourth active mission", "status": "active", "next_action": "Do later"},
+    )
     assert blocked.status_code == 409
+    assert blocked.json()["detail"] == "active_set_full"
+
+    promoted = client.post(f"/missions/{second.json()['id']}/promote", headers=headers("user-a"))
+    assert promoted.status_code == 200
+    assert promoted.json()["active_rank"] == 1
 
     hidden_from_other_user = client.get("/missions", headers=headers("user-b"))
     assert hidden_from_other_user.status_code == 200
@@ -53,6 +75,12 @@ def test_active_limit_checkpoint_and_user_isolation() -> None:
     )
     assert checkpoint.status_code == 201
 
+    today = client.get("/today", headers=headers("user-a"))
+    assert today.status_code == 200
+    assert today.json()["primary_mission"]["id"] == second.json()["id"]
+
+    restored = client.post(f"/missions/{mission_id}/promote", headers=headers("user-a"))
+    assert restored.status_code == 200
     today = client.get("/today", headers=headers("user-a"))
     assert today.status_code == 200
     assert today.json()["primary_mission"]["next_action"] == "Reject the weakest claim"

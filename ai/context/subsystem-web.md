@@ -16,6 +16,7 @@ The web app does not authorize data access, persist durable domain data directly
 - `web/src/components/AppShell.tsx`
 - `web/src/pages/TodayPage.tsx`
 - `web/src/pages/StopCheckpointPage.tsx`
+- `web/src/pages/MissionSnapshotPage.tsx`
 
 ## Important dependencies
 
@@ -32,6 +33,7 @@ The web app does not authorize data access, persist durable domain data directly
 - Start Ritual keeps history, blockers, full snapshots, and parked lists behind explicit disclosure.
 - Stop Ritual asks only the approved five checkpoint questions.
 - Parking views show both parked missions and standalone parking items so users see the same safe-for-later set from Life Index and Parking.
+- Mission Snapshot is the dedicated re-entry screen for editable state fields and immutable checkpoint history.
 
 ## Common failure modes
 
@@ -44,6 +46,7 @@ The web app does not authorize data access, persist durable domain data directly
 - `web/src/pages/TodayPage.test.tsx`
 - `web/src/pages/LifeIndexPage.test.tsx`
 - `web/src/pages/ParkingPage.test.tsx`
+- `web/src/pages/MissionSnapshotPage.test.tsx`
 - `web/src/components/AppShell.test.tsx`
 - `web/e2e/checkpoint.spec.ts`
 

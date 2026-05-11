@@ -90,6 +90,7 @@ function InlineField({
         <textarea
           ref={textareaRef}
           className="snapshot-field-textarea"
+          aria-label={label}
           value={draft}
           rows={3}
           disabled={saving}
@@ -162,7 +163,7 @@ export function MissionSnapshotPage() {
     Promise.all([api.mission(missionId), api.checkpoints(missionId), api.domains()])
       .then(([m, cp, d]) => {
         setMission(m);
-        setCheckpoints(cp);
+        setCheckpoints([...cp].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setDomains(d);
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Could not load mission"))

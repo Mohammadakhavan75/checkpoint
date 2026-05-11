@@ -200,9 +200,8 @@ a {
 .top-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   color: var(--text);
-  padding-right: 200px;
 }
 
 .active-limit {
@@ -225,11 +224,7 @@ a {
 .account-chip {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   min-width: 0;
-  min-height: 42px;
-  border-radius: 8px;
-  padding: 0 12px;
   color: var(--text);
 }
 
@@ -881,8 +876,4 @@ a:focus-visible {
   }
 }
 
-@media (max-width: 1250px) {
-  .account-chip {
-    display: none;
-  }
-}
+

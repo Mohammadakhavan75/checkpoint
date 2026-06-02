@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: checkpoint
-      POSTGRES_PASSWORD: checkpoint
-      POSTGRES_DB: checkpoint
+      POSTGRES_USER: ${POSTGRES_USER:-checkpoint}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-checkpoint}
+      POSTGRES_DB: ${POSTGRES_DB:-checkpoint}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PUBLISHED_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U checkpoint -d checkpoint"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-checkpoint} -d ${POSTGRES_DB:-checkpoint}"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -18,7 +18,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PUBLISHED_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -28,9 +28,14 @@ services:
   identity-service:
     build:
       context: ./services/identity-service
+    networks:
+      default:
+        aliases:
+          - ${IDENTITY_HOST:-identity.${DOMAIN_NAME:-infiniteai.space}}
     environment:
-      DATABASE_URL: postgresql+psycopg://checkpoint:checkpoint@postgres:5432/checkpoint
-      REDIS_URL: redis://redis:6379/0
+      DOMAIN_NAME: ${DOMAIN_NAME:-infiniteai.space}
+      DATABASE_URL: ${IDENTITY_DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-checkpoint}:${POSTGRES_PASSWORD:-checkpoint}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-checkpoint}}
+      REDIS_URL: ${REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/0}
       JWT_SECRET: ${JWT_SECRET:-dev-checkpoint-secret-change-me}
       ACCESS_TOKEN_SECONDS: 900
       REFRESH_TOKEN_SECONDS: 2592000
@@ -48,8 +53,13 @@ services:
   checkpoint-service:
     build:
       context: ./services/checkpoint-service
+    networks:
+      default:
+        aliases:
+          - ${CHECKPOINT_HOST:-checkpoint-service.${DOMAIN_NAME:-infiniteai.space}}
     environment:
-      DATABASE_URL: postgresql+psycopg://checkpoint:checkpoint@postgres:5432/checkpoint
+      DOMAIN_NAME: ${DOMAIN_NAME:-infiniteai.space}
+      DATABASE_URL: ${CHECKPOINT_DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-checkpoint}:${POSTGRES_PASSWORD:-checkpoint}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-checkpoint}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,14 +72,23 @@ services:
   api-gateway:
     build:
       context: ./services/api-gateway
+    networks:
+      default:
+        aliases:
+          - ${API_HOST:-api.${DOMAIN_NAME:-infiniteai.space}}
     environment:
-      IDENTITY_SERVICE_URL: http://identity-service:8001
-      CHECKPOINT_SERVICE_URL: http://checkpoint-service:8002
+      DOMAIN_NAME: ${DOMAIN_NAME:-infiniteai.space}
+      IDENTITY_HOST: ${IDENTITY_HOST:-identity.${DOMAIN_NAME:-infiniteai.space}}
+      CHECKPOINT_HOST: ${CHECKPOINT_HOST:-checkpoint-service.${DOMAIN_NAME:-infiniteai.space}}
+      WEB_HOST: ${WEB_HOST:-${DOMAIN_NAME:-infiniteai.space}}
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL:-http://${IDENTITY_HOST:-identity.${DOMAIN_NAME:-infiniteai.space}}:${IDENTITY_PORT:-8001}}
+      CHECKPOINT_SERVICE_URL: ${CHECKPOINT_SERVICE_URL:-http://${CHECKPOINT_HOST:-checkpoint-service.${DOMAIN_NAME:-infiniteai.space}}:${CHECKPOINT_PORT:-8002}}
       JWT_SECRET: ${JWT_SECRET:-dev-checkpoint-secret-change-me}
-      FRONTEND_ORIGIN: http://localhost:5173
-      COOKIE_SECURE: "false"
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://${WEB_HOST:-${DOMAIN_NAME:-infiniteai.space}}:${WEB_PORT:-5173}}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     depends_on:
       identity-service:
         condition: service_healthy
@@ -84,10 +103,15 @@ services:
   web:
     build:
       context: ./web
+    networks:
+      default:
+        aliases:
+          - ${WEB_HOST:-${DOMAIN_NAME:-infiniteai.space}}
     environment:
-      VITE_API_BASE_URL: http://localhost:8000
+      VITE_DOMAIN_NAME: ${DOMAIN_NAME:-infiniteai.space}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://${API_HOST:-api.${DOMAIN_NAME:-infiniteai.space}}:${API_PORT:-8000}}
     ports:
-      - "5173:5173"
+      - "${WEB_PORT:-5173}:5173"
     depends_on:
       api-gateway:
         condition: service_healthy

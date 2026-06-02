@@ -30,10 +30,13 @@ The gateway does not store user records, mission records, or refresh sessions. I
 
 - Returning raw FastAPI unions can trigger response-model inference errors; gateway proxy handlers use `response_model=None`.
 - Cookie settings must use `secure=true` only when served over HTTPS.
+- Cross-site web/API deployments require `COOKIE_SAMESITE=none` together with `COOKIE_SECURE=true`.
+- Default service addresses derive from `DOMAIN_NAME` and service host variables, currently defaulting to `infiniteai.space`.
 - Upstream service errors should pass through without leaking token values.
 
 ## Tests
 
+- `services/api-gateway/tests/test_cookie_settings.py`
 - Covered indirectly by service tests and browser/API smoke flows for the MVP.
 
 ## Related ADRs

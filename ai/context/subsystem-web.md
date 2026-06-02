@@ -38,6 +38,7 @@ The web app does not authorize data access, persist durable domain data directly
 ## Common failure modes
 
 - Cookie-based auth requires gateway and frontend origins to align with CORS and browser cookie rules.
+- Public API defaults derive from `VITE_DOMAIN_NAME`, currently `infiniteai.space`, unless `VITE_API_BASE_URL` is set.
 - Long mission or checkpoint text can cause mobile overflow if grid children are not allowed to shrink.
 - Playwright E2E cannot run until the local Playwright browser binary is installed.
 

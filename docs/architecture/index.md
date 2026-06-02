@@ -20,7 +20,7 @@ Checkpoint runs locally through Docker Compose:
 - `postgres` stores users, preferences, missions, checkpoints, domains, and parking items.
 - `redis` stores refresh-session state.
 
-The browser talks only to `web` and `api-gateway`. The gateway validates auth cookies and forwards user-scoped requests to internal services.
+The browser talks only to `web` and `api-gateway`. The gateway validates auth cookies and forwards user-scoped requests to internal services. For separate-host deployments, the gateway upstream URLs, frontend CORS origin, and cookie attributes are runtime configuration; see `docs/deployment/distributed-hosts.md`.
 
 ## How to update
 

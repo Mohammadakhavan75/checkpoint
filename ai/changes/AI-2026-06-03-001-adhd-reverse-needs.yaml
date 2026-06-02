@@ -1,0 +1,33 @@
+change_id: "AI-2026-06-03-001-adhd-reverse-needs"
+task_id: "007-adhd-reverse-psychology-needs"
+status: "draft"
+risk_level: "low"
+change_type: "docs"
+subsystems:
+  - "Web"
+  - "Checkpoint Domain"
+  - "AI memory"
+files_changed:
+  - "ai/context-packs/007-adhd-reverse-psychology-needs.md"
+  - "docs/plans/adhd-reverse-psychology-needs.md"
+  - "ai/changes/AI-2026-06-03-001-adhd-reverse-needs.md"
+  - "ai/changes/AI-2026-06-03-001-adhd-reverse-needs.yaml"
+symbols_touched: []
+tests_added_or_modified: []
+adrs_referenced: []
+invariants_reviewed:
+  - "docs/invariants/api-compatibility.md"
+  - "docs/invariants/security.md"
+  - "docs/invariants/concurrency.md"
+  - "docs/invariants/storage.md"
+feature_flags: []
+verification_commands:
+  - "test -f ai/context-packs/007-adhd-reverse-psychology-needs.md"
+  - "test -f docs/plans/adhd-reverse-psychology-needs.md"
+  - "test -f ai/changes/AI-2026-06-03-001-adhd-reverse-needs.md"
+  - "test -f ai/changes/AI-2026-06-03-001-adhd-reverse-needs.yaml"
+rollback_plan_exists: true
+compatibility_impact: "none"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

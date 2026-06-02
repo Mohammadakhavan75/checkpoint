@@ -9,10 +9,23 @@ from fastapi.responses import JSONResponse
 from .security import decode_access_token
 
 
-IDENTITY_SERVICE_URL = os.getenv("IDENTITY_SERVICE_URL", "http://localhost:8001")
-CHECKPOINT_SERVICE_URL = os.getenv("CHECKPOINT_SERVICE_URL", "http://localhost:8002")
-FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+DOMAIN_NAME = os.getenv("DOMAIN_NAME", "infiniteai.space")
+WEB_HOST = os.getenv("WEB_HOST", DOMAIN_NAME)
+IDENTITY_HOST = os.getenv("IDENTITY_HOST", f"identity.{DOMAIN_NAME}")
+CHECKPOINT_HOST = os.getenv("CHECKPOINT_HOST", f"checkpoint-service.{DOMAIN_NAME}")
+WEB_PORT = os.getenv("WEB_PORT", "5173")
+IDENTITY_PORT = os.getenv("IDENTITY_PORT", "8001")
+CHECKPOINT_PORT = os.getenv("CHECKPOINT_PORT", "8002")
+IDENTITY_SERVICE_URL = os.getenv("IDENTITY_SERVICE_URL", f"http://{IDENTITY_HOST}:{IDENTITY_PORT}")
+CHECKPOINT_SERVICE_URL = os.getenv("CHECKPOINT_SERVICE_URL", f"http://{CHECKPOINT_HOST}:{CHECKPOINT_PORT}")
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", f"http://{WEB_HOST}:{WEB_PORT}")
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax").lower()
+
+if COOKIE_SAMESITE not in {"lax", "strict", "none"}:
+    raise RuntimeError("COOKIE_SAMESITE must be one of: lax, strict, none")
+if COOKIE_SAMESITE == "none" and not COOKIE_SECURE:
+    raise RuntimeError("COOKIE_SAMESITE=none requires COOKIE_SECURE=true")
 
 app = FastAPI(title="Checkpoint API Gateway")
 app.add_middleware(
@@ -30,7 +43,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         access_token,
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         max_age=900,
         path="/",
     )
@@ -39,15 +52,15 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         refresh_token,
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         max_age=2_592_000,
         path="/",
     )
 
 
 def clear_auth_cookies(response: Response) -> None:
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("refresh_token", path="/")
+    response.delete_cookie("access_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
+    response.delete_cookie("refresh_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
 
 
 def user_id_from_request(request: Request) -> str:

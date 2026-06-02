@@ -19,9 +19,20 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open `http://localhost:5173`.
+Add these host mappings before opening the app:
 
-The public API is exposed at `http://localhost:8000/api`.
+```text
+127.0.0.1 infiniteai.space
+127.0.0.1 api.infiniteai.space
+127.0.0.1 identity.infiniteai.space
+127.0.0.1 checkpoint-service.infiniteai.space
+```
+
+Then open `http://infiniteai.space:5173`.
+
+The public API is exposed at `http://api.infiniteai.space:8000/api`.
+
+For deploying each container on a separate host, see [Distributed Host Deployment](docs/deployment/distributed-hosts.md).
 
 ## Core Flow
 
@@ -37,6 +48,8 @@ The public API is exposed at `http://localhost:8000/api`.
 docker compose up --build
 docker compose down
 docker compose down -v
+scripts/docker_images.sh build <dockerhub-user> <tag>
+scripts/docker_images.sh build-push <dockerhub-user> <tag>
 ```
 
 Backend tests:

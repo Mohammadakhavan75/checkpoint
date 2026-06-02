@@ -36,6 +36,7 @@ TEST_PATHS = (
     "test/",
     "spec/",
     "__tests__/",
+    "services/api-gateway/tests/",
     "services/identity-service/tests/",
     "services/checkpoint-service/tests/",
     "web/e2e/",

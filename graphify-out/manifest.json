@@ -1,0 +1,657 @@
+{
+  "/Users/mohammad/Documents/projects/Checkpoint/Checkpoints/.obsidian/app.json": {
+    "mtime": 1780422478.5047023,
+    "ast_hash": "99914b932bd37a50b983c5e7c90ae93b",
+    "semantic_hash": "99914b932bd37a50b983c5e7c90ae93b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/Checkpoints/.obsidian/appearance.json": {
+    "mtime": 1780422478.505504,
+    "ast_hash": "99914b932bd37a50b983c5e7c90ae93b",
+    "semantic_hash": "99914b932bd37a50b983c5e7c90ae93b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/Checkpoints/.obsidian/core-plugins.json": {
+    "mtime": 1780422478.0568175,
+    "ast_hash": "7c877bea49eaeabb100563bd157b9051",
+    "semantic_hash": "7c877bea49eaeabb100563bd157b9051"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/Checkpoints/.obsidian/graph.json": {
+    "mtime": 1780422479.706,
+    "ast_hash": "41ffa915f9d880d061cd7db53a247fe1",
+    "semantic_hash": "41ffa915f9d880d061cd7db53a247fe1"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/Checkpoints/.obsidian/workspace.json": {
+    "mtime": 1780422560.195444,
+    "ast_hash": "ce01fee39e1a5b64aa3bf8545e646312",
+    "semantic_hash": "ce01fee39e1a5b64aa3bf8545e646312"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/indexes/change-history.example.json": {
+    "mtime": 1778412012.8203096,
+    "ast_hash": "4608121db28bda5889993b23c835a58b",
+    "semantic_hash": "4608121db28bda5889993b23c835a58b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/indexes/files.example.json": {
+    "mtime": 1778412012.8225915,
+    "ast_hash": "f83d871707ba24f0adbfcb1dd42158c4",
+    "semantic_hash": "f83d871707ba24f0adbfcb1dd42158c4"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/indexes/symbols.example.json": {
+    "mtime": 1778412012.824859,
+    "ast_hash": "2baf62dd735eb9317aed95dd26571d1d",
+    "semantic_hash": "2baf62dd735eb9317aed95dd26571d1d"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/indexes/test-map.example.json": {
+    "mtime": 1778412012.82717,
+    "ast_hash": "d1b8996a185abe11b665d81dcd1a15d5",
+    "semantic_hash": "d1b8996a185abe11b665d81dcd1a15d5"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/scripts/ai_new_task.sh": {
+    "mtime": 1778412082.9917932,
+    "ast_hash": "00ef1b5530d7ff12c853644cc52d90bc",
+    "semantic_hash": "00ef1b5530d7ff12c853644cc52d90bc"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/scripts/check_ai_change_policy.py": {
+    "mtime": 1779925641.474314,
+    "ast_hash": "d9f02946debfd8209d61ec7459ee65de",
+    "semantic_hash": "d9f02946debfd8209d61ec7459ee65de"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/scripts/docker_images.sh": {
+    "mtime": 1779925739.1069443,
+    "ast_hash": "d28d39902bb41a0d7270feb04d7e934b",
+    "semantic_hash": "d28d39902bb41a0d7270feb04d7e934b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/api-gateway/app/__init__.py": {
+    "mtime": 1778370014.9537988,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/api-gateway/app/main.py": {
+    "mtime": 1779964687.1395242,
+    "ast_hash": "da36e809762d964bc523d8e54beb9795",
+    "semantic_hash": "da36e809762d964bc523d8e54beb9795"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/api-gateway/app/security.py": {
+    "mtime": 1778370014.9545279,
+    "ast_hash": "910b9f23138c3f6b12237c63cd9982de",
+    "semantic_hash": "910b9f23138c3f6b12237c63cd9982de"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/api-gateway/tests/test_cookie_settings.py": {
+    "mtime": 1779964711.6305404,
+    "ast_hash": "9807b4b2f45245f66e74bd55420d14c5",
+    "semantic_hash": "9807b4b2f45245f66e74bd55420d14c5"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/app/__init__.py": {
+    "mtime": 1778369938.7021046,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/app/database.py": {
+    "mtime": 1778369938.7024279,
+    "ast_hash": "431005cb3db8019940ccf40b9184f344",
+    "semantic_hash": "431005cb3db8019940ccf40b9184f344"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/app/main.py": {
+    "mtime": 1778465980.3385153,
+    "ast_hash": "2af4cd30f45ab21d92a885983bd0dc45",
+    "semantic_hash": "2af4cd30f45ab21d92a885983bd0dc45"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/app/models.py": {
+    "mtime": 1778371051.3617132,
+    "ast_hash": "83fd59d64b33562af1fdd772e92d0d54",
+    "semantic_hash": "83fd59d64b33562af1fdd772e92d0d54"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/app/schemas.py": {
+    "mtime": 1778369938.7032034,
+    "ast_hash": "fc8a8d1c98f214c66a058610cfeb9cb0",
+    "semantic_hash": "fc8a8d1c98f214c66a058610cfeb9cb0"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/tests/test_checkpoint.py": {
+    "mtime": 1778466107.1029327,
+    "ast_hash": "b7460878c874e8bcce935a1cc8eacfb6",
+    "semantic_hash": "b7460878c874e8bcce935a1cc8eacfb6"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/__init__.py": {
+    "mtime": 1778369838.2674704,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/database.py": {
+    "mtime": 1778369838.2677667,
+    "ast_hash": "50d7d8cc1b2b461c2df67495409c4c4c",
+    "semantic_hash": "50d7d8cc1b2b461c2df67495409c4c4c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/main.py": {
+    "mtime": 1778369838.2688177,
+    "ast_hash": "4791111550acf460f5371251930d798b",
+    "semantic_hash": "4791111550acf460f5371251930d798b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/models.py": {
+    "mtime": 1778369838.2680063,
+    "ast_hash": "d41acb08df2e39bfcda43405812af126",
+    "semantic_hash": "d41acb08df2e39bfcda43405812af126"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/schemas.py": {
+    "mtime": 1778369838.2682183,
+    "ast_hash": "5e635b70b9aff6a6e0306f95617e21b5",
+    "semantic_hash": "5e635b70b9aff6a6e0306f95617e21b5"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/app/security.py": {
+    "mtime": 1778369838.2684338,
+    "ast_hash": "950ed641ef66e34d81d8e25a7f045993",
+    "semantic_hash": "950ed641ef66e34d81d8e25a7f045993"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/tests/test_identity.py": {
+    "mtime": 1778370406.676454,
+    "ast_hash": "4525bdd34731cd4b86c8e5accf44ee87",
+    "semantic_hash": "4525bdd34731cd4b86c8e5accf44ee87"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/update_css.py": {
+    "mtime": 1778418353.480974,
+    "ast_hash": "651d254e02c1637ef1bb515884f6ffa1",
+    "semantic_hash": "651d254e02c1637ef1bb515884f6ffa1"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/e2e/checkpoint.spec.ts": {
+    "mtime": 1778370406.6808815,
+    "ast_hash": "7c946d75b8fbcd840f5965a89f17b617",
+    "semantic_hash": "7c946d75b8fbcd840f5965a89f17b617"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/package.json": {
+    "mtime": 1778370406.6755614,
+    "ast_hash": "0ec6778b821b861886a3da8322fa6d1e",
+    "semantic_hash": "0ec6778b821b861886a3da8322fa6d1e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/playwright.config.ts": {
+    "mtime": 1778370406.679181,
+    "ast_hash": "7b36cfa263870a41a2c8f3468f73d916",
+    "semantic_hash": "7b36cfa263870a41a2c8f3468f73d916"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/App.tsx": {
+    "mtime": 1778465980.3386803,
+    "ast_hash": "0391702c220fd08f12d01e62c4073b5c",
+    "semantic_hash": "0391702c220fd08f12d01e62c4073b5c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/components/AppShell.test.tsx": {
+    "mtime": 1778418353.4813428,
+    "ast_hash": "efcedf58ddc47142c82dd5ec429059e1",
+    "semantic_hash": "efcedf58ddc47142c82dd5ec429059e1"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/components/AppShell.tsx": {
+    "mtime": 1778465977.5178344,
+    "ast_hash": "c25619809a50fd97307f1e9b88c2a83e",
+    "semantic_hash": "c25619809a50fd97307f1e9b88c2a83e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/components/MissionCreateForm.tsx": {
+    "mtime": 1778465980.3388069,
+    "ast_hash": "d509458042087fafeb94410f3311cd1b",
+    "semantic_hash": "d509458042087fafeb94410f3311cd1b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/components/QuietField.tsx": {
+    "mtime": 1778370190.3141172,
+    "ast_hash": "cda62151a41da083239cb8aa49a0ee9e",
+    "semantic_hash": "cda62151a41da083239cb8aa49a0ee9e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/components/RitualSteps.tsx": {
+    "mtime": 1778370190.313407,
+    "ast_hash": "9b4caa30da542296240d7bee80de752f",
+    "semantic_hash": "9b4caa30da542296240d7bee80de752f"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/lib/api.ts": {
+    "mtime": 1779964692.0836737,
+    "ast_hash": "70515d595b8cf2e27fa074ce387aa9ec",
+    "semantic_hash": "70515d595b8cf2e27fa074ce387aa9ec"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/lib/auth.tsx": {
+    "mtime": 1778370343.1400998,
+    "ast_hash": "a805757420392b90d8884213107486d0",
+    "semantic_hash": "a805757420392b90d8884213107486d0"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/lib/theme.tsx": {
+    "mtime": 1778418353.4819312,
+    "ast_hash": "adcb23efbcfe85dea35d36acf5a0c70e",
+    "semantic_hash": "adcb23efbcfe85dea35d36acf5a0c70e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/lib/types.ts": {
+    "mtime": 1778370094.9112089,
+    "ast_hash": "2da719a92e0980141dcbf20e612ebd3b",
+    "semantic_hash": "2da719a92e0980141dcbf20e612ebd3b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/main.tsx": {
+    "mtime": 1778418353.4820993,
+    "ast_hash": "bf3e6200f508dac5bee877cf11fbfacc",
+    "semantic_hash": "bf3e6200f508dac5bee877cf11fbfacc"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/AuthPage.tsx": {
+    "mtime": 1778371934.3923063,
+    "ast_hash": "c22d2b48c90775d3bed9e11a3a7d1d42",
+    "semantic_hash": "c22d2b48c90775d3bed9e11a3a7d1d42"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/LifeIndexPage.test.tsx": {
+    "mtime": 1778465980.3391325,
+    "ast_hash": "6231d6a9a87e8ba2956cfe12d80753d4",
+    "semantic_hash": "6231d6a9a87e8ba2956cfe12d80753d4"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/LifeIndexPage.tsx": {
+    "mtime": 1778466005.4074554,
+    "ast_hash": "29d62fbb761c0f8762a722313f8f4cae",
+    "semantic_hash": "29d62fbb761c0f8762a722313f8f4cae"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/MissionSnapshotPage.test.tsx": {
+    "mtime": 1778466093.3856597,
+    "ast_hash": "d3a5768a93e5faca0762b795b0d835ed",
+    "semantic_hash": "d3a5768a93e5faca0762b795b0d835ed"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/MissionSnapshotPage.tsx": {
+    "mtime": 1778466085.405546,
+    "ast_hash": "2887daee42cf004cc5aa86d78cd678d6",
+    "semantic_hash": "2887daee42cf004cc5aa86d78cd678d6"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/ParkingPage.test.tsx": {
+    "mtime": 1778422957.5683112,
+    "ast_hash": "38f67ee3e5c0af90c147c79e6574d535",
+    "semantic_hash": "38f67ee3e5c0af90c147c79e6574d535"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/ParkingPage.tsx": {
+    "mtime": 1778422957.568637,
+    "ast_hash": "8b925f28495f550e09cc374184d35472",
+    "semantic_hash": "8b925f28495f550e09cc374184d35472"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/SettingsPage.tsx": {
+    "mtime": 1778465980.3396595,
+    "ast_hash": "ac0eae27bacd12e3176fafe4c27a5f18",
+    "semantic_hash": "ac0eae27bacd12e3176fafe4c27a5f18"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/StopCheckpointPage.tsx": {
+    "mtime": 1778370343.143223,
+    "ast_hash": "e09b9e80df8d0dcdd7e1873b63842527",
+    "semantic_hash": "e09b9e80df8d0dcdd7e1873b63842527"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/TodayPage.test.tsx": {
+    "mtime": 1778370406.6784933,
+    "ast_hash": "f4fa2b823593e3f13c27d44ec4a9ab08",
+    "semantic_hash": "f4fa2b823593e3f13c27d44ec4a9ab08"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/pages/TodayPage.tsx": {
+    "mtime": 1778466005.4076774,
+    "ast_hash": "9b2899d30305d072009bfc2e49098dd6",
+    "semantic_hash": "9b2899d30305d072009bfc2e49098dd6"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/test-setup.ts": {
+    "mtime": 1778418353.4826791,
+    "ast_hash": "cfe44b9ab2ebf08c4da46cd682958580",
+    "semantic_hash": "cfe44b9ab2ebf08c4da46cd682958580"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/src/vite-env.d.ts": {
+    "mtime": 1778370094.9083009,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/tsconfig.app.json": {
+    "mtime": 1778370094.9048545,
+    "ast_hash": "33128b67dbdfd0c8b66d2310da7c523a",
+    "semantic_hash": "33128b67dbdfd0c8b66d2310da7c523a"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/tsconfig.json": {
+    "mtime": 1778370094.9043796,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/tsconfig.node.json": {
+    "mtime": 1778370094.9058666,
+    "ast_hash": "dfd434f396f89712109f250b3f5c1cb7",
+    "semantic_hash": "dfd434f396f89712109f250b3f5c1cb7"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/vite.config.ts": {
+    "mtime": 1778370556.9293714,
+    "ast_hash": "e3c9994c3512b32a8e5f33921b201278",
+    "semantic_hash": "e3c9994c3512b32a8e5f33921b201278"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/.pre-commit-config.yaml": {
+    "mtime": 1778412107.626984,
+    "ast_hash": "fb1ee52a8e58341f7284c9804c13a5ea",
+    "semantic_hash": "fb1ee52a8e58341f7284c9804c13a5ea"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/AGENTS.md": {
+    "mtime": 1778410663.5159795,
+    "ast_hash": "d98de8322581b0b56e2073f4c2f9fbde",
+    "semantic_hash": "d98de8322581b0b56e2073f4c2f9fbde"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/README.md": {
+    "mtime": 1779964722.6646585,
+    "ast_hash": "c98ff24f53a9c3400d2def40863c5bce",
+    "semantic_hash": "c98ff24f53a9c3400d2def40863c5bce"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-001-infra.md": {
+    "mtime": 1778413990.335076,
+    "ast_hash": "5b004246f3726a1667ea21c9c9e28c0c",
+    "semantic_hash": "5b004246f3726a1667ea21c9c9e28c0c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-001-infra.yaml": {
+    "mtime": 1778413990.3354561,
+    "ast_hash": "8ec7035642861c8d25fa4e8eaa588ab3",
+    "semantic_hash": "8ec7035642861c8d25fa4e8eaa588ab3"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-002-identity.md": {
+    "mtime": 1778413990.3357935,
+    "ast_hash": "c77b62b8ad8cc5d7a932dd53ada24ac9",
+    "semantic_hash": "c77b62b8ad8cc5d7a932dd53ada24ac9"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-002-identity.yaml": {
+    "mtime": 1778413990.3361025,
+    "ast_hash": "0fc770f4e5f78d2f03142054e4be1512",
+    "semantic_hash": "0fc770f4e5f78d2f03142054e4be1512"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-003-checkpoint-domain.md": {
+    "mtime": 1778413990.336417,
+    "ast_hash": "e452ae3e5a87d7d77ffd3a90b27d4d50",
+    "semantic_hash": "e452ae3e5a87d7d77ffd3a90b27d4d50"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-003-checkpoint-domain.yaml": {
+    "mtime": 1778413990.3367133,
+    "ast_hash": "1abec6104801eb8cea78bc1f05f0f515",
+    "semantic_hash": "1abec6104801eb8cea78bc1f05f0f515"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-004-gateway.md": {
+    "mtime": 1778413990.3369691,
+    "ast_hash": "6b1ebbd0ddd09c8091efeb6b9550bce9",
+    "semantic_hash": "6b1ebbd0ddd09c8091efeb6b9550bce9"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-004-gateway.yaml": {
+    "mtime": 1778413990.3372655,
+    "ast_hash": "6c40bae596fa7ff9fe606851d5f3976c",
+    "semantic_hash": "6c40bae596fa7ff9fe606851d5f3976c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-005-web.md": {
+    "mtime": 1778413990.337512,
+    "ast_hash": "073e72fbabb2f9d5ac33b92233abde70",
+    "semantic_hash": "073e72fbabb2f9d5ac33b92233abde70"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-005-web.yaml": {
+    "mtime": 1778413990.3377745,
+    "ast_hash": "906296b99381c490fc72768af6875fe7",
+    "semantic_hash": "906296b99381c490fc72768af6875fe7"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-006-dark-mode.md": {
+    "mtime": 1778418353.4803827,
+    "ast_hash": "1322218f59de0129c84d1093a94a64ba",
+    "semantic_hash": "1322218f59de0129c84d1093a94a64ba"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-006-dark-mode.yaml": {
+    "mtime": 1778418353.4805892,
+    "ast_hash": "96a3f9a6277d663c4af9581e9def250a",
+    "semantic_hash": "96a3f9a6277d663c4af9581e9def250a"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-007-parking-consistency.md": {
+    "mtime": 1778422957.565403,
+    "ast_hash": "ea4308b93e5d6035bff6963b31066f97",
+    "semantic_hash": "ea4308b93e5d6035bff6963b31066f97"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-007-parking-consistency.yaml": {
+    "mtime": 1778422957.5656662,
+    "ast_hash": "edc5c1c88a986558977055064ae51ddd",
+    "semantic_hash": "edc5c1c88a986558977055064ae51ddd"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-007-parking-missions.md": {
+    "mtime": 1778422957.5658665,
+    "ast_hash": "0feac84e726d49919662b80e5be850f4",
+    "semantic_hash": "0feac84e726d49919662b80e5be850f4"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-007-parking-missions.yaml": {
+    "mtime": 1778422957.5661182,
+    "ast_hash": "6acedbe0a502a6de16f7c9754741c931",
+    "semantic_hash": "6acedbe0a502a6de16f7c9754741c931"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-008-logout-position.md": {
+    "mtime": 1778465977.517388,
+    "ast_hash": "67e970be0028783c03a2b0ab87eff121",
+    "semantic_hash": "67e970be0028783c03a2b0ab87eff121"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-10-008-logout-position.yaml": {
+    "mtime": 1778465977.5175312,
+    "ast_hash": "9be758bca4f764d33ac37b3d33710fab",
+    "semantic_hash": "9be758bca4f764d33ac37b3d33710fab"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-001-gap-m1-mission-snapshot.md": {
+    "mtime": 1778465984.002555,
+    "ast_hash": "c80b6cb86aed2e2ba7de7d69bbbb8296",
+    "semantic_hash": "c80b6cb86aed2e2ba7de7d69bbbb8296"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-001-gap-m1-mission-snapshot.yaml": {
+    "mtime": 1778465984.002791,
+    "ast_hash": "613c71f38c504517d89555138ff2734e",
+    "semantic_hash": "613c71f38c504517d89555138ff2734e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-002-merge-logout-gap-closure.md": {
+    "mtime": 1778466040.907875,
+    "ast_hash": "62daecfcb3c20367fe9f1706cdd7c5f7",
+    "semantic_hash": "62daecfcb3c20367fe9f1706cdd7c5f7"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-002-merge-logout-gap-closure.yaml": {
+    "mtime": 1778466049.5311272,
+    "ast_hash": "815855a2ef82b9868d5767c04f658b09",
+    "semantic_hash": "815855a2ef82b9868d5767c04f658b09"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-003-service-domains.md": {
+    "mtime": 1779964829.3221166,
+    "ast_hash": "253584e94be25bd46185c08b10e04e52",
+    "semantic_hash": "253584e94be25bd46185c08b10e04e52"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/AI-2026-05-11-003-service-domains.yaml": {
+    "mtime": 1779964835.8700557,
+    "ast_hash": "d59cbf68532745ad710870c5032c4cd8",
+    "semantic_hash": "d59cbf68532745ad710870c5032c4cd8"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/changes/README.md": {
+    "mtime": 1778411973.8153346,
+    "ast_hash": "777ff724391eab07080adce0c1e86c1c",
+    "semantic_hash": "777ff724391eab07080adce0c1e86c1c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/001-dark-mode.md": {
+    "mtime": 1778418353.4807122,
+    "ast_hash": "26b534f8911c631c31041d9520f31efe",
+    "semantic_hash": "26b534f8911c631c31041d9520f31efe"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/002-parking-missions.md": {
+    "mtime": 1778422957.5664103,
+    "ast_hash": "382b533a171e9961597837f00519b67c",
+    "semantic_hash": "382b533a171e9961597837f00519b67c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/003-logout-position.md": {
+    "mtime": 1778465977.5176697,
+    "ast_hash": "27d81a0afb3e11a45c219750b22b6e82",
+    "semantic_hash": "27d81a0afb3e11a45c219750b22b6e82"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/004-gap-closure-m1-mission-snapshot.md": {
+    "mtime": 1778465984.0030353,
+    "ast_hash": "f6bfad293259d66be4fdef6f1db1960d",
+    "semantic_hash": "f6bfad293259d66be4fdef6f1db1960d"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/005-gap-closure-m2-m5.md": {
+    "mtime": 1778465984.0032623,
+    "ast_hash": "d47def6a1291ca0d94c2c49c1f226e1e",
+    "semantic_hash": "d47def6a1291ca0d94c2c49c1f226e1e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/006-merge-fix-logout-and-gap-closure.md": {
+    "mtime": 1778465984.0033975,
+    "ast_hash": "cb79210085fa797fcf76eceeda84a0e1",
+    "semantic_hash": "cb79210085fa797fcf76eceeda84a0e1"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/006-service-domains.md": {
+    "mtime": 1779964819.333259,
+    "ast_hash": "cd51ccc88be49782f1699e7d1dc77b08",
+    "semantic_hash": "cd51ccc88be49782f1699e7d1dc77b08"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/README.md": {
+    "mtime": 1778412004.4129019,
+    "ast_hash": "5987700ee7f45ea7767a7c70ef65f4b9",
+    "semantic_hash": "5987700ee7f45ea7767a7c70ef65f4b9"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/TASK-0001-checkpoint-mvp.md": {
+    "mtime": 1778413990.333564,
+    "ast_hash": "3c39f0c474a565ae6a3d0d2c6e0105f6",
+    "semantic_hash": "3c39f0c474a565ae6a3d0d2c6e0105f6"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context-packs/TASK-0002-parking-consistency.md": {
+    "mtime": 1778422957.566638,
+    "ast_hash": "df60d2ea8ed83551a8e7b0830a88acf3",
+    "semantic_hash": "df60d2ea8ed83551a8e7b0830a88acf3"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/coding-guidelines.md": {
+    "mtime": 1778411996.2446766,
+    "ast_hash": "007589d6045addb223011f774d25c822",
+    "semantic_hash": "007589d6045addb223011f774d25c822"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/repo-map.md": {
+    "mtime": 1778413990.3309317,
+    "ast_hash": "df78ab0ec2bfc45494a68da46493d52d",
+    "semantic_hash": "df78ab0ec2bfc45494a68da46493d52d"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/subsystem-api-gateway.md": {
+    "mtime": 1779964776.21649,
+    "ast_hash": "96cf2c134b99958444f37b4721e5b861",
+    "semantic_hash": "96cf2c134b99958444f37b4721e5b861"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/subsystem-checkpoint.md": {
+    "mtime": 1778413990.3331466,
+    "ast_hash": "9acec1eae2499994193c1578e63d74cd",
+    "semantic_hash": "9acec1eae2499994193c1578e63d74cd"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/subsystem-example.md": {
+    "mtime": 1778411996.250577,
+    "ast_hash": "ff1bf97d0cfca2b1c8a4783ebf978a60",
+    "semantic_hash": "ff1bf97d0cfca2b1c8a4783ebf978a60"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/subsystem-identity.md": {
+    "mtime": 1778413990.3328743,
+    "ast_hash": "78ecdcd21b308dc3eac33a054d25b915",
+    "semantic_hash": "78ecdcd21b308dc3eac33a054d25b915"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/subsystem-web.md": {
+    "mtime": 1779964780.1479661,
+    "ast_hash": "6e43527ec045fb64fe7bb17b960b9000",
+    "semantic_hash": "6e43527ec045fb64fe7bb17b960b9000"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/context/testing-guidelines.md": {
+    "mtime": 1778411996.2557945,
+    "ast_hash": "3145e1aff91665691287d5e4f43b1da0",
+    "semantic_hash": "3145e1aff91665691287d5e4f43b1da0"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/README.md": {
+    "mtime": 1778412024.0667064,
+    "ast_hash": "e0cbee3eedb5be4539474c0105d2aa80",
+    "semantic_hash": "e0cbee3eedb5be4539474c0105d2aa80"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/TASK-0001-checkpoint-mvp/plan.md": {
+    "mtime": 1778413990.3342938,
+    "ast_hash": "98c0a2e66407fbbbe852eae4377c2d18",
+    "semantic_hash": "98c0a2e66407fbbbe852eae4377c2d18"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/TASK-0001-checkpoint-mvp/session-log.md": {
+    "mtime": 1778413990.3346605,
+    "ast_hash": "ca44825a380776b32050b94d0e275628",
+    "semantic_hash": "ca44825a380776b32050b94d0e275628"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/TASK-0004-gap-closure-m1/plan.md": {
+    "mtime": 1778465984.003664,
+    "ast_hash": "f11f42786aa4cd3ed2defce27d10dbc8",
+    "semantic_hash": "f11f42786aa4cd3ed2defce27d10dbc8"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/TASK-0005-gap-closure-m2-m5/plan.md": {
+    "mtime": 1778465984.0038974,
+    "ast_hash": "b8285d89eea7490edf21a3c29dd47203",
+    "semantic_hash": "b8285d89eea7490edf21a3c29dd47203"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/tasks/TASK-0006-service-domains/plan.md": {
+    "mtime": 1779964625.3433921,
+    "ast_hash": "2aafc3404508ff67fe4c89cbef9ff255",
+    "semantic_hash": "2aafc3404508ff67fe4c89cbef9ff255"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/templates/change-record-template.md": {
+    "mtime": 1778412044.0713844,
+    "ast_hash": "a75cb48040b94257119eaa240b284fbe",
+    "semantic_hash": "a75cb48040b94257119eaa240b284fbe"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/templates/change-record-template.yaml": {
+    "mtime": 1778412044.072045,
+    "ast_hash": "93b629982b17a35668a981a2dfc852b0",
+    "semantic_hash": "93b629982b17a35668a981a2dfc852b0"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/templates/context-pack-template.md": {
+    "mtime": 1778412044.0726,
+    "ast_hash": "9849f0b440d7ce71bf2f5145e57e3c4e",
+    "semantic_hash": "9849f0b440d7ce71bf2f5145e57e3c4e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/templates/plan-template.md": {
+    "mtime": 1778412044.0732362,
+    "ast_hash": "04f8c38dd98336f4a939f6a9b49e74fd",
+    "semantic_hash": "04f8c38dd98336f4a939f6a9b49e74fd"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/ai/templates/session-log-template.md": {
+    "mtime": 1778412044.0736394,
+    "ast_hash": "53f7c3de150f286420c3cccaf572e35c",
+    "semantic_hash": "53f7c3de150f286420c3cccaf572e35c"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docker-compose.yml": {
+    "mtime": 1779964675.7921996,
+    "ast_hash": "1457fab9f9b85dda8616ea6a9ade3fee",
+    "semantic_hash": "1457fab9f9b85dda8616ea6a9ade3fee"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/adr/ADR-000-template.md": {
+    "mtime": 1778412082.9848204,
+    "ast_hash": "34241ed6f1961c62c631f42ef945385b",
+    "semantic_hash": "34241ed6f1961c62c631f42ef945385b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/architecture/index.md": {
+    "mtime": 1779925517.4754133,
+    "ast_hash": "51d0eb0e126f0977295c16a2d1ebda45",
+    "semantic_hash": "51d0eb0e126f0977295c16a2d1ebda45"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/deployment/distributed-hosts.md": {
+    "mtime": 1779964735.907286,
+    "ast_hash": "05709a0415480a739590aecb62b62530",
+    "semantic_hash": "05709a0415480a739590aecb62b62530"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/invariants/api-compatibility.md": {
+    "mtime": 1778412082.9864573,
+    "ast_hash": "da6f2bbb5b8a3540cf8a8e1d7ef0ae1b",
+    "semantic_hash": "da6f2bbb5b8a3540cf8a8e1d7ef0ae1b"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/invariants/concurrency.md": {
+    "mtime": 1778412082.9868658,
+    "ast_hash": "8ed63106e8795abd4f82a6d24ce081d1",
+    "semantic_hash": "8ed63106e8795abd4f82a6d24ce081d1"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/invariants/security.md": {
+    "mtime": 1778412082.9872253,
+    "ast_hash": "fb9462c5fb62d07ab8adaff8eec72856",
+    "semantic_hash": "fb9462c5fb62d07ab8adaff8eec72856"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/invariants/storage.md": {
+    "mtime": 1778412082.9875994,
+    "ast_hash": "5ff6672f33b19473949e0ad01222871a",
+    "semantic_hash": "5ff6672f33b19473949e0ad01222871a"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/docs/plans/gap-closure-plan.md": {
+    "mtime": 1778465984.0042188,
+    "ast_hash": "7f26bc7dc3ce28d49f04bcbca78a4f66",
+    "semantic_hash": "7f26bc7dc3ce28d49f04bcbca78a4f66"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/api-gateway/requirements.txt": {
+    "mtime": 1778370014.9530506,
+    "ast_hash": "0c13e30cda4bcdf175b60801db41ac3d",
+    "semantic_hash": "0c13e30cda4bcdf175b60801db41ac3d"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/checkpoint-service/requirements.txt": {
+    "mtime": 1778370606.6675193,
+    "ast_hash": "97c57a4a0dee6968e881c001a946e993",
+    "semantic_hash": "97c57a4a0dee6968e881c001a946e993"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/services/identity-service/requirements.txt": {
+    "mtime": 1778370606.6665175,
+    "ast_hash": "afe033ed9ba00979ce2e940fd400ce7e",
+    "semantic_hash": "afe033ed9ba00979ce2e940fd400ce7e"
+  },
+  "/Users/mohammad/Documents/projects/Checkpoint/web/index.html": {
+    "mtime": 1778370094.90392,
+    "ast_hash": "02a13fc18e581231b4196d90079784b8",
+    "semantic_hash": "02a13fc18e581231b4196d90079784b8"
+  }
+}

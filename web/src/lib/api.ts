@@ -1,6 +1,7 @@
 import type { Checkpoint, Domain, Mission, ParkingItem, Preferences, TodayPayload, User } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const DOMAIN_NAME = import.meta.env.VITE_DOMAIN_NAME || "infiniteai.space";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://api.${DOMAIN_NAME}:8000`;
 
 type RequestOptions = RequestInit & {
   json?: unknown;

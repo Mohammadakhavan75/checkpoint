@@ -11,8 +11,10 @@ test("signup, create a mission, leave a checkpoint, and return to Today", async 
   await expect(page.getByRole("heading", { name: "Start ritual" })).toBeVisible();
   await page.getByLabel("Mission").fill("Finish anomaly detection direction");
   await page.getByLabel("Next physical action").fill("Open notes.md and write three claims");
-  await page.getByRole("button", { name: "Create mission" }).click();
+  await page.getByRole("button", { name: "Create active mission" }).click();
 
+  await expect(page.getByRole("heading", { name: "State first" })).toBeVisible();
+  await page.getByRole("button", { name: /Locked in/ }).click();
   await expect(page.getByText("Finish anomaly detection direction")).toBeVisible();
   await page.getByRole("link", { name: "Leave checkpoint instead" }).click();
   await page.getByLabel("What changed?").fill("Compared contribution angles");
@@ -22,6 +24,8 @@ test("signup, create a mission, leave a checkpoint, and return to Today", async 
   await page.getByLabel("What should you not rethink?").fill("Do not revisit tooling");
   await page.getByRole("button", { name: "Save checkpoint" }).click();
 
+  await expect(page.getByRole("heading", { name: "State first" })).toBeVisible();
+  await page.getByRole("button", { name: /Locked in/ }).click();
   await expect(page.getByText("Reject the weakest claim")).toBeVisible();
   await expect(page.getByText("Do not revisit tooling")).toBeVisible();
 });

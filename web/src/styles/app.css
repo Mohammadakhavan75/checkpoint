@@ -517,6 +517,151 @@ a {
   text-decoration: none;
 }
 
+.state-reset-button {
+  min-height: 42px;
+  align-self: flex-start;
+}
+
+.state-checkin-panel {
+  display: grid;
+  gap: 26px;
+}
+
+.state-checkin-intro h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.state-checkin-intro p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.state-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.state-option {
+  display: grid;
+  min-height: 128px;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 18px 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.state-option:hover,
+.state-option:focus-visible {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  outline: none;
+}
+
+.state-option:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.state-option span {
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.state-option small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.state-option-recovery {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.director-panel {
+  display: grid;
+  gap: 24px;
+}
+
+.entry-move-block {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.entry-move-block p {
+  margin: 0;
+  color: var(--teal);
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.entry-move-block h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.6vw, 2.65rem);
+  line-height: 1.08;
+  font-weight: 760;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.reward-moment {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  border: 1px solid var(--teal);
+  border-radius: 8px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  padding: 12px 14px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.director-actions {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(190px, 260px) minmax(160px, auto);
+  gap: 18px;
+  align-items: center;
+}
+
+.director-actions-two {
+  grid-template-columns: minmax(220px, 300px) minmax(190px, 260px);
+}
+
+.director-parking {
+  justify-content: center;
+  min-height: 54px;
+}
+
+.context-toggle {
+  justify-self: start;
+}
+
+.director-context {
+  display: grid;
+  gap: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.director-context-visible {
+  margin-top: 4px;
+}
+
 .show-more-button {
   display: inline-flex;
   align-items: center;
@@ -1448,6 +1593,8 @@ select {
   }
 
   .ritual-actions,
+  .director-actions,
+  .director-actions-two,
   .form-grid,
   .index-grid,
   .snapshot-grid {
@@ -1492,9 +1639,16 @@ select {
     flex-direction: column;
   }
 
+  .state-options {
+    grid-template-columns: 1fr;
+  }
+
+  .state-option {
+    min-height: 92px;
+  }
+
   .more-panel div {
     grid-template-columns: 1fr;
     gap: 6px;
   }
 }
-

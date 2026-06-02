@@ -68,6 +68,26 @@ class Checkpoint(Base):
     mission: Mapped[Mission] = relationship(back_populates="checkpoints")
 
 
+class StateLog(Base):
+    __tablename__ = "state_logs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    user_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
+    state: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
+
+
+class RewardEvent(Base):
+    __tablename__ = "reward_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    user_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
+    mission_id: Mapped[str] = mapped_column(String(36), ForeignKey("missions.id"), index=True, nullable=True)
+    kind: Mapped[str] = mapped_column(String(40), nullable=False)
+    message: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
+
+
 class ParkingItem(Base):
     __tablename__ = "parking_items"
 

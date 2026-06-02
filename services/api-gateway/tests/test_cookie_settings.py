@@ -1,6 +1,8 @@
 import importlib
 import sys
 
+from fastapi.testclient import TestClient
+
 
 def load_gateway(monkeypatch, *, secure: str | None = None, samesite: str | None = None, domain_name: str | None = None):
     for key in (
@@ -78,3 +80,76 @@ def test_samesite_none_without_secure_is_rejected(monkeypatch) -> None:
         assert "COOKIE_SAMESITE=none requires COOKIE_SECURE=true" in str(exc)
     else:
         raise AssertionError("Expected insecure cross-site cookie settings to be rejected")
+
+
+def test_today_state_requires_auth_and_forwards_user(monkeypatch) -> None:
+    gateway = load_gateway(monkeypatch)
+    calls = []
+
+    class FakeResponse:
+        status_code = 201
+        text = ""
+
+        def json(self):
+            return {"state": "Avoiding"}
+
+    async def fake_checkpoint_request(method, path, user_id, *, json=None, params=None):
+        calls.append({"method": method, "path": path, "user_id": user_id, "json": json, "params": params})
+        return FakeResponse()
+
+    monkeypatch.setattr(gateway, "decode_access_token", lambda token: {"sub": "gateway-user"})
+    monkeypatch.setattr(gateway, "checkpoint_request", fake_checkpoint_request)
+    client = TestClient(gateway.app)
+
+    unauthenticated = client.post("/api/today/state", json={"state": "Avoiding"})
+    assert unauthenticated.status_code == 401
+    assert calls == []
+
+    authenticated = client.post("/api/today/state", cookies={"access_token": "valid"}, json={"state": "Avoiding"})
+    assert authenticated.status_code == 201
+    assert calls == [
+        {
+            "method": "POST",
+            "path": "/today/state",
+            "user_id": "gateway-user",
+            "json": {"state": "Avoiding"},
+            "params": None,
+        }
+    ]
+
+
+def test_today_start_requires_auth_and_forwards_user(monkeypatch) -> None:
+    gateway = load_gateway(monkeypatch)
+    calls = []
+
+    class FakeResponse:
+        status_code = 201
+        text = ""
+
+        def json(self):
+            return {"kind": "started", "message": "You broke avoidance. Momentum restored."}
+
+    async def fake_checkpoint_request(method, path, user_id, *, json=None, params=None):
+        calls.append({"method": method, "path": path, "user_id": user_id, "json": json, "params": params})
+        return FakeResponse()
+
+    monkeypatch.setattr(gateway, "decode_access_token", lambda token: {"sub": "gateway-user"})
+    monkeypatch.setattr(gateway, "checkpoint_request", fake_checkpoint_request)
+    client = TestClient(gateway.app)
+
+    payload = {"mission_id": "mission-1", "state": "Locked in", "action_text": "Open draft.md"}
+    unauthenticated = client.post("/api/today/start", json=payload)
+    assert unauthenticated.status_code == 401
+    assert calls == []
+
+    authenticated = client.post("/api/today/start", cookies={"access_token": "valid"}, json=payload)
+    assert authenticated.status_code == 201
+    assert calls == [
+        {
+            "method": "POST",
+            "path": "/today/start",
+            "user_id": "gateway-user",
+            "json": payload,
+            "params": None,
+        }
+    ]

@@ -1,4 +1,4 @@
-import type { Checkpoint, Domain, Mission, ParkingItem, Preferences, TodayPayload, User } from "./types";
+import type { Checkpoint, DirectorState, Domain, Mission, ParkingItem, Preferences, RewardEvent, TodayPayload, User } from "./types";
 
 const DOMAIN_NAME = import.meta.env.VITE_DOMAIN_NAME || "infiniteai.space";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://api.${DOMAIN_NAME}:8000`;
@@ -51,6 +51,9 @@ export const api = {
   preferences: () => request<Preferences>("/api/preferences"),
   updatePreferences: (payload: Partial<Preferences>) => request<Preferences>("/api/preferences", { method: "PATCH", json: payload }),
   today: () => request<TodayPayload>("/api/today"),
+  setTodayState: (state: DirectorState) => request<{ state: DirectorState }>("/api/today/state", { method: "POST", json: { state } }),
+  startToday: (payload: { mission_id: string; state: DirectorState; action_text: string }) =>
+    request<RewardEvent>("/api/today/start", { method: "POST", json: payload }),
   domains: () => request<Domain[]>("/api/domains"),
   createDomain: (name: string) => request<Domain>("/api/domains", { method: "POST", json: { name } }),
   updateDomain: (id: string, name: string) => request<Domain>(`/api/domains/${id}`, { method: "PATCH", json: { name } }),

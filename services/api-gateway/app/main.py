@@ -199,6 +199,16 @@ async def get_today(current_user_id: str = Depends(user_id_from_request)) -> JSO
     return JSONResponse(payload)
 
 
+@app.post("/api/today/state", status_code=status.HTTP_201_CREATED, response_model=None)
+async def create_today_state(request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("POST", "/today/state", current_user_id, json=await read_json(request)))
+
+
+@app.post("/api/today/start", status_code=status.HTTP_201_CREATED, response_model=None)
+async def start_today(request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("POST", "/today/start", current_user_id, json=await read_json(request)))
+
+
 @app.get("/api/domains", response_model=None)
 async def list_domains(current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
     return passthrough_json(await checkpoint_request("GET", "/domains", current_user_id))

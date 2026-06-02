@@ -1,12 +1,15 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
-from .models import Checkpoint, Domain, Mission, ParkingItem
+from .models import Checkpoint, Domain, Mission, ParkingItem, RewardEvent, StateLog
 from .schemas import (
     CheckpointCreate,
     CheckpointOut,
+    DirectorOut,
     DomainCreate,
     DomainOut,
     DomainUpdate,
@@ -16,11 +19,18 @@ from .schemas import (
     ParkingItemCreate,
     ParkingItemOut,
     ParkingItemUpdate,
+    RewardEventOut,
+    StateLogCreate,
+    StateLogOut,
+    TodayStartCreate,
     TodayOut,
 )
 
 
 app = FastAPI(title="Checkpoint Domain Service")
+
+ENTRY_MOVE_FALLBACK = "Open the work surface and stay with it for two minutes."
+RECOVERY_AFTER = timedelta(hours=24)
 
 
 @app.on_event("startup")
@@ -37,6 +47,122 @@ def require_mission(db: Session, current_user_id: str, mission_id: str) -> Missi
     if mission is None or mission.user_id != current_user_id:
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def ensure_aware(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
+def latest_state(db: Session, current_user_id: str) -> StateLog | None:
+    return db.scalar(
+        select(StateLog)
+        .where(StateLog.user_id == current_user_id)
+        .order_by(StateLog.created_at.desc())
+    )
+
+
+def latest_reward(db: Session, current_user_id: str, mission_id: str | None = None) -> RewardEvent | None:
+    stmt = select(RewardEvent).where(RewardEvent.user_id == current_user_id)
+    if mission_id is not None:
+        stmt = stmt.where(RewardEvent.mission_id == mission_id)
+    return db.scalar(stmt.order_by(RewardEvent.created_at.desc()))
+
+
+def recovery_due_for(primary: Mission | None, last_checkpoint: Checkpoint | None, latest_mission_reward: RewardEvent | None) -> bool:
+    if primary is None:
+        return False
+    activity_dates = [
+        ensure_aware(last_checkpoint.created_at) if last_checkpoint else None,
+        ensure_aware(latest_mission_reward.created_at) if latest_mission_reward else None,
+    ]
+    last_activity = max((date for date in activity_dates if date is not None), default=None)
+    if last_activity is None:
+        return False
+    return utc_now() - last_activity > RECOVERY_AFTER
+
+
+def entry_move_for(primary: Mission | None, last_checkpoint: Checkpoint | None) -> str:
+    if last_checkpoint and last_checkpoint.next_action.strip():
+        return last_checkpoint.next_action.strip()
+    if primary and primary.next_action.strip():
+        return primary.next_action.strip()
+    return ENTRY_MOVE_FALLBACK
+
+
+def reward_message(kind: str, state: str | None = None) -> str:
+    if kind == "returned_after_gap":
+        return "Return counts. Resilience restored."
+    if kind == "checkpoint_saved":
+        return "Checkpoint saved. Future you has a handle."
+    if state in {"Avoiding", "Overwhelmed"}:
+        return "You broke avoidance. Momentum restored."
+    if state == "Locked in":
+        return "Motion started. Keep the lane clear."
+    return "You crossed the start line. Momentum restored."
+
+
+def director_for(
+    db: Session,
+    current_user_id: str,
+    primary: Mission | None,
+    last_checkpoint: Checkpoint | None,
+) -> DirectorOut | None:
+    if primary is None:
+        return None
+    state = latest_state(db, current_user_id)
+    mission_reward = latest_reward(db, current_user_id, primary.id)
+    recovery_due = recovery_due_for(primary, last_checkpoint, mission_reward)
+    current_state = state.state if state else None
+    if recovery_due or current_state == "Recovering":
+        recommended_mode = "recovery"
+        hint = reward_message("returned_after_gap", current_state)
+    elif current_state in {"Avoiding", "Overwhelmed"}:
+        recommended_mode = "low_state"
+        hint = reward_message("started", current_state)
+    elif current_state == "Locked in":
+        recommended_mode = "locked_in"
+        hint = reward_message("resumed", current_state)
+    elif current_state == "Warming up":
+        recommended_mode = "warming_up"
+        hint = reward_message("started", current_state)
+    else:
+        recommended_mode = "check_in"
+        hint = "Pick your state. The app will shrink the first move."
+    return DirectorOut(
+        current_state=current_state,
+        recovery_due=recovery_due,
+        entry_move=entry_move_for(primary, last_checkpoint),
+        fallback_move="Make it smaller: open the work surface and touch only the first visible step.",
+        reward_hint=hint,
+        recommended_mode=recommended_mode,
+        latest_reward=mission_reward,
+    )
+
+
+def create_reward(
+    db: Session,
+    current_user_id: str,
+    *,
+    kind: str,
+    mission_id: str | None,
+    message: str | None = None,
+) -> RewardEvent:
+    reward = RewardEvent(
+        user_id=current_user_id,
+        mission_id=mission_id,
+        kind=kind,
+        message=message or reward_message(kind),
+    )
+    db.add(reward)
+    return reward
 
 
 @app.get("/health")
@@ -67,7 +193,55 @@ def get_today(current_user_id: str = Depends(user_id), db: Session = Depends(get
         last_checkpoint=last_checkpoint,
         active_count=len(active_missions),
         parking_count=parking_count + parked_missions,
+        director=director_for(db, current_user_id, primary, last_checkpoint),
     )
+
+
+@app.post("/today/state", response_model=StateLogOut, status_code=status.HTTP_201_CREATED)
+def create_state_log(
+    payload: StateLogCreate,
+    current_user_id: str = Depends(user_id),
+    db: Session = Depends(get_db),
+) -> StateLogOut:
+    state_log = StateLog(user_id=current_user_id, state=payload.state)
+    db.add(state_log)
+    db.commit()
+    db.refresh(state_log)
+    return state_log
+
+
+@app.post("/today/start", response_model=RewardEventOut, status_code=status.HTTP_201_CREATED)
+def start_today(
+    payload: TodayStartCreate,
+    current_user_id: str = Depends(user_id),
+    db: Session = Depends(get_db),
+) -> RewardEventOut:
+    mission = require_mission(db, current_user_id, payload.mission_id)
+    last_checkpoint = db.scalar(
+        select(Checkpoint)
+        .where(Checkpoint.user_id == current_user_id, Checkpoint.mission_id == mission.id)
+        .order_by(Checkpoint.created_at.desc())
+    )
+    mission_reward = latest_reward(db, current_user_id, mission.id)
+    is_recovery = payload.state == "Recovering" or recovery_due_for(mission, last_checkpoint, mission_reward)
+    if is_recovery:
+        kind = "returned_after_gap"
+    elif last_checkpoint or mission_reward:
+        kind = "resumed"
+    else:
+        kind = "started"
+    state_log = StateLog(user_id=current_user_id, state=payload.state)
+    db.add(state_log)
+    reward = create_reward(
+        db,
+        current_user_id,
+        kind=kind,
+        mission_id=mission.id,
+        message=reward_message(kind, payload.state),
+    )
+    db.commit()
+    db.refresh(reward)
+    return reward
 
 
 @app.get("/domains", response_model=list[DomainOut])
@@ -283,6 +457,13 @@ def create_checkpoint(
     mission.do_not_rethink = payload.do_not_rethink
     mission.reentry_note = payload.where_stopped or mission.reentry_note
     db.add(checkpoint)
+    create_reward(
+        db,
+        current_user_id,
+        kind="checkpoint_saved",
+        mission_id=mission_id,
+        message=reward_message("checkpoint_saved"),
+    )
     db.commit()
     db.refresh(checkpoint)
     return checkpoint

@@ -92,6 +92,46 @@ class CheckpointOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class StateLogCreate(BaseModel):
+    state: str = Field(pattern="^(Avoiding|Overwhelmed|Warming up|Locked in|Recovering)$")
+
+
+class StateLogOut(BaseModel):
+    id: str
+    user_id: str
+    state: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TodayStartCreate(BaseModel):
+    mission_id: str
+    state: str = Field(pattern="^(Avoiding|Overwhelmed|Warming up|Locked in|Recovering)$")
+    action_text: str = Field(min_length=1)
+
+
+class RewardEventOut(BaseModel):
+    id: str
+    user_id: str
+    mission_id: str | None
+    kind: str
+    message: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DirectorOut(BaseModel):
+    current_state: str | None
+    recovery_due: bool
+    entry_move: str
+    fallback_move: str
+    reward_hint: str
+    recommended_mode: str
+    latest_reward: RewardEventOut | None = None
+
+
 class ParkingItemCreate(BaseModel):
     title: str = Field(min_length=1, max_length=240)
     note: str = ""
@@ -117,3 +157,4 @@ class TodayOut(BaseModel):
     last_checkpoint: CheckpointOut | None
     active_count: int
     parking_count: int
+    director: DirectorOut | None = None

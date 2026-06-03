@@ -6,7 +6,7 @@ import { MissionCreateForm } from "../components/MissionCreateForm";
 import { QuietField } from "../components/QuietField";
 import { RitualSteps } from "../components/RitualSteps";
 import { ApiError, api } from "../lib/api";
-import type { DirectorState, RewardEvent, TodayPayload } from "../lib/types";
+import type { DirectorState, RewardEvent, TodayPayload, WorkSession } from "../lib/types";
 
 const STATE_OPTIONS: { value: DirectorState; note: string }[] = [
   { value: "Avoiding", note: "The task feels radioactive." },
@@ -30,6 +30,7 @@ export function TodayPage() {
   const [stateSubmitting, setStateSubmitting] = useState<DirectorState | null>(null);
   const [starting, setStarting] = useState(false);
   const [reward, setReward] = useState<RewardEvent | null>(null);
+  const [activeSession, setActiveSession] = useState<WorkSession | null>(null);
   const [entryOverride, setEntryOverride] = useState("");
   const navigate = useNavigate();
 
@@ -57,6 +58,16 @@ export function TodayPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!activeSession) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void api.heartbeatToday({ mission_id: activeSession.mission_id }).then(setActiveSession).catch(() => {});
+    }, 60_000);
+    return () => window.clearInterval(timer);
+  }, [activeSession]);
+
   if (loading) {
     return <div className="page-shell">Loading Today</div>;
   }
@@ -72,6 +83,8 @@ export function TodayPage() {
   }
 
   const director = today?.director ?? null;
+  const recommendedMicro = director?.recommended_micro_mission ?? null;
+  const session = activeSession ?? director?.active_session ?? null;
   const lastCheckpointText =
     today.last_checkpoint?.where_stopped ||
     today.last_checkpoint?.changed ||
@@ -82,6 +95,7 @@ export function TodayPage() {
   const entryMove = entryOverride || director?.entry_move || nextAction;
   const fallbackMove = director?.fallback_move || "Make it smaller: open the work surface and touch only the first visible step.";
   const doNotRethink = mission.do_not_rethink || today.last_checkpoint?.do_not_rethink || "Keep the decision small today.";
+  const startMissionId = recommendedMicro?.id ?? mission.id;
 
   async function chooseState(state: DirectorState) {
     setError("");
@@ -92,6 +106,7 @@ export function TodayPage() {
       setShowMore(false);
       setReward(null);
       setEntryOverride("");
+      setActiveSession(director?.active_session ?? null);
       setResumeStep(1);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save state");
@@ -108,11 +123,12 @@ export function TodayPage() {
     setStarting(true);
     try {
       const event = await api.startToday({
-        mission_id: mission.id,
+        mission_id: startMissionId,
         state: selectedState,
         action_text: entryMove,
       });
       setReward(event);
+      setActiveSession(event.session ?? null);
       setResumeStep(2);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not start");
@@ -136,6 +152,7 @@ export function TodayPage() {
             <h2>What state are you in?</h2>
             <p>{director?.recovery_due ? "A gap is detected, so Recovering is ready." : "Today will shrink itself around this."}</p>
           </div>
+          {director && <MomentumStrip momentum={director.momentum} resilience={director.resilience} />}
           <div className="state-options">
             {STATE_OPTIONS.map((option) => (
               <button
@@ -170,10 +187,13 @@ export function TodayPage() {
 
         <section className="ritual-panel director-panel" aria-label="Director today">
           <div className="entry-move-block">
-            <p>2-minute entry move</p>
+            <p>{recommendedMicro ? `${recommendedMicro.est_minutes}-minute tiny move` : "2-minute entry move"}</p>
             <h2>{entryMove}</h2>
+            {recommendedMicro && <small>From {mission.title}</small>}
           </div>
 
+          {director && <MomentumStrip momentum={director.momentum} resilience={director.resilience} />}
+          {session && <p className="session-note">Session active. Checkpointing will save the stop point.</p>}
           {reward && (
             <p className="reward-moment" role="status">
               <CheckCircle2 size={20} />
@@ -237,9 +257,12 @@ export function TodayPage() {
 
         <section className="ritual-panel director-panel" aria-label="Warm start">
           <div className="entry-move-block">
-            <p>First move</p>
+            <p>{recommendedMicro ? `${recommendedMicro.est_minutes}-minute tiny move` : "First move"}</p>
             <h2>{entryMove}</h2>
+            {recommendedMicro && <small>From {mission.title}</small>}
           </div>
+          {director && <MomentumStrip momentum={director.momentum} resilience={director.resilience} />}
+          {session && <p className="session-note">Session active. Checkpointing will save the stop point.</p>}
           {reward && (
             <p className="reward-moment" role="status">
               <CheckCircle2 size={20} />
@@ -303,10 +326,17 @@ export function TodayPage() {
         <QuietField icon={<ArrowRight size={24} />} label="Next physical action" accent>
           {entryMove}
         </QuietField>
+        {recommendedMicro && (
+          <QuietField icon={<Minimize2 size={22} />} label="Tiny move">
+            {recommendedMicro.title}
+          </QuietField>
+        )}
         <QuietField icon={<ShieldCheck size={23} />} label="Do not rethink">
           {doNotRethink}
         </QuietField>
 
+        {director && <MomentumStrip momentum={director.momentum} resilience={director.resilience} />}
+        {session && <p className="session-note">Session active. Checkpointing will save the stop point.</p>}
         {reward && (
           <p className="reward-moment" role="status">
             <CheckCircle2 size={20} />
@@ -365,6 +395,15 @@ export function TodayPage() {
           </dl>
         </section>
       )}
+    </div>
+  );
+}
+
+function MomentumStrip({ momentum, resilience }: { momentum: number; resilience: number }) {
+  return (
+    <div className="momentum-strip" aria-label="Momentum signal">
+      <span>Momentum {momentum}</span>
+      <span>Resilience {resilience}</span>
     </div>
   );
 }

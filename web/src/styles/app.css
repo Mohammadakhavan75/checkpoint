@@ -615,6 +615,38 @@ a {
   overflow-wrap: anywhere;
 }
 
+.entry-move-block small {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.momentum-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.momentum-strip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-quiet);
+  color: var(--text-muted-3);
+  padding: 0 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.session-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .reward-moment {
   display: inline-flex;
   width: fit-content;
@@ -833,6 +865,56 @@ a:focus-visible {
 
 .checkpoint-form .mission-title-block {
   margin-bottom: 4px;
+}
+
+.tiny-moves-panel {
+  margin-top: 26px;
+  padding: 24px;
+}
+
+.tiny-move-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(170px, auto);
+  gap: 14px;
+  align-items: end;
+}
+
+.tiny-move-list {
+  display: grid;
+  gap: 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.tiny-move-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line-soft);
+  padding: 14px 0;
+}
+
+.tiny-move-row strong {
+  display: block;
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+.tiny-move-row p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.tiny-move-row-completed {
+  opacity: 0.68;
+}
+
+.tiny-complete-label {
+  color: var(--green);
+  font-size: 0.9rem;
+  font-weight: 760;
 }
 
 .life-index-page {
@@ -1595,6 +1677,7 @@ select {
   .ritual-actions,
   .director-actions,
   .director-actions-two,
+  .tiny-move-form,
   .form-grid,
   .index-grid,
   .snapshot-grid {
@@ -1635,6 +1718,11 @@ select {
   }
 
   .below-ritual {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tiny-move-row {
     align-items: stretch;
     flex-direction: column;
   }

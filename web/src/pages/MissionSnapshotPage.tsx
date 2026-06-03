@@ -1,6 +1,6 @@
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { ApiError, api } from "../lib/api";
@@ -152,17 +152,23 @@ function CheckpointRow({ checkpoint }: { checkpoint: Checkpoint }) {
 export function MissionSnapshotPage() {
   const { missionId } = useParams<{ missionId: string }>();
   const [mission, setMission] = useState<Mission | null>(null);
+  const [microMissions, setMicroMissions] = useState<Mission[]>([]);
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tinyTitle, setTinyTitle] = useState("");
+  const [tinyAction, setTinyAction] = useState("");
+  const [tinyError, setTinyError] = useState("");
+  const [creatingTiny, setCreatingTiny] = useState(false);
 
   useEffect(() => {
     if (!missionId) return;
     setLoading(true);
-    Promise.all([api.mission(missionId), api.checkpoints(missionId), api.domains()])
-      .then(([m, cp, d]) => {
+    Promise.all([api.mission(missionId), api.microMissions(missionId), api.checkpoints(missionId), api.domains()])
+      .then(([m, tiny, cp, d]) => {
         setMission(m);
+        setMicroMissions(tiny);
         setCheckpoints([...cp].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setDomains(d);
       })
@@ -174,6 +180,41 @@ export function MissionSnapshotPage() {
     if (!missionId) return;
     const updated = await api.updateMission(missionId, { [key]: value });
     setMission(updated);
+  }
+
+  async function createTinyMove(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!missionId || !tinyTitle.trim()) return;
+    setTinyError("");
+    setCreatingTiny(true);
+    try {
+      const created = await api.createMicroMission(missionId, {
+        title: tinyTitle,
+        next_action: tinyAction,
+        activation_energy: "low",
+        cognitive_load: "low",
+        emotional_resistance: "low",
+        est_minutes: 2,
+        reward_type: "momentum",
+      });
+      setMicroMissions((items) => [created, ...items]);
+      setTinyTitle("");
+      setTinyAction("");
+    } catch (err) {
+      setTinyError(err instanceof ApiError ? err.message : "Could not create tiny move");
+    } finally {
+      setCreatingTiny(false);
+    }
+  }
+
+  async function completeTinyMove(microMission: Mission) {
+    setTinyError("");
+    try {
+      await api.completeMission(microMission.id, "Tiny move completed");
+      setMicroMissions((items) => items.map((item) => (item.id === microMission.id ? { ...item, status: "completed" } : item)));
+    } catch (err) {
+      setTinyError(err instanceof ApiError ? err.message : "Could not complete tiny move");
+    }
   }
 
   if (loading) return <div className="page-shell">Loading</div>;
@@ -224,6 +265,48 @@ export function MissionSnapshotPage() {
           ))}
         </div>
       </section>
+
+      {mission.parent_id === null && (
+        <section className="simple-panel tiny-moves-panel">
+          <h2>Tiny moves</h2>
+          <form className="tiny-move-form" onSubmit={createTinyMove}>
+            <label>
+              Tiny move
+              <input value={tinyTitle} onChange={(event) => setTinyTitle(event.target.value)} placeholder="Open notes.md for two minutes" required />
+            </label>
+            <label>
+              Action
+              <input value={tinyAction} onChange={(event) => setTinyAction(event.target.value)} placeholder="Touch only the first visible step" />
+            </label>
+            <button className="secondary-button" type="submit" disabled={creatingTiny}>
+              <Plus size={18} />
+              {creatingTiny ? "Creating" : "Create tiny move"}
+            </button>
+          </form>
+          {tinyError && <p className="form-error">{tinyError}</p>}
+          <div className="tiny-move-list">
+            {microMissions.length === 0 && <p className="muted">No tiny moves yet.</p>}
+            {microMissions.map((microMission) => (
+              <div className={`tiny-move-row ${microMission.status === "completed" ? "tiny-move-row-completed" : ""}`} key={microMission.id}>
+                <div>
+                  <strong>{microMission.title}</strong>
+                  <p>
+                    {microMission.next_action || "No action set."} · {microMission.est_minutes} min
+                  </p>
+                </div>
+                {microMission.status === "completed" ? (
+                  <span className="tiny-complete-label">Complete</span>
+                ) : (
+                  <button className="small-button" type="button" onClick={() => void completeTinyMove(microMission)}>
+                    <CheckCircle2 size={16} />
+                    Complete
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="simple-panel snapshot-history-panel">
         <h2>Checkpoint history</h2>

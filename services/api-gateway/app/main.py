@@ -209,6 +209,11 @@ async def start_today(request: Request, current_user_id: str = Depends(user_id_f
     return passthrough_json(await checkpoint_request("POST", "/today/start", current_user_id, json=await read_json(request)))
 
 
+@app.post("/api/today/heartbeat", response_model=None)
+async def heartbeat_today(request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("POST", "/today/heartbeat", current_user_id, json=await read_json(request)))
+
+
 @app.get("/api/domains", response_model=None)
 async def list_domains(current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
     return passthrough_json(await checkpoint_request("GET", "/domains", current_user_id))
@@ -238,6 +243,11 @@ async def create_mission(request: Request, current_user_id: str = Depends(user_i
     )
 
 
+@app.get("/api/missions/{mission_id}", response_model=None)
+async def get_mission(mission_id: str, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("GET", f"/missions/{mission_id}", current_user_id))
+
+
 @app.patch("/api/missions/{mission_id}", response_model=None)
 async def update_mission(mission_id: str, request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
     return passthrough_json(await checkpoint_request("PATCH", f"/missions/{mission_id}", current_user_id, json=await read_json(request)))
@@ -255,6 +265,21 @@ async def activate_mission(mission_id: str, current_user_id: str = Depends(user_
 @app.post("/api/missions/{mission_id}/park", response_model=None)
 async def park_mission(mission_id: str, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
     return passthrough_json(await checkpoint_request("POST", f"/missions/{mission_id}/park", current_user_id))
+
+
+@app.get("/api/missions/{mission_id}/micro-missions", response_model=None)
+async def list_micro_missions(mission_id: str, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("GET", f"/missions/{mission_id}/micro-missions", current_user_id))
+
+
+@app.post("/api/missions/{mission_id}/micro-missions", status_code=status.HTTP_201_CREATED, response_model=None)
+async def create_micro_mission(mission_id: str, request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("POST", f"/missions/{mission_id}/micro-missions", current_user_id, json=await read_json(request)))
+
+
+@app.post("/api/missions/{mission_id}/complete", status_code=status.HTTP_201_CREATED, response_model=None)
+async def complete_mission(mission_id: str, request: Request, current_user_id: str = Depends(user_id_from_request)) -> JSONResponse:
+    return passthrough_json(await checkpoint_request("POST", f"/missions/{mission_id}/complete", current_user_id, json=await read_json(request)))
 
 
 @app.get("/api/missions/{mission_id}/checkpoints", response_model=None)

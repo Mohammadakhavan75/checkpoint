@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../lib/api";
-import type { ParkingItem } from "../lib/types";
+import type { Mission, ParkingItem } from "../lib/types";
 import { LifeIndexPage } from "./LifeIndexPage";
 
 vi.mock("../lib/api", () => ({
@@ -29,6 +29,37 @@ const parkingItem: ParkingItem = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
+
+function missionFixture(overrides: Partial<Mission> = {}): Mission {
+  const now = new Date().toISOString();
+  return {
+    id: "mission-1",
+    domain_id: null,
+    parent_id: null,
+    title: "Top level mission",
+    status: "active",
+    active_rank: 1,
+    mission_kind: "standard",
+    activation_energy: "medium",
+    cognitive_load: "medium",
+    emotional_resistance: "medium",
+    novelty: "medium",
+    est_minutes: 15,
+    reward_type: "momentum",
+    why_matters: "",
+    success_condition: "",
+    current_state: "",
+    last_decision: "",
+    blockers: "",
+    files_links: "",
+    reentry_note: "",
+    next_action: "Open the top-level work",
+    do_not_rethink: "",
+    created_at: now,
+    updated_at: now,
+    ...overrides,
+  };
+}
 
 function renderPage() {
   return render(
@@ -63,5 +94,16 @@ describe("LifeIndexPage", () => {
     renderPage();
 
     expect(await screen.findByText(/Nothing active yet/)).toBeInTheDocument();
+  });
+
+  it("does not show child micro-missions in the main index", async () => {
+    vi.mocked(api.missions).mockResolvedValue([
+      missionFixture(),
+      missionFixture({ id: "micro-1", parent_id: "mission-1", title: "Tiny child move", active_rank: null, est_minutes: 2 }),
+    ]);
+    renderPage();
+
+    expect(await screen.findByText("Top level mission")).toBeInTheDocument();
+    expect(screen.queryByText("Tiny child move")).not.toBeInTheDocument();
   });
 });

@@ -12,9 +12,17 @@ export type Preferences = {
 export type Mission = {
   id: string;
   domain_id: string | null;
+  parent_id: string | null;
   title: string;
   status: "active" | "parked" | "completed";
   active_rank: number | null;
+  mission_kind: "exploration" | "momentum" | "boss" | "recovery" | "maintenance" | "standard";
+  activation_energy: "low" | "medium" | "high";
+  cognitive_load: "low" | "medium" | "high";
+  emotional_resistance: "low" | "medium" | "high";
+  novelty: "low" | "medium" | "high";
+  est_minutes: number;
+  reward_type: "momentum" | "clarity" | "resilience" | "stability" | "exploration" | "courage";
   why_matters: string;
   success_condition: string;
   current_state: string;
@@ -60,9 +68,27 @@ export type RewardEvent = {
   id: string;
   user_id: string;
   mission_id: string | null;
-  kind: "started" | "resumed" | "returned_after_gap" | "checkpoint_saved" | string;
+  kind: "started" | "resumed" | "returned_after_gap" | "checkpoint_saved" | "completed" | string;
   message: string;
+  momentum_delta: number;
+  clarity_delta: number;
+  resilience_delta: number;
+  reason: string;
   created_at: string;
+};
+
+export type WorkSession = {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  started_at: string;
+  last_heartbeat_at: string;
+  ended_at: string | null;
+  end_kind: string | null;
+};
+
+export type TodayStartResponse = RewardEvent & {
+  session?: WorkSession | null;
 };
 
 export type DirectorPayload = {
@@ -73,6 +99,11 @@ export type DirectorPayload = {
   reward_hint: string;
   recommended_mode: "check_in" | "low_state" | "warming_up" | "locked_in" | "recovery" | string;
   latest_reward: RewardEvent | null;
+  momentum: number;
+  resilience: number;
+  recommended_micro_mission: Mission | null;
+  active_session: WorkSession | null;
+  session_stale: boolean;
 };
 
 export type TodayPayload = {

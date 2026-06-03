@@ -1,4 +1,4 @@
-import type { Checkpoint, DirectorState, Domain, Mission, ParkingItem, Preferences, RewardEvent, TodayPayload, User } from "./types";
+import type { Checkpoint, DirectorState, Domain, Mission, ParkingItem, Preferences, RewardEvent, TodayPayload, TodayStartResponse, User, WorkSession } from "./types";
 
 const DOMAIN_NAME = import.meta.env.VITE_DOMAIN_NAME || "infiniteai.space";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://api.${DOMAIN_NAME}:8000`;
@@ -43,6 +43,20 @@ export type AuthPayload = {
   preferences: Preferences;
 };
 
+type MissionListOptions = {
+  includeChildren?: boolean;
+  parentId?: string;
+};
+
+function missionListPath(status?: Mission["status"], options: MissionListOptions = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (options.includeChildren) params.set("include_children", "true");
+  if (options.parentId) params.set("parent_id", options.parentId);
+  const query = params.toString();
+  return query ? `/api/missions?${query}` : "/api/missions";
+}
+
 export const api = {
   signup: (email: string, password: string) => request<AuthPayload>("/api/auth/signup", { method: "POST", json: { email, password } }),
   login: (email: string, password: string) => request<AuthPayload>("/api/auth/login", { method: "POST", json: { email, password } }),
@@ -53,13 +67,14 @@ export const api = {
   today: () => request<TodayPayload>("/api/today"),
   setTodayState: (state: DirectorState) => request<{ state: DirectorState }>("/api/today/state", { method: "POST", json: { state } }),
   startToday: (payload: { mission_id: string; state: DirectorState; action_text: string }) =>
-    request<RewardEvent>("/api/today/start", { method: "POST", json: payload }),
+    request<TodayStartResponse>("/api/today/start", { method: "POST", json: payload }),
+  heartbeatToday: (payload: { mission_id?: string }) => request<WorkSession>("/api/today/heartbeat", { method: "POST", json: payload }),
   domains: () => request<Domain[]>("/api/domains"),
   createDomain: (name: string) => request<Domain>("/api/domains", { method: "POST", json: { name } }),
   updateDomain: (id: string, name: string) => request<Domain>(`/api/domains/${id}`, { method: "PATCH", json: { name } }),
   deleteDomain: (id: string) => request<void>(`/api/domains/${id}`, { method: "DELETE" }),
   mission: (id: string) => request<Mission>(`/api/missions/${id}`),
-  missions: (status?: Mission["status"]) => request<Mission[]>(status ? `/api/missions?status=${status}` : "/api/missions"),
+  missions: (status?: Mission["status"], options?: MissionListOptions) => request<Mission[]>(missionListPath(status, options)),
   createMission: (payload: Partial<Mission> & Pick<Mission, "title">) => request<Mission>("/api/missions", { method: "POST", json: payload }),
   updateMission: (id: string, payload: Partial<Mission>) => request<Mission>(`/api/missions/${id}`, { method: "PATCH", json: payload }),
   activateMission: (id: string) => request<Mission>(`/api/missions/${id}/activate`, { method: "POST" }),
@@ -67,6 +82,11 @@ export const api = {
   demoteMission: (id: string) => request<Mission>(`/api/missions/${id}/demote`, { method: "POST" }),
   parkMission: (id: string) => request<Mission>(`/api/missions/${id}/park`, { method: "POST" }),
   deleteMission: (id: string) => request<void>(`/api/missions/${id}`, { method: "DELETE" }),
+  microMissions: (missionId: string) => request<Mission[]>(`/api/missions/${missionId}/micro-missions`),
+  createMicroMission: (missionId: string, payload: Partial<Mission> & Pick<Mission, "title">) =>
+    request<Mission>(`/api/missions/${missionId}/micro-missions`, { method: "POST", json: payload }),
+  completeMission: (missionId: string, completion_note = "") =>
+    request<RewardEvent>(`/api/missions/${missionId}/complete`, { method: "POST", json: { completion_note } }),
   checkpoints: (missionId: string) => request<Checkpoint[]>(`/api/missions/${missionId}/checkpoints`),
   createCheckpoint: (missionId: string, payload: Pick<Checkpoint, "changed" | "decision" | "where_stopped" | "next_action" | "do_not_rethink">) =>
     request<Checkpoint>(`/api/missions/${missionId}/checkpoints`, { method: "POST", json: payload }),

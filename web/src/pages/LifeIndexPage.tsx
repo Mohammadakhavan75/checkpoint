@@ -34,15 +34,16 @@ export function LifeIndexPage() {
     void load();
   }, []);
 
-  const primary = useMemo(() => missions.find((m) => m.status === "active" && m.active_rank === 1) ?? null, [missions]);
+  const topLevelMissions = useMemo(() => missions.filter((m) => m.parent_id === null), [missions]);
+  const primary = useMemo(() => topLevelMissions.find((m) => m.status === "active" && m.active_rank === 1) ?? null, [topLevelMissions]);
   const secondary = useMemo(
     () =>
-      missions
+      topLevelMissions
         .filter((m) => m.status === "active" && m.active_rank !== 1)
         .sort((a, b) => (a.active_rank ?? 99) - (b.active_rank ?? 99)),
-    [missions],
+    [topLevelMissions],
   );
-  const parked = useMemo(() => missions.filter((m) => m.status === "parked"), [missions]);
+  const parked = useMemo(() => topLevelMissions.filter((m) => m.status === "parked"), [topLevelMissions]);
   const parkingCount = parked.length + parkingItems.length;
 
   // Group secondary by domain for M5 layout
@@ -59,11 +60,11 @@ export function LifeIndexPage() {
 
   // Domains overview: each domain + its active mission count
   const domainStats = useMemo(() => {
-    const active = missions.filter((m) => m.status === "active");
+    const active = topLevelMissions.filter((m) => m.status === "active");
     return domains
       .map((d) => ({ domain: d, count: active.filter((m) => m.domain_id === d.id).length }))
       .filter((s) => s.count > 0);
-  }, [domains, missions]);
+  }, [domains, topLevelMissions]);
 
   async function activate(id: string) {
     setError("");
@@ -256,4 +257,3 @@ export function LifeIndexPage() {
     </div>
   );
 }
-

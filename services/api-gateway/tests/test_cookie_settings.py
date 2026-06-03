@@ -153,3 +153,56 @@ def test_today_start_requires_auth_and_forwards_user(monkeypatch) -> None:
             "params": None,
         }
     ]
+
+
+def test_v2_routes_require_auth_and_forward_user(monkeypatch) -> None:
+    gateway = load_gateway(monkeypatch)
+    calls = []
+
+    class FakeResponse:
+        text = ""
+
+        def __init__(self, status_code: int, payload: dict | list):
+            self.status_code = status_code
+            self.payload = payload
+
+        def json(self):
+            return self.payload
+
+    async def fake_checkpoint_request(method, path, user_id, *, json=None, params=None):
+        calls.append({"method": method, "path": path, "user_id": user_id, "json": json, "params": params})
+        return FakeResponse(201 if method == "POST" else 200, {"ok": True} if method == "POST" else [])
+
+    monkeypatch.setattr(gateway, "decode_access_token", lambda token: {"sub": "gateway-user"})
+    monkeypatch.setattr(gateway, "checkpoint_request", fake_checkpoint_request)
+    client = TestClient(gateway.app)
+
+    routes = [
+        ("POST", "/api/today/heartbeat", {"mission_id": "mission-1"}, "/today/heartbeat"),
+        ("GET", "/api/missions/mission-1", None, "/missions/mission-1"),
+        ("GET", "/api/missions/mission-1/micro-missions", None, "/missions/mission-1/micro-missions"),
+        ("POST", "/api/missions/mission-1/micro-missions", {"title": "Tiny move"}, "/missions/mission-1/micro-missions"),
+        ("POST", "/api/missions/mission-1/complete", {"completion_note": "Done"}, "/missions/mission-1/complete"),
+    ]
+
+    for method, public_path, payload, _upstream_path in routes:
+        if method == "GET":
+            response = client.get(public_path)
+        else:
+            response = client.post(public_path, json=payload)
+        assert response.status_code == 401
+    assert calls == []
+
+    for method, public_path, payload, upstream_path in routes:
+        if method == "GET":
+            response = client.get(public_path, cookies={"access_token": "valid"})
+        else:
+            response = client.post(public_path, cookies={"access_token": "valid"}, json=payload)
+        assert response.status_code in {200, 201}
+        assert calls[-1] == {
+            "method": method,
+            "path": upstream_path,
+            "user_id": "gateway-user",
+            "json": payload,
+            "params": None,
+        }

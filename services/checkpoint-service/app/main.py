@@ -1,18 +1,20 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
-from .models import Checkpoint, Domain, Mission, ParkingItem, RewardEvent, StateLog
+from .models import Checkpoint, Domain, Mission, ParkingItem, RewardEvent, StateLog, WorkSession
 from .schemas import (
     CheckpointCreate,
     CheckpointOut,
+    CompleteMissionCreate,
     DirectorOut,
     DomainCreate,
     DomainOut,
     DomainUpdate,
+    MicroMissionCreate,
     MissionCreate,
     MissionOut,
     MissionUpdate,
@@ -22,8 +24,11 @@ from .schemas import (
     RewardEventOut,
     StateLogCreate,
     StateLogOut,
+    TodayHeartbeatCreate,
     TodayStartCreate,
+    TodayStartOut,
     TodayOut,
+    WorkSessionOut,
 )
 
 
@@ -32,10 +37,47 @@ app = FastAPI(title="Checkpoint Domain Service")
 ENTRY_MOVE_FALLBACK = "Open the work surface and stay with it for two minutes."
 RECOVERY_AFTER = timedelta(hours=24)
 
+SCHEMA_COLUMN_MIGRATIONS = {
+    "missions": [
+        ("parent_id", "VARCHAR(36)"),
+        ("mission_kind", "VARCHAR(32) NOT NULL DEFAULT 'standard'"),
+        ("activation_energy", "VARCHAR(16) NOT NULL DEFAULT 'medium'"),
+        ("cognitive_load", "VARCHAR(16) NOT NULL DEFAULT 'medium'"),
+        ("emotional_resistance", "VARCHAR(16) NOT NULL DEFAULT 'medium'"),
+        ("novelty", "VARCHAR(16) NOT NULL DEFAULT 'medium'"),
+        ("est_minutes", "INTEGER NOT NULL DEFAULT 15"),
+        ("reward_type", "VARCHAR(32) NOT NULL DEFAULT 'momentum'"),
+    ],
+    "state_logs": [
+        ("energy_focus", "INTEGER"),
+        ("energy_emotional", "INTEGER"),
+        ("novelty_hunger", "INTEGER"),
+    ],
+    "reward_events": [
+        ("momentum_delta", "INTEGER NOT NULL DEFAULT 0"),
+        ("clarity_delta", "INTEGER NOT NULL DEFAULT 0"),
+        ("resilience_delta", "INTEGER NOT NULL DEFAULT 0"),
+        ("reason", "TEXT NOT NULL DEFAULT ''"),
+    ],
+}
+
 
 @app.on_event("startup")
 def on_startup() -> None:
+    ensure_schema()
+
+
+def ensure_schema() -> None:
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as connection:
+        inspector = inspect(connection)
+        for table_name, columns in SCHEMA_COLUMN_MIGRATIONS.items():
+            if not inspector.has_table(table_name):
+                continue
+            existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
+            for column_name, ddl in columns:
+                if column_name not in existing_columns:
+                    connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}"))
 
 
 def user_id(x_user_id: str = Header(alias="X-User-Id")) -> str:
@@ -47,6 +89,12 @@ def require_mission(db: Session, current_user_id: str, mission_id: str) -> Missi
     if mission is None or mission.user_id != current_user_id:
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission
+
+
+def top_level_mission_for(mission: Mission, db: Session, current_user_id: str) -> Mission:
+    if mission.parent_id is None:
+        return mission
+    return require_mission(db, current_user_id, mission.parent_id)
 
 
 def utc_now() -> datetime:
@@ -76,12 +124,60 @@ def latest_reward(db: Session, current_user_id: str, mission_id: str | None = No
     return db.scalar(stmt.order_by(RewardEvent.created_at.desc()))
 
 
-def recovery_due_for(primary: Mission | None, last_checkpoint: Checkpoint | None, latest_mission_reward: RewardEvent | None) -> bool:
+def latest_open_session(db: Session, current_user_id: str, mission_id: str | None = None) -> WorkSession | None:
+    stmt = select(WorkSession).where(WorkSession.user_id == current_user_id, WorkSession.ended_at.is_(None))
+    if mission_id is not None:
+        stmt = stmt.where(WorkSession.mission_id == mission_id)
+    return db.scalar(stmt.order_by(WorkSession.last_heartbeat_at.desc()))
+
+
+def open_session_is_stale(session: WorkSession | None) -> bool:
+    if session is None:
+        return False
+    last_seen = ensure_aware(session.last_heartbeat_at)
+    return last_seen is not None and utc_now() - last_seen > RECOVERY_AFTER
+
+
+def reward_totals(db: Session, current_user_id: str) -> tuple[int, int]:
+    totals = db.execute(
+        select(
+            func.coalesce(func.sum(RewardEvent.momentum_delta), 0),
+            func.coalesce(func.sum(RewardEvent.resilience_delta), 0),
+        ).where(RewardEvent.user_id == current_user_id)
+    ).one()
+    return max(int(totals[0]), 0), max(int(totals[1]), 0)
+
+
+def reward_deltas(kind: str, reward_type: str | None = None) -> tuple[int, int, int]:
+    if kind == "returned_after_gap":
+        return 0, 0, 2
+    if kind == "checkpoint_saved":
+        return 0, 1, 0
+    if kind == "completed":
+        if reward_type in {"clarity", "exploration"}:
+            return 1, 2, 0
+        if reward_type == "resilience":
+            return 1, 0, 2
+        return 2, 0, 0
+    if kind in {"started", "resumed"}:
+        return 1, 0, 0
+    return 0, 0, 0
+
+
+def recovery_due_for(
+    primary: Mission | None,
+    last_checkpoint: Checkpoint | None,
+    latest_mission_reward: RewardEvent | None,
+    active_session: WorkSession | None = None,
+) -> bool:
     if primary is None:
         return False
+    if open_session_is_stale(active_session):
+        return True
     activity_dates = [
         ensure_aware(last_checkpoint.created_at) if last_checkpoint else None,
         ensure_aware(latest_mission_reward.created_at) if latest_mission_reward else None,
+        ensure_aware(active_session.last_heartbeat_at) if active_session else None,
     ]
     last_activity = max((date for date in activity_dates if date is not None), default=None)
     if last_activity is None:
@@ -89,7 +185,13 @@ def recovery_due_for(primary: Mission | None, last_checkpoint: Checkpoint | None
     return utc_now() - last_activity > RECOVERY_AFTER
 
 
-def entry_move_for(primary: Mission | None, last_checkpoint: Checkpoint | None) -> str:
+def micro_mission_entry(mission: Mission) -> str:
+    return mission.next_action.strip() or mission.title.strip() or ENTRY_MOVE_FALLBACK
+
+
+def entry_move_for(primary: Mission | None, last_checkpoint: Checkpoint | None, micro_mission: Mission | None = None) -> str:
+    if micro_mission is not None:
+        return micro_mission_entry(micro_mission)
     if last_checkpoint and last_checkpoint.next_action.strip():
         return last_checkpoint.next_action.strip()
     if primary and primary.next_action.strip():
@@ -102,11 +204,64 @@ def reward_message(kind: str, state: str | None = None) -> str:
         return "Return counts. Resilience restored."
     if kind == "checkpoint_saved":
         return "Checkpoint saved. Future you has a handle."
+    if kind == "completed":
+        return "Tiny move complete. Momentum banked."
     if state in {"Avoiding", "Overwhelmed"}:
         return "You broke avoidance. Momentum restored."
     if state == "Locked in":
         return "Motion started. Keep the lane clear."
     return "You crossed the start line. Momentum restored."
+
+
+def recommended_micro_mission_for(db: Session, current_user_id: str, primary: Mission | None, state: str | None) -> Mission | None:
+    if primary is None:
+        return None
+    candidates = list(
+        db.scalars(
+            select(Mission)
+            .where(
+                Mission.user_id == current_user_id,
+                Mission.parent_id == primary.id,
+                Mission.status != "completed",
+            )
+            .order_by(Mission.updated_at.desc())
+        ).all()
+    )
+    if not candidates:
+        return None
+    if state in {"Avoiding", "Overwhelmed", "Recovering"}:
+        low_candidates = [
+            mission
+            for mission in candidates
+            if mission.est_minutes <= 8
+            and mission.activation_energy == "low"
+            and mission.cognitive_load == "low"
+            and mission.emotional_resistance == "low"
+        ]
+        if low_candidates:
+            return sorted(low_candidates, key=lambda mission: (mission.est_minutes, mission.updated_at), reverse=False)[0]
+    return sorted(candidates, key=lambda mission: (mission.est_minutes, mission.updated_at), reverse=False)[0]
+
+
+def start_or_resume_session(db: Session, current_user_id: str, mission_id: str) -> WorkSession:
+    now = utc_now()
+    current = latest_open_session(db, current_user_id, mission_id)
+    if current is not None:
+        current.last_heartbeat_at = now
+        return current
+    for session in db.scalars(select(WorkSession).where(WorkSession.user_id == current_user_id, WorkSession.ended_at.is_(None))).all():
+        session.ended_at = now
+        session.end_kind = "switched"
+    session = WorkSession(user_id=current_user_id, mission_id=mission_id, started_at=now, last_heartbeat_at=now)
+    db.add(session)
+    return session
+
+
+def end_open_sessions(db: Session, current_user_id: str, end_kind: str) -> None:
+    now = utc_now()
+    for session in db.scalars(select(WorkSession).where(WorkSession.user_id == current_user_id, WorkSession.ended_at.is_(None))).all():
+        session.ended_at = now
+        session.end_kind = end_kind
 
 
 def director_for(
@@ -119,8 +274,11 @@ def director_for(
         return None
     state = latest_state(db, current_user_id)
     mission_reward = latest_reward(db, current_user_id, primary.id)
-    recovery_due = recovery_due_for(primary, last_checkpoint, mission_reward)
+    active_session = latest_open_session(db, current_user_id)
+    recovery_due = recovery_due_for(primary, last_checkpoint, mission_reward, active_session)
     current_state = state.state if state else None
+    micro_mission = recommended_micro_mission_for(db, current_user_id, primary, current_state)
+    momentum, resilience = reward_totals(db, current_user_id)
     if recovery_due or current_state == "Recovering":
         recommended_mode = "recovery"
         hint = reward_message("returned_after_gap", current_state)
@@ -139,11 +297,16 @@ def director_for(
     return DirectorOut(
         current_state=current_state,
         recovery_due=recovery_due,
-        entry_move=entry_move_for(primary, last_checkpoint),
+        entry_move=entry_move_for(primary, last_checkpoint, micro_mission),
         fallback_move="Make it smaller: open the work surface and touch only the first visible step.",
         reward_hint=hint,
         recommended_mode=recommended_mode,
         latest_reward=mission_reward,
+        momentum=momentum,
+        resilience=resilience,
+        recommended_micro_mission=micro_mission,
+        active_session=active_session,
+        session_stale=open_session_is_stale(active_session),
     )
 
 
@@ -154,12 +317,19 @@ def create_reward(
     kind: str,
     mission_id: str | None,
     message: str | None = None,
+    reward_type: str | None = None,
+    reason: str = "",
 ) -> RewardEvent:
+    momentum_delta, clarity_delta, resilience_delta = reward_deltas(kind, reward_type)
     reward = RewardEvent(
         user_id=current_user_id,
         mission_id=mission_id,
         kind=kind,
         message=message or reward_message(kind),
+        momentum_delta=max(momentum_delta, 0),
+        clarity_delta=max(clarity_delta, 0),
+        resilience_delta=max(resilience_delta, 0),
+        reason=reason,
     )
     db.add(reward)
     return reward
@@ -174,7 +344,7 @@ def health() -> dict[str, str]:
 def get_today(current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> TodayOut:
     active_stmt = (
         select(Mission)
-        .where(Mission.user_id == current_user_id, Mission.status == "active")
+        .where(Mission.user_id == current_user_id, Mission.status == "active", Mission.parent_id.is_(None))
         .order_by(Mission.active_rank.asc().nullslast(), Mission.updated_at.desc())
     )
     active_missions = list(db.scalars(active_stmt).all())
@@ -187,7 +357,14 @@ def get_today(current_user_id: str = Depends(user_id), db: Session = Depends(get
             .order_by(Checkpoint.created_at.desc())
         )
     parking_count = db.scalar(select(func.count()).select_from(ParkingItem).where(ParkingItem.user_id == current_user_id)) or 0
-    parked_missions = db.scalar(select(func.count()).select_from(Mission).where(Mission.user_id == current_user_id, Mission.status == "parked")) or 0
+    parked_missions = (
+        db.scalar(
+            select(func.count())
+            .select_from(Mission)
+            .where(Mission.user_id == current_user_id, Mission.status == "parked", Mission.parent_id.is_(None))
+        )
+        or 0
+    )
     return TodayOut(
         primary_mission=primary,
         last_checkpoint=last_checkpoint,
@@ -203,27 +380,34 @@ def create_state_log(
     current_user_id: str = Depends(user_id),
     db: Session = Depends(get_db),
 ) -> StateLogOut:
-    state_log = StateLog(user_id=current_user_id, state=payload.state)
+    state_log = StateLog(
+        user_id=current_user_id,
+        state=payload.state,
+        energy_focus=payload.energy_focus,
+        energy_emotional=payload.energy_emotional,
+        novelty_hunger=payload.novelty_hunger,
+    )
     db.add(state_log)
     db.commit()
     db.refresh(state_log)
     return state_log
 
 
-@app.post("/today/start", response_model=RewardEventOut, status_code=status.HTTP_201_CREATED)
+@app.post("/today/start", response_model=TodayStartOut, status_code=status.HTTP_201_CREATED)
 def start_today(
     payload: TodayStartCreate,
     current_user_id: str = Depends(user_id),
     db: Session = Depends(get_db),
-) -> RewardEventOut:
+) -> TodayStartOut:
     mission = require_mission(db, current_user_id, payload.mission_id)
+    activity_mission = top_level_mission_for(mission, db, current_user_id)
     last_checkpoint = db.scalar(
         select(Checkpoint)
-        .where(Checkpoint.user_id == current_user_id, Checkpoint.mission_id == mission.id)
+        .where(Checkpoint.user_id == current_user_id, Checkpoint.mission_id == activity_mission.id)
         .order_by(Checkpoint.created_at.desc())
     )
-    mission_reward = latest_reward(db, current_user_id, mission.id)
-    is_recovery = payload.state == "Recovering" or recovery_due_for(mission, last_checkpoint, mission_reward)
+    mission_reward = latest_reward(db, current_user_id, activity_mission.id)
+    is_recovery = payload.state == "Recovering" or recovery_due_for(activity_mission, last_checkpoint, mission_reward)
     if is_recovery:
         kind = "returned_after_gap"
     elif last_checkpoint or mission_reward:
@@ -232,16 +416,35 @@ def start_today(
         kind = "started"
     state_log = StateLog(user_id=current_user_id, state=payload.state)
     db.add(state_log)
+    session = start_or_resume_session(db, current_user_id, mission.id)
     reward = create_reward(
         db,
         current_user_id,
         kind=kind,
         mission_id=mission.id,
         message=reward_message(kind, payload.state),
+        reward_type=mission.reward_type,
+        reason=payload.action_text,
     )
     db.commit()
     db.refresh(reward)
-    return reward
+    db.refresh(session)
+    return TodayStartOut(**RewardEventOut.model_validate(reward).model_dump(), session=session)
+
+
+@app.post("/today/heartbeat", response_model=WorkSessionOut)
+def heartbeat_today(
+    payload: TodayHeartbeatCreate,
+    current_user_id: str = Depends(user_id),
+    db: Session = Depends(get_db),
+) -> WorkSessionOut:
+    session = latest_open_session(db, current_user_id, payload.mission_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="No active session")
+    session.last_heartbeat_at = utc_now()
+    db.commit()
+    db.refresh(session)
+    return session
 
 
 @app.get("/domains", response_model=list[DomainOut])
@@ -290,12 +493,18 @@ def get_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Se
 @app.get("/missions", response_model=list[MissionOut])
 def list_missions(
     status_filter: str | None = Query(default=None, alias="status"),
+    parent_id_filter: str | None = Query(default=None, alias="parent_id"),
+    include_children: bool = Query(default=False),
     current_user_id: str = Depends(user_id),
     db: Session = Depends(get_db),
 ) -> list[MissionOut]:
     stmt = select(Mission).where(Mission.user_id == current_user_id)
     if status_filter:
         stmt = stmt.where(Mission.status == status_filter)
+    if parent_id_filter is not None:
+        stmt = stmt.where(Mission.parent_id == parent_id_filter)
+    elif not include_children:
+        stmt = stmt.where(Mission.parent_id.is_(None))
     stmt = stmt.order_by(Mission.status.asc(), Mission.active_rank.asc().nullslast(), Mission.updated_at.desc())
     return list(db.scalars(stmt).all())
 
@@ -307,7 +516,7 @@ def _active_missions(db: Session, user_id_val: str) -> list[Mission]:
     return list(
         db.scalars(
             select(Mission)
-            .where(Mission.user_id == user_id_val, Mission.status == "active")
+            .where(Mission.user_id == user_id_val, Mission.status == "active", Mission.parent_id.is_(None))
             .order_by(Mission.active_rank.asc().nullslast())
         ).all()
     )
@@ -331,12 +540,18 @@ def create_mission(
 ) -> MissionOut:
     if payload.domain_id and not db.scalar(select(Domain).where(Domain.id == payload.domain_id, Domain.user_id == current_user_id)):
         raise HTTPException(status_code=404, detail="Domain not found")
+    if payload.parent_id:
+        parent = require_mission(db, current_user_id, payload.parent_id)
+        if parent.parent_id is not None:
+            raise HTTPException(status_code=409, detail="Nested micro-missions are not supported")
     mission = Mission(user_id=current_user_id, **payload.model_dump())
-    if mission.status == "active":
+    if mission.status == "active" and mission.parent_id is None:
         actives = _active_missions(db, current_user_id)
         if len(actives) >= ACTIVE_LIMIT:
             raise HTTPException(status_code=409, detail="active_set_full")
         mission.active_rank = _next_free_rank(actives)
+    if mission.parent_id is not None:
+        mission.active_rank = None
     db.add(mission)
     db.commit()
     db.refresh(mission)
@@ -350,8 +565,14 @@ def update_mission(mission_id: str, payload: MissionUpdate, current_user_id: str
     if "domain_id" in updates and updates["domain_id"]:
         if not db.scalar(select(Domain).where(Domain.id == updates["domain_id"], Domain.user_id == current_user_id)):
             raise HTTPException(status_code=404, detail="Domain not found")
+    if "parent_id" in updates and updates["parent_id"]:
+        parent = require_mission(db, current_user_id, updates["parent_id"])
+        if parent.id == mission.id or parent.parent_id is not None:
+            raise HTTPException(status_code=409, detail="Invalid parent mission")
     for key, value in updates.items():
         setattr(mission, key, value)
+    if mission.parent_id is not None:
+        mission.active_rank = None
     db.commit()
     db.refresh(mission)
     return mission
@@ -360,6 +581,12 @@ def update_mission(mission_id: str, payload: MissionUpdate, current_user_id: str
 @app.post("/missions/{mission_id}/activate", response_model=MissionOut)
 def activate_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
     mission = require_mission(db, current_user_id, mission_id)
+    if mission.parent_id is not None:
+        mission.status = "active"
+        mission.active_rank = None
+        db.commit()
+        db.refresh(mission)
+        return mission
     if mission.status != "active":
         actives = _active_missions(db, current_user_id)
         if len(actives) >= ACTIVE_LIMIT:
@@ -374,6 +601,8 @@ def activate_mission(mission_id: str, current_user_id: str = Depends(user_id), d
 @app.post("/missions/{mission_id}/promote", response_model=MissionOut)
 def promote_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
     mission = require_mission(db, current_user_id, mission_id)
+    if mission.parent_id is not None:
+        raise HTTPException(status_code=409, detail="Micro-missions cannot be primary")
     if mission.status != "active":
         raise HTTPException(status_code=409, detail="Mission is not active")
     if mission.active_rank == 1:
@@ -393,6 +622,8 @@ def promote_mission(mission_id: str, current_user_id: str = Depends(user_id), db
 @app.post("/missions/{mission_id}/demote", response_model=MissionOut)
 def demote_mission(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> MissionOut:
     mission = require_mission(db, current_user_id, mission_id)
+    if mission.parent_id is not None:
+        raise HTTPException(status_code=409, detail="Micro-missions cannot be demoted")
     if mission.status != "active":
         raise HTTPException(status_code=409, detail="Mission is not active")
     if mission.active_rank != 1:
@@ -430,6 +661,78 @@ def delete_mission(mission_id: str, current_user_id: str = Depends(user_id), db:
     db.commit()
 
 
+@app.get("/missions/{mission_id}/micro-missions", response_model=list[MissionOut])
+def list_micro_missions(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> list[MissionOut]:
+    require_mission(db, current_user_id, mission_id)
+    return list(
+        db.scalars(
+            select(Mission)
+            .where(Mission.user_id == current_user_id, Mission.parent_id == mission_id)
+            .order_by(Mission.status.asc(), Mission.est_minutes.asc(), Mission.updated_at.desc())
+        ).all()
+    )
+
+
+@app.post("/missions/{mission_id}/micro-missions", response_model=MissionOut, status_code=status.HTTP_201_CREATED)
+def create_micro_mission(
+    mission_id: str,
+    payload: MicroMissionCreate,
+    current_user_id: str = Depends(user_id),
+    db: Session = Depends(get_db),
+) -> MissionOut:
+    parent = require_mission(db, current_user_id, mission_id)
+    if parent.parent_id is not None:
+        raise HTTPException(status_code=409, detail="Nested micro-missions are not supported")
+    mission_kind = "exploration" if payload.reward_type == "exploration" else "recovery" if payload.reward_type == "resilience" else "momentum"
+    micro_mission = Mission(
+        user_id=current_user_id,
+        domain_id=parent.domain_id,
+        parent_id=parent.id,
+        title=payload.title.strip(),
+        status="active",
+        active_rank=None,
+        mission_kind=mission_kind,
+        activation_energy=payload.activation_energy,
+        cognitive_load=payload.cognitive_load,
+        emotional_resistance=payload.emotional_resistance,
+        novelty=payload.novelty,
+        est_minutes=payload.est_minutes,
+        reward_type=payload.reward_type,
+        next_action=payload.next_action.strip() or payload.title.strip(),
+        do_not_rethink=parent.do_not_rethink,
+        why_matters=parent.why_matters,
+    )
+    db.add(micro_mission)
+    db.commit()
+    db.refresh(micro_mission)
+    return micro_mission
+
+
+@app.post("/missions/{mission_id}/complete", response_model=RewardEventOut, status_code=status.HTTP_201_CREATED)
+def complete_mission(
+    mission_id: str,
+    payload: CompleteMissionCreate,
+    current_user_id: str = Depends(user_id),
+    db: Session = Depends(get_db),
+) -> RewardEventOut:
+    mission = require_mission(db, current_user_id, mission_id)
+    mission.status = "completed"
+    mission.active_rank = None
+    end_open_sessions(db, current_user_id, "completed")
+    reward = create_reward(
+        db,
+        current_user_id,
+        kind="completed",
+        mission_id=mission.id,
+        message=reward_message("completed"),
+        reward_type=mission.reward_type,
+        reason=payload.completion_note,
+    )
+    db.commit()
+    db.refresh(reward)
+    return reward
+
+
 @app.get("/missions/{mission_id}/checkpoints", response_model=list[CheckpointOut])
 def list_checkpoints(mission_id: str, current_user_id: str = Depends(user_id), db: Session = Depends(get_db)) -> list[CheckpointOut]:
     require_mission(db, current_user_id, mission_id)
@@ -463,7 +766,10 @@ def create_checkpoint(
         kind="checkpoint_saved",
         mission_id=mission_id,
         message=reward_message("checkpoint_saved"),
+        reward_type=mission.reward_type,
+        reason=payload.where_stopped or payload.changed,
     )
+    end_open_sessions(db, current_user_id, "checkpoint_saved")
     db.commit()
     db.refresh(checkpoint)
     return checkpoint

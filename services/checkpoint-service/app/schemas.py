@@ -23,7 +23,15 @@ class DomainOut(BaseModel):
 class MissionCreate(BaseModel):
     title: str = Field(min_length=1, max_length=240)
     domain_id: str | None = None
+    parent_id: str | None = None
     status: str = Field(default="parked", pattern="^(active|parked|completed)$")
+    mission_kind: str = Field(default="standard", pattern="^(exploration|momentum|boss|recovery|maintenance|standard)$")
+    activation_energy: str = Field(default="medium", pattern="^(low|medium|high)$")
+    cognitive_load: str = Field(default="medium", pattern="^(low|medium|high)$")
+    emotional_resistance: str = Field(default="medium", pattern="^(low|medium|high)$")
+    novelty: str = Field(default="medium", pattern="^(low|medium|high)$")
+    est_minutes: int = Field(default=15, ge=1, le=240)
+    reward_type: str = Field(default="momentum", pattern="^(momentum|clarity|resilience|stability|exploration|courage)$")
     why_matters: str = ""
     success_condition: str = ""
     current_state: str = ""
@@ -38,7 +46,15 @@ class MissionCreate(BaseModel):
 class MissionUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=240)
     domain_id: str | None = None
+    parent_id: str | None = None
     status: str | None = Field(default=None, pattern="^(active|parked|completed)$")
+    mission_kind: str | None = Field(default=None, pattern="^(exploration|momentum|boss|recovery|maintenance|standard)$")
+    activation_energy: str | None = Field(default=None, pattern="^(low|medium|high)$")
+    cognitive_load: str | None = Field(default=None, pattern="^(low|medium|high)$")
+    emotional_resistance: str | None = Field(default=None, pattern="^(low|medium|high)$")
+    novelty: str | None = Field(default=None, pattern="^(low|medium|high)$")
+    est_minutes: int | None = Field(default=None, ge=1, le=240)
+    reward_type: str | None = Field(default=None, pattern="^(momentum|clarity|resilience|stability|exploration|courage)$")
     why_matters: str | None = None
     success_condition: str | None = None
     current_state: str | None = None
@@ -53,9 +69,17 @@ class MissionUpdate(BaseModel):
 class MissionOut(BaseModel):
     id: str
     domain_id: str | None
+    parent_id: str | None
     title: str
     status: str
     active_rank: int | None
+    mission_kind: str
+    activation_energy: str
+    cognitive_load: str
+    emotional_resistance: str
+    novelty: str
+    est_minutes: int
+    reward_type: str
     why_matters: str
     success_condition: str
     current_state: str
@@ -94,12 +118,18 @@ class CheckpointOut(BaseModel):
 
 class StateLogCreate(BaseModel):
     state: str = Field(pattern="^(Avoiding|Overwhelmed|Warming up|Locked in|Recovering)$")
+    energy_focus: int | None = Field(default=None, ge=0, le=10)
+    energy_emotional: int | None = Field(default=None, ge=0, le=10)
+    novelty_hunger: int | None = Field(default=None, ge=0, le=10)
 
 
 class StateLogOut(BaseModel):
     id: str
     user_id: str
     state: str
+    energy_focus: int | None
+    energy_emotional: int | None
+    novelty_hunger: int | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -117,9 +147,48 @@ class RewardEventOut(BaseModel):
     mission_id: str | None
     kind: str
     message: str
+    momentum_delta: int
+    clarity_delta: int
+    resilience_delta: int
+    reason: str
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class WorkSessionOut(BaseModel):
+    id: str
+    user_id: str
+    mission_id: str
+    started_at: datetime
+    last_heartbeat_at: datetime
+    ended_at: datetime | None
+    end_kind: str | None
+
+    model_config = {"from_attributes": True}
+
+
+class TodayStartOut(RewardEventOut):
+    session: WorkSessionOut | None = None
+
+
+class MicroMissionCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=240)
+    next_action: str = ""
+    activation_energy: str = Field(default="low", pattern="^(low|medium|high)$")
+    cognitive_load: str = Field(default="low", pattern="^(low|medium|high)$")
+    emotional_resistance: str = Field(default="low", pattern="^(low|medium|high)$")
+    novelty: str = Field(default="medium", pattern="^(low|medium|high)$")
+    est_minutes: int = Field(default=2, ge=1, le=8)
+    reward_type: str = Field(default="momentum", pattern="^(momentum|clarity|resilience|stability|exploration|courage)$")
+
+
+class CompleteMissionCreate(BaseModel):
+    completion_note: str = ""
+
+
+class TodayHeartbeatCreate(BaseModel):
+    mission_id: str | None = None
 
 
 class DirectorOut(BaseModel):
@@ -130,6 +199,11 @@ class DirectorOut(BaseModel):
     reward_hint: str
     recommended_mode: str
     latest_reward: RewardEventOut | None = None
+    momentum: int = 0
+    resilience: int = 0
+    recommended_micro_mission: MissionOut | None = None
+    active_session: WorkSessionOut | None = None
+    session_stale: bool = False
 
 
 class ParkingItemCreate(BaseModel):

@@ -23,12 +23,20 @@ function todayPayload(overrides: Partial<TodayPayload> = {}): TodayPayload {
   const now = new Date().toISOString();
   return {
     primary_mission: {
-      id: "mission-1",
-      title: "Finish anomaly detection direction",
-      status: "active",
-      domain_id: null,
-      active_rank: 1,
-      why_matters: "It clarifies the paper.",
+        id: "mission-1",
+        title: "Finish anomaly detection direction",
+        status: "active",
+        domain_id: null,
+        parent_id: null,
+        active_rank: 1,
+        mission_kind: "standard",
+        activation_energy: "medium",
+        cognitive_load: "medium",
+        emotional_resistance: "medium",
+        novelty: "medium",
+        est_minutes: 15,
+        reward_type: "momentum",
+        why_matters: "It clarifies the paper.",
       success_condition: "Three contribution claims drafted.",
       current_state: "",
       last_decision: "",
@@ -61,8 +69,43 @@ function todayPayload(overrides: Partial<TodayPayload> = {}): TodayPayload {
       reward_hint: "Pick your state. The app will shrink the first move.",
       recommended_mode: "check_in",
       latest_reward: null,
+      momentum: 4,
+      resilience: 2,
+      recommended_micro_mission: null,
+      active_session: null,
+      session_stale: false,
     },
     ...overrides,
+  };
+}
+
+function microMission() {
+  const now = new Date().toISOString();
+  return {
+    id: "micro-1",
+    title: "Collect three rough bullets",
+    status: "active" as const,
+    domain_id: null,
+    parent_id: "mission-1",
+    active_rank: null,
+    mission_kind: "momentum" as const,
+    activation_energy: "low" as const,
+    cognitive_load: "low" as const,
+    emotional_resistance: "low" as const,
+    novelty: "medium" as const,
+    est_minutes: 3,
+    reward_type: "momentum" as const,
+    why_matters: "",
+    success_condition: "",
+    current_state: "",
+    last_decision: "",
+    blockers: "",
+    files_links: "",
+    reentry_note: "",
+    next_action: "Open scary.md and write rough bullets",
+    do_not_rethink: "",
+    created_at: now,
+    updated_at: now,
   };
 }
 
@@ -76,7 +119,12 @@ beforeEach(() => {
     mission_id: "mission-1",
     kind: "started",
     message: "You broke avoidance. Momentum restored.",
+    momentum_delta: 1,
+    clarity_delta: 0,
+    resilience_delta: 0,
+    reason: "Open notes.md and write three possible contribution claims.",
     created_at: new Date().toISOString(),
+    session: null,
   });
 });
 
@@ -90,6 +138,8 @@ describe("TodayPage", () => {
 
     expect(await screen.findByText("State first")).toBeInTheDocument();
     expect(screen.getByText("What state are you in?")).toBeInTheDocument();
+    expect(screen.getByText("Momentum 4")).toBeInTheDocument();
+    expect(screen.getByText("Resilience 2")).toBeInTheDocument();
     expect(screen.queryByText("Finish anomaly detection direction")).not.toBeInTheDocument();
   });
 
@@ -108,6 +158,43 @@ describe("TodayPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /show mission context/i }));
     expect(screen.getByText("Finish anomaly detection direction")).toBeInTheDocument();
+  });
+
+  it("uses the recommended micro-mission as the start target", async () => {
+    apiMock.today.mockResolvedValueOnce(
+      todayPayload({
+        director: {
+          current_state: null,
+          recovery_due: false,
+          entry_move: "Open scary.md and write rough bullets",
+          fallback_move: "Make it smaller: open the work surface and touch only the first visible step.",
+          reward_hint: "Pick your state. The app will shrink the first move.",
+          recommended_mode: "check_in",
+          latest_reward: null,
+          momentum: 1,
+          resilience: 0,
+          recommended_micro_mission: microMission(),
+          active_session: null,
+          session_stale: false,
+        },
+      }),
+    );
+    render(
+      <MemoryRouter>
+        <TodayPage />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: /Avoiding/i }));
+    expect(await screen.findByText("Open scary.md and write rough bullets")).toBeInTheDocument();
+    expect(screen.getByText("From Finish anomaly detection direction")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /Start this move/i }));
+    expect(apiMock.startToday).toHaveBeenCalledWith({
+      mission_id: "micro-1",
+      state: "Avoiding",
+      action_text: "Open scary.md and write rough bullets",
+    });
   });
 
   it("shows familiar resume context for locked-in state and rewards resume", async () => {
@@ -142,6 +229,11 @@ describe("TodayPage", () => {
           reward_hint: "Return counts. Resilience restored.",
           recommended_mode: "recovery",
           latest_reward: null,
+          momentum: 0,
+          resilience: 1,
+          recommended_micro_mission: null,
+          active_session: null,
+          session_stale: false,
         },
       }),
     );
@@ -151,7 +243,12 @@ describe("TodayPage", () => {
       mission_id: "mission-1",
       kind: "returned_after_gap",
       message: "Return counts. Resilience restored.",
+      momentum_delta: 0,
+      clarity_delta: 0,
+      resilience_delta: 2,
+      reason: "Open notes.md and write three possible contribution claims.",
       created_at: new Date().toISOString(),
+      session: null,
     });
 
     render(

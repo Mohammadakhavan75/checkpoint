@@ -42,6 +42,8 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     email: EmailStr
+    name: Optional[str] = None
+    picture: Optional[str] = None
     created_at: datetime
 
 

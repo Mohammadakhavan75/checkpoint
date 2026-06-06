@@ -71,7 +71,13 @@ async def google_login(
     if claims.get("email_verified") is False:
         raise HTTPException(status_code=401, detail="Google email is not verified")
 
-    user = await get_or_link_google_user(session, email=email, google_sub=google_sub)
+    user = await get_or_link_google_user(
+        session,
+        email=email,
+        google_sub=google_sub,
+        name=claims.get("name"),
+        picture=claims.get("picture"),
+    )
     await session.commit()
     return Token(access_token=create_access_token(str(user.id)))
 

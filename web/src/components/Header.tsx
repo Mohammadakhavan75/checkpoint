@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { useAuth } from "../auth";
 import { RULES } from "../constants";
+import { UserMenu } from "./UserMenu";
 
 export function Header({ onCapture }: { onCapture: (text: string) => void }) {
-  const { user, logout } = useAuth();
   const [text, setText] = useState("");
   const [ruleIdx, setRuleIdx] = useState(0);
 
@@ -38,12 +37,7 @@ export function Header({ onCapture }: { onCapture: (text: string) => void }) {
         />
         <kbd>↵</kbd>
       </div>
-      {user && (
-        <div className="userbox">
-          <span className="email">{user.email}</span>
-          <button onClick={logout}>logout</button>
-        </div>
-      )}
+      <UserMenu />
     </header>
   );
 }

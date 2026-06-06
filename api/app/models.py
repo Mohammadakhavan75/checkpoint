@@ -40,6 +40,9 @@ class User(Base):
     hashed_password: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Google account subject id; lets the same email sign in via Google + password
     google_sub: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
+    # display profile (populated from Google; null for password-only accounts)
+    name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    picture: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -88,7 +88,7 @@ main{overflow:auto;padding:22px 26px 80px}
 /* ===== sidebar ===== */
 .sect{padding:0 14px;margin:6px 0 18px}
 .sect h4{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:1.5px;color:var(--faint);
-  text-transform:uppercase;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+  text-transform:uppercase;margin:0 0 8px;display:flex;gap:8px;align-items:center}
 .navbtn{width:100%;display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;
   font-size:13px;color:var(--dim);text-align:left;border:1px solid transparent}
 .navbtn:hover{background:var(--panel);color:var(--text)}
@@ -97,6 +97,14 @@ main{overflow:auto;padding:22px 26px 80px}
   background:#0c0f13;border:1px solid var(--line);padding:0 6px;border-radius:10px}
 .navbtn.on .cnt{color:var(--amber);border-color:var(--amber2)}
 .dom-dot{width:7px;height:7px;border-radius:2px;background:var(--line2)}
+.addbtn{font-family:'JetBrains Mono';font-size:13px;line-height:1;color:var(--faint);
+  width:18px;height:18px;border:1px solid var(--line2);border-radius:5px;
+  display:inline-flex;align-items:center;justify-content:center}
+.addbtn:hover{color:var(--amber);border-color:var(--amber2)}
+.addinput{width:100%;background:var(--ink);border:1px solid var(--amber2);border-radius:6px;
+  padding:7px 9px;font-size:12.5px;outline:none;margin-bottom:6px}
+.addinput:focus{border-color:var(--amber)}
+.sidehint{font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint);padding:4px 9px;line-height:1.5}
 
 .legend{font-size:11.5px;color:var(--dim)}
 .legend div{display:flex;align-items:center;gap:8px;padding:3px 0}
@@ -230,11 +238,25 @@ main{overflow:auto;padding:22px 26px 80px}
 .ring .time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .ring .time .t{font-family:'JetBrains Mono';font-size:38px;font-weight:800;letter-spacing:1px}
 .ring .time .bt{font-family:'JetBrains Mono';font-size:11px;color:var(--faint);letter-spacing:2px;text-transform:uppercase}
-.blockpick{display:flex;flex-direction:column;gap:6px;width:100%}
-.blockpick button{font-family:'JetBrains Mono';font-size:12px;text-align:left;padding:8px 11px;border-radius:7px;
-  border:1px solid var(--line);color:var(--dim);display:flex;justify-content:space-between}
-.blockpick button.on{border-color:var(--amber);color:var(--amber);background:#1a130699}
 .clockbtns{display:flex;gap:8px}
+.pomo{display:flex;align-items:center;gap:8px}
+.pomo .pomolab{font-family:'JetBrains Mono';font-size:10px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase}
+.pomostep{display:flex;align-items:center;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.pomostep button{font-family:'JetBrains Mono';font-size:15px;width:30px;height:32px;color:var(--dim);background:none}
+.pomostep button:hover{color:var(--amber)}
+.pomostep input{width:46px;height:32px;text-align:center;border:none;border-left:1px solid var(--line);border-right:1px solid var(--line);
+  background:none;color:var(--text);font-family:'JetBrains Mono';font-size:15px;font-weight:600;-moz-appearance:textfield}
+.pomostep input::-webkit-outer-spin-button,.pomostep input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.snaplist{margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
+.snapempty{font-family:'JetBrains Mono';font-size:12px;color:var(--faint);padding:6px 2px}
+.snapcard{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.snapcard .snapmain{flex:1;min-width:0}
+.snaptitle{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.5px;color:var(--amber);margin-bottom:3px}
+.snapnote{font-size:13px;white-space:pre-wrap;word-break:break-word}
+.snaplink{display:inline-block;margin-top:4px;font-family:'JetBrains Mono';font-size:11.5px;color:var(--cyan);word-break:break-all}
+.snapdel{color:var(--faint);font-size:14px;line-height:1;padding:2px 4px;border-radius:5px}
+.snapdel:hover{color:var(--red)}
 .session .work{padding:30px 36px;overflow:auto}
 .session .work .focus{font-family:'JetBrains Mono';font-size:11px;letter-spacing:2px;color:var(--faint);text-transform:uppercase}
 .session .work .fa{font-size:22px;margin:8px 0 22px;line-height:1.35}

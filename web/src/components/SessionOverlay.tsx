@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { BLOCKS, type Block } from "../constants";
 import type { Item } from "../types";
+import { SnapshotModal } from "./SnapshotModal";
 
-function defaultBlock(mode?: string | null): Block {
-  const id = mode === "Scout" ? "scout" : mode === "Do" ? "exec" : mode === "Plan" ? "ignition" : "deep";
-  return BLOCKS.find((b) => b.id === id) ?? BLOCKS[2];
+const DEFAULT_MIN = 25;
+const MIN_MIN = 1;
+const MAX_MIN = 180;
+
+function clampMin(m: number): number {
+  if (Number.isNaN(m)) return DEFAULT_MIN;
+  return Math.min(MAX_MIN, Math.max(MIN_MIN, Math.round(m)));
 }
 
 export function SessionOverlay({
@@ -17,10 +21,10 @@ export function SessionOverlay({
   onAbandon: () => void;
   onCheckpoint: () => void;
 }) {
-  const initial = useMemo(() => defaultBlock(item.mode), [item.mode]);
-  const [block, setBlock] = useState<Block>(initial);
-  const [remaining, setRemaining] = useState(initial.min * 60);
+  const [minutes, setMinutes] = useState(DEFAULT_MIN);
+  const [remaining, setRemaining] = useState(DEFAULT_MIN * 60);
   const [running, setRunning] = useState(true);
+  const [snapOpen, setSnapOpen] = useState(false);
 
   useEffect(() => {
     if (!running) return;
@@ -28,16 +32,25 @@ export function SessionOverlay({
     return () => clearInterval(id);
   }, [running]);
 
-  function pick(b: Block) {
-    setBlock(b);
-    setRemaining(b.min * 60);
+  function applyMinutes(m: number) {
+    const clamped = clampMin(m);
+    setMinutes(clamped);
+    setRemaining(clamped * 60);
+    setRunning(true);
+  }
+
+  function reset() {
+    setRemaining(minutes * 60);
+    setRunning(true);
   }
 
   const f = item.fields;
   const C = 2 * Math.PI * 88;
-  const frac = remaining / (block.min * 60);
+  const total = minutes * 60;
+  const frac = total > 0 ? remaining / total : 0;
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
+  const done = remaining === 0;
 
   return (
     <div className="session">
@@ -71,26 +84,42 @@ export function SessionOverlay({
               <div className="t">
                 {mm}:{ss}
               </div>
-              <div className="bt">{block.name}</div>
+              <div className="bt">{done ? "TIME'S UP" : "POMODORO"}</div>
             </div>
           </div>
+
+          <div className="pomo">
+            <span className="pomolab">Length</span>
+            <div className="pomostep">
+              <button onClick={() => applyMinutes(minutes - 5)} aria-label="decrease">
+                −
+              </button>
+              <input
+                type="number"
+                min={MIN_MIN}
+                max={MAX_MIN}
+                value={minutes}
+                onChange={(e) => applyMinutes(Number(e.target.value))}
+              />
+              <button onClick={() => applyMinutes(minutes + 5)} aria-label="increase">
+                +
+              </button>
+            </div>
+            <span className="pomolab">min</span>
+          </div>
+
           <div className="clockbtns">
-            <button className="btn" onClick={() => setRunning((r) => !r)}>
+            <button className="btn" onClick={() => setRunning((r) => !r)} disabled={done}>
               {running ? "❚❚ Pause" : "▸ Resume"}
             </button>
-          </div>
-          <div className="blockpick">
-            {BLOCKS.map((b) => (
-              <button key={b.id} className={block.id === b.id ? "on" : ""} onClick={() => pick(b)}>
-                <span>{b.name}</span>
-                <span>{b.min}m</span>
-              </button>
-            ))}
+            <button className="btn ghost" onClick={reset}>
+              ↺ Reset
+            </button>
           </div>
         </div>
         <div className="work">
           <div className="focus">First action — start here, nothing else</div>
-          <div className="fa">{f.firstAction || "—"}</div>
+          <div className="fa">{f.firstAction || item.title}</div>
           <div className="swrow">
             <div className="scard">
               <div className="k">Description</div>
@@ -105,7 +134,10 @@ export function SessionOverlay({
               </div>
             )}
           </div>
-          <div style={{ marginTop: 26, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 10 }}>
+            <button className="btn" style={{ padding: "11px 18px" }} onClick={() => setSnapOpen(true)}>
+              ⊞ Snapshot — add notes &amp; links
+            </button>
             <button className="btn amber" style={{ padding: "11px 18px" }} onClick={onCheckpoint}>
               ⊟ Close session → write checkpoint
             </button>
@@ -116,6 +148,8 @@ export function SessionOverlay({
           </p>
         </div>
       </div>
+
+      {snapOpen && <SnapshotModal id={item.id} onClose={() => setSnapOpen(false)} />}
     </div>
   );
 }

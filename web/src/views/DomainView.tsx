@@ -7,11 +7,13 @@ function BacklogRow({
   idx,
   onState,
   onCompile,
+  onFastExecute,
 }: {
   item: Item;
   idx: number;
   onState: (id: string, state: ItemState) => void;
   onCompile: (id: string) => void;
+  onFastExecute: (id: string, compiled: boolean) => void;
 }) {
   return (
     <div className={`row fade-in s${(idx % 4) + 1} ${item.state}`}>
@@ -34,6 +36,13 @@ function BacklogRow({
       </div>
       <div className="acts">
         <StateSelect item={item} onChange={(s) => onState(item.id, s)} />
+        <button
+          className="btn"
+          title="Start a session now — skip compiling"
+          onClick={() => onFastExecute(item.id, item.compiled)}
+        >
+          ⚡ Go
+        </button>
         <button className="btn amber" onClick={() => onCompile(item.id)}>
           {item.compiled ? "Recompile" : "Compile"}
         </button>
@@ -132,11 +141,13 @@ export function DomainView({
   collapsed,
   onToggle,
   onCompile,
+  onFastExecute,
 }: {
   domain: string;
   collapsed: Set<string>;
   onToggle: (id: string) => void;
   onCompile: (id: string) => void;
+  onFastExecute: (id: string, compiled: boolean) => void;
 }) {
   const { data, isLoading } = useItems("domain", domain);
   const setState = useSetState();
@@ -176,6 +187,7 @@ export function DomainView({
                 idx={idx}
                 onState={onState}
                 onCompile={onCompile}
+                onFastExecute={onFastExecute}
               />
             ),
           )

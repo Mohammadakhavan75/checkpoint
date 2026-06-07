@@ -24,8 +24,6 @@ export const STATE_ORDER: ItemState[] = [
   "killed",
 ];
 
-export const DOMAINS = ["DDWS", "HPC", "Farokhi", "Research", "Teaching", "Personal"];
-
 export interface Block {
   id: string;
   name: string;

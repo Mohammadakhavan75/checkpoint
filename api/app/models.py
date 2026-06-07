@@ -16,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Text,
+    UniqueConstraint,
     Uuid,
     func,
 )
@@ -43,6 +44,27 @@ class User(Base):
     # display profile (populated from Google; null for password-only accounts)
     name: Mapped[str | None] = mapped_column(Text, nullable=True)
     picture: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class Domain(Base):
+    """A user's custom domain (the sidebar categories). Items reference a domain
+    by name (items.domain text); this table is the per-user registry so a domain
+    can exist even before it has any items."""
+
+    __tablename__ = "domains"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "name", name="uq_domains_owner_name"),
+        Index("ix_domains_owner", "owner_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -102,6 +124,30 @@ class Checkpoint(Base):
     next_action: Mapped[str] = mapped_column(Text, nullable=False)
     resume_from: Mapped[str] = mapped_column(Text, nullable=False)
     do_not_redo: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class Snapshot(Base):
+    """Freeform context the user attaches to an item: a note and/or a link,
+    kept with the task so it persists across sessions.
+
+    Unlike a Checkpoint (the mandatory session receipt), a snapshot is optional
+    scratch material the user collects for themselves. File attachments are a
+    planned extension — add ``file_*`` columns alongside ``note``/``url`` then.
+    """
+
+    __tablename__ = "snapshots"
+    __table_args__ = (Index("ix_snapshots_item", "item_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("items.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

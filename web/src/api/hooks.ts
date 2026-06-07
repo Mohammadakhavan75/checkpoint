@@ -4,6 +4,7 @@ import type {
   CheckpointPayload,
   CompilePayload,
   ItemState,
+  SnapshotPayload,
   Tab,
 } from "../types";
 import * as api from "./client";
@@ -32,13 +33,31 @@ export function useCheckpoints(id: string | null) {
   });
 }
 
+export function useSnapshots(id: string | null) {
+  return useQuery({
+    queryKey: ["snapshots", id],
+    queryFn: () => api.listSnapshots(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useDomains() {
+  return useQuery({ queryKey: ["domains"], queryFn: api.listDomains });
+}
+
 function useInvalidateAll() {
   const qc = useQueryClient();
   return () => {
     qc.invalidateQueries({ queryKey: ["items"] });
     qc.invalidateQueries({ queryKey: ["item"] });
     qc.invalidateQueries({ queryKey: ["checkpoints"] });
+    qc.invalidateQueries({ queryKey: ["domains"] });
   };
+}
+
+export function useCreateDomain() {
+  const invalidate = useInvalidateAll();
+  return useMutation({ mutationFn: (name: string) => api.createDomain(name), onSuccess: invalidate });
 }
 
 export function useCapture() {
@@ -90,5 +109,25 @@ export function useSaveCheckpoint() {
     mutationFn: (vars: { id: string; payload: CheckpointPayload }) =>
       api.createCheckpoint(vars.id, vars.payload),
     onSuccess: invalidate,
+  });
+}
+
+export function useSaveSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; payload: SnapshotPayload }) =>
+      api.createSnapshot(vars.id, vars.payload),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({ queryKey: ["snapshots", vars.id] }),
+  });
+}
+
+export function useDeleteSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; snapshotId: string }) =>
+      api.deleteSnapshot(vars.id, vars.snapshotId),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({ queryKey: ["snapshots", vars.id] }),
   });
 }

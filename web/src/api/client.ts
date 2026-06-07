@@ -2,8 +2,11 @@ import type {
   Checkpoint,
   CheckpointPayload,
   CompilePayload,
+  Domain,
   Item,
   ItemState,
+  Snapshot,
+  SnapshotPayload,
   Tab,
   User,
 } from "../types";
@@ -82,6 +85,12 @@ export const getProviders = () =>
 
 export const me = () => request<User>("/auth/me");
 
+// ----- domains -----
+export const listDomains = () => request<Domain[]>("/domains");
+
+export const createDomain = (name: string) =>
+  request<Domain>("/domains", { method: "POST", ...body({ name }) });
+
 // ----- items -----
 export function listItems(tab: Tab, domain?: string) {
   const params = new URLSearchParams({ tab });
@@ -115,3 +124,13 @@ export const listCheckpoints = (id: string) =>
 
 export const createCheckpoint = (id: string, payload: CheckpointPayload) =>
   request<Checkpoint>(`/items/${id}/checkpoints`, { method: "POST", ...body(payload) });
+
+// ----- snapshots -----
+export const listSnapshots = (id: string) =>
+  request<Snapshot[]>(`/items/${id}/snapshots`);
+
+export const createSnapshot = (id: string, payload: SnapshotPayload) =>
+  request<Snapshot>(`/items/${id}/snapshots`, { method: "POST", ...body(payload) });
+
+export const deleteSnapshot = (id: string, snapshotId: string) =>
+  request<void>(`/items/${id}/snapshots/${snapshotId}`, { method: "DELETE" });

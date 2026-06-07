@@ -112,6 +112,54 @@ async def test_ai_endpoints_are_stubbed_501(client):
     assert r.status_code == 501
 
 
+async def test_snapshot_create_list_delete(client):
+    r = await client.post("/api/items", json={"title": "work", "domain": "DDWS", "state": "active"})
+    iid = r.json()["id"]
+
+    # empty snapshot (no note, no link) -> 422
+    r = await client.post(f"/api/items/{iid}/snapshots", json={"note": "  ", "url": ""})
+    assert r.status_code == 422
+
+    # note-only snapshot
+    r = await client.post(f"/api/items/{iid}/snapshots", json={"note": "remember this"})
+    assert r.status_code == 201
+    assert r.json()["note"] == "remember this"
+
+    # link-only snapshot with a title
+    r = await client.post(
+        f"/api/items/{iid}/snapshots",
+        json={"title": "spec", "url": "https://example.com/doc"},
+    )
+    assert r.status_code == 201
+    sid = r.json()["id"]
+    assert r.json()["url"] == "https://example.com/doc"
+
+    # both are listed, scoped to the item
+    r = await client.get(f"/api/items/{iid}/snapshots")
+    assert r.status_code == 200
+    rows = r.json()
+    assert len(rows) == 2
+    assert {row["note"] for row in rows} == {"remember this", None}
+
+    # delete one
+    r = await client.delete(f"/api/items/{iid}/snapshots/{sid}")
+    assert r.status_code == 204
+    r = await client.get(f"/api/items/{iid}/snapshots")
+    remaining = r.json()
+    assert len(remaining) == 1
+    assert remaining[0]["note"] == "remember this"
+
+
+async def test_snapshot_unknown_item_404(client):
+    import uuid
+
+    missing = uuid.uuid4()
+    r = await client.get(f"/api/items/{missing}/snapshots")
+    assert r.status_code == 404
+    r = await client.post(f"/api/items/{missing}/snapshots", json={"note": "x"})
+    assert r.status_code == 404
+
+
 async def test_register_and_login(client):
     r = await client.post(
         "/api/auth/register", json={"email": "new@example.com", "password": "secret1"}

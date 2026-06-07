@@ -27,6 +27,21 @@ export interface Checkpoint {
   created_at: string;
 }
 
+export interface Snapshot {
+  id: string;
+  item_id: string;
+  title?: string | null;
+  note?: string | null;
+  url?: string | null;
+  created_at: string;
+}
+
+export interface SnapshotPayload {
+  title?: string;
+  note?: string;
+  url?: string;
+}
+
 export interface ItemFields {
   description?: string;
   firstAction?: string;
@@ -66,6 +81,12 @@ export interface User {
   name?: string | null;
   picture?: string | null;
   created_at: string;
+}
+
+export interface Domain {
+  id: string | null;
+  name: string;
+  count: number;
 }
 
 export interface PhaseInput {

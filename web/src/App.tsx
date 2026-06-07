@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useCapture, useItem } from "./api/hooks";
+import { useCapture, useCompile, useItem } from "./api/hooks";
 import { useAuth } from "./auth";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
@@ -17,9 +17,10 @@ import type { Tab } from "./types";
 export function App() {
   const { user, loading } = useAuth();
   const capture = useCapture();
+  const compile = useCompile();
 
   const [tab, setTab] = useState<Tab>("today");
-  const [domain, setDomain] = useState("DDWS");
+  const [domain, setDomain] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const [compileId, setCompileId] = useState<string | null>(null);
@@ -56,6 +57,16 @@ export function App() {
     setCheckpointOpen(false);
   }
 
+  // Fast path: skip the compile form. For an uncompiled item, quick-classify it
+  // as known|bounded ("just do it" → mode Do, compiled, active), then jump
+  // straight into a work session.
+  async function fastExecute(id: string, alreadyCompiled: boolean) {
+    if (!alreadyCompiled) {
+      await compile.mutateAsync({ id, payload: { procedure: "known", scope: "bounded" } });
+    }
+    setSessionId(id);
+  }
+
   return (
     <>
       <div className="app">
@@ -77,6 +88,7 @@ export function App() {
                 collapsed={collapsed}
                 onToggle={toggleCollapse}
                 onCompile={setCompileId}
+                onFastExecute={fastExecute}
               />
             )}
           </main>

@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 StateLiteral = Literal[
     "idea",
@@ -77,6 +77,29 @@ class CheckpointOut(BaseModel):
     created_at: datetime
 
 
+# ----- snapshots -----
+class SnapshotCreate(BaseModel):
+    title: Optional[str] = None
+    note: Optional[str] = None
+    url: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _require_content(self) -> "SnapshotCreate":
+        if not (self.note and self.note.strip()) and not (self.url and self.url.strip()):
+            raise ValueError("a snapshot needs a note or a link")
+        return self
+
+
+class SnapshotOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    item_id: uuid.UUID
+    title: Optional[str] = None
+    note: Optional[str] = None
+    url: Optional[str] = None
+    created_at: datetime
+
+
 # ----- items -----
 class ItemCreate(BaseModel):
     title: str = Field(min_length=1)
@@ -116,6 +139,16 @@ class CompileRequest(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     phases: Optional[list[PhaseInput]] = None
+
+
+class DomainCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=40)
+
+
+class DomainOut(BaseModel):
+    id: Optional[uuid.UUID] = None
+    name: str
+    count: int = 0
 
 
 class CaptureRequest(BaseModel):

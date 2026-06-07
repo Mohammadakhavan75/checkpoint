@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from .auth import hash_password
 from .db import SessionLocal
-from .models import Checkpoint, Item, User
+from .models import Checkpoint, Domain, Item, User
 
 # Note: must be a publicly-valid domain — EmailStr (email-validator) rejects
 # special-use TLDs like .local, so the demo account could not be logged into.
@@ -29,6 +29,9 @@ async def seed() -> None:
         session.add(user)
         await session.flush()
         uid = user.id
+
+        for domain_name in ("DDWS", "HPC", "Farokhi", "Research", "Teaching", "Personal"):
+            session.add(Domain(owner_id=uid, name=domain_name))
 
         def add(**kwargs) -> Item:
             item = Item(owner_id=uid, **kwargs)

@@ -1,6 +1,34 @@
-import { useItems } from "../api/hooks";
-import { DOMAINS, STATES } from "../constants";
+import { useState } from "react";
+
+import { useCapture, useCreateDomain, useDomains, useItems } from "../api/hooks";
+import { STATES } from "../constants";
 import type { ItemState, Tab } from "../types";
+
+function AddInput({
+  placeholder,
+  onSubmit,
+  onCancel,
+}: {
+  placeholder: string;
+  onSubmit: (value: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState("");
+  return (
+    <input
+      className="addinput"
+      autoFocus
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={onCancel}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && value.trim()) onSubmit(value.trim());
+        else if (e.key === "Escape") onCancel();
+      }}
+    />
+  );
+}
 
 export function Sidebar({
   tab,
@@ -14,8 +42,12 @@ export function Sidebar({
   const today = useItems("today");
   const ready = useItems("ready");
   const reservoir = useItems("reservoir");
-  // DOMAINS is a constant-length array, so this map calls hooks in a stable order.
-  const domainData = DOMAINS.map((d) => useItems("domain", d));
+  const domains = useDomains();
+  const createDomain = useCreateDomain();
+  const capture = useCapture();
+
+  const [addingDomain, setAddingDomain] = useState(false);
+  const [addingIdea, setAddingIdea] = useState(false);
 
   return (
     <aside>
@@ -36,22 +68,64 @@ export function Sidebar({
       </div>
 
       <div className="sect">
-        <h4>Domains</h4>
-        {DOMAINS.map((d, i) => (
+        <h4>
+          Domains
           <button
-            key={d}
-            className={`navbtn ${tab === "domain" && domain === d ? "on" : ""}`}
-            onClick={() => onNav("domain", d)}
+            className="addbtn"
+            title="Add a domain"
+            onClick={() => setAddingDomain((v) => !v)}
+          >
+            ＋
+          </button>
+        </h4>
+        {addingDomain && (
+          <AddInput
+            placeholder="new domain name"
+            onCancel={() => setAddingDomain(false)}
+            onSubmit={(name) => {
+              createDomain.mutate(name, { onSuccess: () => onNav("domain", name) });
+              setAddingDomain(false);
+            }}
+          />
+        )}
+        {(domains.data ?? []).map((d) => (
+          <button
+            key={d.name}
+            className={`navbtn ${tab === "domain" && domain === d.name ? "on" : ""}`}
+            onClick={() => onNav("domain", d.name)}
           >
             <span className="dom-dot" />
-            {d}
-            <span className="cnt">{domainData[i].data?.length ?? 0}</span>
+            {d.name}
+            <span className="cnt">{d.count}</span>
           </button>
         ))}
+        {!domains.isLoading && (domains.data ?? []).length === 0 && !addingDomain && (
+          <div className="sidehint">No domains yet — add one with ＋</div>
+        )}
       </div>
 
       <div className="sect">
-        <h4>Reservoir</h4>
+        <h4>
+          Reservoir
+          <button
+            className="addbtn"
+            title="Add a brain rot"
+            onClick={() => setAddingIdea((v) => !v)}
+          >
+            ＋
+          </button>
+        </h4>
+        {addingIdea && (
+          <AddInput
+            placeholder="capture an idea"
+            onCancel={() => setAddingIdea(false)}
+            onSubmit={(text) => {
+              capture.mutate(text);
+              setAddingIdea(false);
+              onNav("reservoir");
+            }}
+          />
+        )}
         <button
           className={`navbtn ${tab === "reservoir" ? "on" : ""}`}
           onClick={() => onNav("reservoir")}

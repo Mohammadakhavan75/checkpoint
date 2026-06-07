@@ -22,6 +22,7 @@ from ..schemas import (
     StateRequest,
 )
 from ..services.checkpoints import latest_checkpoints_for
+from ..services.domains import ensure_domain
 from ..services.items import (
     capture,
     compile_item,
@@ -242,6 +243,7 @@ async def promote_item(
     session: AsyncSession = Depends(get_session),
 ) -> ItemOut:
     item = await _require_item(item_id, user, session)
+    await ensure_domain(session, user.id, payload.domain)
     await promote(session, item, payload.domain)
     await session.commit()
     await session.refresh(item)

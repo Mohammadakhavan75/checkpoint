@@ -14,13 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..auth import get_current_user
 from ..db import get_session
 from ..models import User
-from ..schemas import SnapshotCreate, SnapshotOut
+from ..schemas import SnapshotCreate, SnapshotOut, SnapshotUpdate
 from ..services.items import get_item
 from ..services.snapshots import (
     delete_snapshot,
     get_snapshot,
     save_snapshot,
     snapshot_history,
+    update_snapshot,
 )
 
 router = APIRouter()
@@ -54,6 +55,35 @@ async def create_snapshot(
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     snapshot = await save_snapshot(session, item, payload)
+    await session.commit()
+    await session.refresh(snapshot)
+    return SnapshotOut.model_validate(snapshot)
+
+
+@router.patch(
+    "/{item_id}/snapshots/{snapshot_id}",
+    response_model=SnapshotOut,
+)
+async def patch_snapshot(
+    item_id: uuid.UUID,
+    snapshot_id: uuid.UUID,
+    payload: SnapshotUpdate,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> SnapshotOut:
+    item = await get_item(session, item_id, user.id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    snapshot = await get_snapshot(session, snapshot_id, item.id)
+    if snapshot is None:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    
+    # Optional extra check: validate that the final note is not empty if changed
+    updated_note = payload.note if payload.note is not None else snapshot.note
+    if not updated_note or not updated_note.strip():
+        raise HTTPException(status_code=400, detail="Snapshot note cannot be empty")
+        
+    await update_snapshot(session, snapshot, payload)
     await session.commit()
     await session.refresh(snapshot)
     return SnapshotOut.model_validate(snapshot)

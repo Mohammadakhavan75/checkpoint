@@ -253,10 +253,48 @@ main{overflow:auto;padding:22px 26px 80px}
 .snapcard{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
 .snapcard .snapmain{flex:1;min-width:0}
 .snaptitle{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.5px;color:var(--amber);margin-bottom:3px}
-.snapnote{font-size:13px;white-space:pre-wrap;word-break:break-word}
-.snaplink{display:inline-block;margin-top:4px;font-family:'JetBrains Mono';font-size:11.5px;color:var(--cyan);word-break:break-all}
-.snapdel{color:var(--faint);font-size:14px;line-height:1;padding:2px 4px;border-radius:5px}
-.snapdel:hover{color:var(--red)}
+.snapnote{font-size:13px;word-break:break-word;color:var(--text)}
+.snapnote h1,.snapnote h2,.snapnote h3{margin-top:8px;margin-bottom:4px;font-weight:600}
+.snapnote h1{font-size:1.15em;color:var(--text)}
+.snapnote h2{font-size:1.05em;color:var(--text)}
+.snapnote h3{font-size:1em;color:var(--text)}
+.snapnote p{margin:0 0 6px 0;line-height:1.4}
+.snapnote p:last-child{margin-bottom:0}
+.snapnote ul,.snapnote ol{margin:4px 0 6px 0;padding-left:18px}
+.snapnote li{margin-bottom:3px}
+.snapnote code{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--ink);padding:1px 4px;border-radius:4px;color:var(--cyan)}
+.snapnote pre{background:var(--ink);padding:6px 8px;border-radius:6px;overflow-x:auto;margin:6px 0}
+.snapnote pre code{padding:0;background:transparent;color:var(--text)}
+.snapnote blockquote{margin:6px 0;padding-left:10px;border-left:3px solid var(--amber);color:var(--faint)}
+.snapnote a{color:var(--cyan);text-decoration:underline}
+.snapnote a:hover{color:var(--text)}
+
+/* Checklists and list styling */
+.snapnote ul:has(input[type="checkbox"]){list-style-type:none;padding-left:2px}
+.snapnote li:has(input[type="checkbox"]){display:flex;align-items:center;gap:6px}
+.snapnote input[type="checkbox"]{cursor:pointer;accent-color:var(--amber);width:13px;height:13px;margin:0}
+
+/* Editing card states */
+.snapcard.editing{border-color:var(--amber2)}
+
+.snapactions{display:flex;gap:6px;align-self:center;align-items:center;flex-shrink:0}
+.snapedit, .snapdel{
+  background:none;
+  border:none;
+  color:var(--faint);
+  font-size:14px;
+  line-height:1;
+  padding:4px;
+  border-radius:5px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:color .12s, transform .12s;
+}
+.snapedit:hover{color:var(--amber);transform:scale(1.15)}
+.snapdel:hover{color:var(--red);transform:scale(1.15)}
+.snapedit:disabled, .snapdel:disabled{opacity:.4;cursor:not-allowed}
 .session .work{padding:30px 36px;overflow:auto}
 .session .work .focus{font-family:'JetBrains Mono';font-size:11px;letter-spacing:2px;color:var(--faint);text-transform:uppercase}
 .session .work .fa{font-size:22px;margin:8px 0 22px;line-height:1.35}
@@ -290,4 +328,29 @@ main{overflow:auto;padding:22px 26px 80px}
   .body{grid-template-columns:1fr} aside{display:none}
   .cap{min-width:0} .session .stage{grid-template-columns:1fr}
   .exec{grid-template-columns:1fr} .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
+}
+
+/* ===== StackEdit styles ===== */
+.stackedit-close-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000000;
+  padding: 10px 20px;
+  background: rgba(19, 22, 27, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  color: var(--amber);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+.stackedit-close-btn:hover {
+  background: var(--amber);
+  color: #1a1206;
+  transform: translateY(-1px);
 }

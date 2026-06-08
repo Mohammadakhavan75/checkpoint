@@ -1,0 +1,21 @@
+stages:
+  - deploy
+
+deploy_checkpoint:
+  stage: deploy
+  tags:
+    - home-ubuntu
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "prod/alpha"'
+  environment:
+    name: production
+    url: https://infiniteai.space
+  script:
+    - cd /home/mohammad/home-projects/checkpoint
+    - git fetch origin prod/alpha
+    - git checkout prod/alpha
+    - git reset --hard "$CI_COMMIT_SHA"
+    - cd /home/mohammad/home-projects
+    - docker compose -f docker-compose.yaml up -d --build checkpoint-api checkpoint-web
+    - docker compose -f docker-compose.yaml ps checkpoint-postgres checkpoint-api checkpoint-web
+    - curl -fsS https://api.infiniteai.space/api/auth/providers

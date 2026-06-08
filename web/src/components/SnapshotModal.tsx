@@ -11,6 +11,41 @@ import {
 } from "../api/hooks";
 import { Snapshot } from "../types";
 
+// Quick Markdown reference shown as an in-app help/lookup while editing notes.
+const MARKDOWN_HELP: ReadonlyArray<readonly [string, string]> = [
+  ["# Heading", "Headings (## smaller, ### smaller)"],
+  ["**bold**  *italic*", "Emphasis"],
+  ["- item", "Bullet list"],
+  ["1. item", "Numbered list"],
+  ["- [ ] todo   - [x] done", "Task list (interactive here)"],
+  ["[label](https://…)", "Link"],
+  ["`code`", "Inline code"],
+  ["``` … ```", "Fenced code block (on its own lines)"],
+  ["> quote", "Blockquote"],
+  ["| a | b |", "Table (header row, then |---|---|)"],
+  ["---", "Horizontal divider"],
+];
+
+function MarkdownHelp() {
+  return (
+    <div className="cheatsheet">
+      <h4>Markdown cheat sheet</h4>
+      <table>
+        <tbody>
+          {MARKDOWN_HELP.map(([syntax, desc]) => (
+            <tr key={syntax}>
+              <td className="syn">
+                <code>{syntax}</code>
+              </td>
+              <td className="desc">{desc}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void }) {
   const { data: snapshots = [], isLoading } = useSnapshots(id);
   const save = useSaveSnapshot();
@@ -25,6 +60,9 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editNote, setEditNote] = useState("");
+
+  // Markdown cheat sheet help
+  const [showHelp, setShowHelp] = useState(false);
 
   // StackEdit state & refs
   const [isStackeditOpen, setIsStackeditOpen] = useState(false);
@@ -275,26 +313,25 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
             <div className="field">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                 <label style={{ margin: 0 }}>Note (Markdown compatible)</label>
-                <button
-                  type="button"
-                  onClick={() => openStackeditEditor(note, null)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "11.5px",
-                    color: "var(--cyan)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: 0
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-                >
-                  ✎ Edit in StackEdit
-                </button>
+                <div className="notebar">
+                  <button
+                    type="button"
+                    className={`linkbtn${showHelp ? " on" : ""}`}
+                    aria-pressed={showHelp}
+                    onClick={() => setShowHelp((v) => !v)}
+                  >
+                    ? Markdown help
+                  </button>
+                  <button
+                    type="button"
+                    className="linkbtn"
+                    onClick={() => openStackeditEditor(note, null)}
+                  >
+                    ✎ Edit in StackEdit
+                  </button>
+                </div>
               </div>
+              {showHelp && <MarkdownHelp />}
               <textarea
                 rows={3}
                 placeholder="a thought, a code snippet, a task list (- [ ] item)"

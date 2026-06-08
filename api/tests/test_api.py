@@ -2,6 +2,28 @@
 from __future__ import annotations
 
 
+async def test_capture_direct_into_domain_registers_it(client):
+    # Fast Task Domain: capture straight into a (new) domain, skipping the reservoir.
+    r = await client.post(
+        "/api/items/capture", json={"text": "fast task", "domain": "Launch"}
+    )
+    assert r.status_code == 201
+    item = r.json()
+    assert item["domain"] == "Launch"
+    assert item["state"] == "needsdef"
+    iid = item["id"]
+
+    # it is NOT in the reservoir...
+    r = await client.get("/api/items", params={"tab": "reservoir"})
+    assert not any(i["id"] == iid for i in r.json())
+
+    # ...it is in the domain backlog, and the domain was auto-registered.
+    r = await client.get("/api/items", params={"tab": "domain", "domain": "Launch"})
+    assert any(i["id"] == iid for i in r.json())
+    r = await client.get("/api/domains")
+    assert any(d["name"] == "Launch" for d in r.json())
+
+
 async def test_capture_promote_compile_ready_today_flow(client):
     r = await client.post("/api/items/capture", json={"text": "shiny idea"})
     assert r.status_code == 201

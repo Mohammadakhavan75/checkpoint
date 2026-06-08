@@ -135,7 +135,10 @@ VITE_API_BASE=http://localhost:8000/api npm run dev
 4. **Reservoir (Brain Rots)** — parked ideas, promotable into domains.
 5. **Session + Checkpoint** — timer/focus view; closing a session forces writing a checkpoint.
 
-A global quick-capture input (the header bar) drops a thought into the Reservoir.
+A global quick-capture input (the header bar) drops a thought into the Reservoir by
+default. Its target selector also offers **Fast Task Domain**: pick a domain and the
+captured item skips the Reservoir, landing straight in that domain as `needsdef` (the
+same end state as promoting a brain rot, in one step).
 
 ## The core model
 

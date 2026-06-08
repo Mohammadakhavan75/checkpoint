@@ -32,6 +32,19 @@ async def test_capture_and_promote(session, user):
     assert item.state == "needsdef"
 
 
+async def test_capture_direct_into_domain(session, user):
+    """Fast Task Domain: capturing with a domain skips the reservoir."""
+    item = await capture(session, user.id, "  ship it  ", "DDWS")
+    assert item.title == "ship it"
+    assert item.domain == "DDWS"
+    assert item.state == "needsdef"
+
+    # An explicit reservoir target still parks the idea.
+    parked = await capture(session, user.id, "later", "reservoir")
+    assert parked.domain == "reservoir"
+    assert parked.state == "idea"
+
+
 async def test_rollup_all_done(session, user):
     parent = await _add(session, user, title="P", domain="HPC", state="active")
     await _add(session, user, title="c1", domain="HPC", state="done", parent_id=parent.id)

@@ -100,8 +100,8 @@ export function listItems(tab: Tab, domain?: string) {
 
 export const getItem = (id: string) => request<Item>(`/items/${id}`);
 
-export const captureItem = (text: string) =>
-  request<Item>("/items/capture", { method: "POST", ...body({ text }) });
+export const captureItem = (text: string, domain?: string) =>
+  request<Item>("/items/capture", { method: "POST", ...body({ text, domain }) });
 
 export const promoteItem = (id: string, domain: string) =>
   request<Item>(`/items/${id}/promote`, { method: "POST", ...body({ domain }) });

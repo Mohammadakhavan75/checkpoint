@@ -163,6 +163,9 @@ class DomainOut(BaseModel):
 
 class CaptureRequest(BaseModel):
     text: str = Field(min_length=1)
+    # Optional target domain. When set, the item is captured straight into that
+    # domain ("Fast Task Domain") instead of the reservoir.
+    domain: Optional[str] = None
 
 
 class PromoteRequest(BaseModel):

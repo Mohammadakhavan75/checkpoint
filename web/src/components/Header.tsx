@@ -1,16 +1,32 @@
 import { useEffect, useState } from "react";
 
+import { useDomains } from "../api/hooks";
 import { RULES } from "../constants";
 import { UserMenu } from "./UserMenu";
 
-export function Header({ onCapture }: { onCapture: (text: string) => void }) {
+// Sentinel for the default "park in the reservoir" capture target.
+const RESERVOIR = "";
+
+export function Header({
+  onCapture,
+}: {
+  onCapture: (text: string, domain?: string) => void;
+}) {
   const [text, setText] = useState("");
+  const [target, setTarget] = useState(RESERVOIR);
   const [ruleIdx, setRuleIdx] = useState(0);
+  const domains = useDomains();
 
   useEffect(() => {
     const id = setInterval(() => setRuleIdx((i) => (i + 1) % RULES.length), 6000);
     return () => clearInterval(id);
   }, []);
+
+  function submit() {
+    if (!text.trim()) return;
+    onCapture(text.trim(), target === RESERVOIR ? undefined : target);
+    setText("");
+  }
 
   return (
     <header>
@@ -29,13 +45,23 @@ export function Header({ onCapture }: { onCapture: (text: string) => void }) {
           autoComplete="off"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && text.trim()) {
-              onCapture(text.trim());
-              setText("");
-            }
+            if (e.key === "Enter") submit();
           }}
         />
-        <kbd>↵</kbd>
+        <select
+          className="cap-target"
+          title="Where this lands — the reservoir, or straight into a domain"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+        >
+          <option value={RESERVOIR}>~ Reservoir</option>
+          {(domains.data ?? []).map((d) => (
+            <option key={d.name} value={d.name}>
+              → {d.name}
+            </option>
+          ))}
+        </select>
+        <kbd onClick={submit}>↵</kbd>
       </div>
       <UserMenu />
     </header>

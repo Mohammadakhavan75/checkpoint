@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     google_client_id: str = ""
 
     # Comma-separated list of allowed CORS origins for the web client.
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = "https://infiniteai.space,https://www.infiniteai.space,http://localhost:5173,http://127.0.0.1:5173"
 
     # When true, the API seeds the demo data on startup (idempotent).
     seed_on_start: bool = False

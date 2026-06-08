@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Item, Snapshot
-from ..schemas import SnapshotCreate
+from ..schemas import SnapshotCreate, SnapshotUpdate
 
 
 async def snapshot_history(
@@ -46,9 +46,19 @@ async def save_snapshot(
         item_id=item.id,
         title=_clean(payload.title),
         note=_clean(payload.note),
-        url=_clean(payload.url),
     )
     session.add(snapshot)
+    await session.flush()
+    return snapshot
+
+
+async def update_snapshot(
+    session: AsyncSession, snapshot: Snapshot, payload: SnapshotUpdate
+) -> Snapshot:
+    if payload.title is not None:
+        snapshot.title = _clean(payload.title)
+    if payload.note is not None:
+        snapshot.note = _clean(payload.note)
     await session.flush()
     return snapshot
 

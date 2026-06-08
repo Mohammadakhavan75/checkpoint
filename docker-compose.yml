@@ -18,7 +18,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://checkpoint:${DB_PASSWORD:-checkpoint}@postgres:5432/checkpoint
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://infiniteai.space,https://www.infiniteai.space}
       SEED_ON_START: ${SEED_ON_START:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
@@ -31,7 +31,7 @@ services:
   web:
     build: ./web
     environment:
-      VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8000/api}
+      VITE_API_BASE: ${VITE_API_BASE:-https://api.infiniteai.space/api}
       VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     depends_on:
       - api

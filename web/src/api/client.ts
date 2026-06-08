@@ -132,5 +132,8 @@ export const listSnapshots = (id: string) =>
 export const createSnapshot = (id: string, payload: SnapshotPayload) =>
   request<Snapshot>(`/items/${id}/snapshots`, { method: "POST", ...body(payload) });
 
+export const updateSnapshot = (id: string, snapshotId: string, payload: SnapshotPayload) =>
+  request<Snapshot>(`/items/${id}/snapshots/${snapshotId}`, { method: "PATCH", ...body(payload) });
+
 export const deleteSnapshot = (id: string, snapshotId: string) =>
   request<void>(`/items/${id}/snapshots/${snapshotId}`, { method: "DELETE" });

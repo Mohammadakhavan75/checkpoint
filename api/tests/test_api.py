@@ -116,38 +116,55 @@ async def test_snapshot_create_list_delete(client):
     r = await client.post("/api/items", json={"title": "work", "domain": "DDWS", "state": "active"})
     iid = r.json()["id"]
 
-    # empty snapshot (no note, no link) -> 422
-    r = await client.post(f"/api/items/{iid}/snapshots", json={"note": "  ", "url": ""})
+    # empty snapshot (no note) -> 422
+    r = await client.post(f"/api/items/{iid}/snapshots", json={"note": "  "})
     assert r.status_code == 422
 
     # note-only snapshot
     r = await client.post(f"/api/items/{iid}/snapshots", json={"note": "remember this"})
     assert r.status_code == 201
     assert r.json()["note"] == "remember this"
+    sid1 = r.json()["id"]
 
-    # link-only snapshot with a title
+    # snapshot with title and note
     r = await client.post(
         f"/api/items/{iid}/snapshots",
-        json={"title": "spec", "url": "https://example.com/doc"},
+        json={"title": "spec", "note": "look at README"},
     )
     assert r.status_code == 201
-    sid = r.json()["id"]
-    assert r.json()["url"] == "https://example.com/doc"
+    sid2 = r.json()["id"]
+    assert r.json()["title"] == "spec"
+    assert r.json()["note"] == "look at README"
 
     # both are listed, scoped to the item
     r = await client.get(f"/api/items/{iid}/snapshots")
     assert r.status_code == 200
     rows = r.json()
     assert len(rows) == 2
-    assert {row["note"] for row in rows} == {"remember this", None}
+    assert {row["note"] for row in rows} == {"remember this", "look at README"}
+
+    # patch/update snapshot note
+    r = await client.patch(
+        f"/api/items/{iid}/snapshots/{sid1}",
+        json={"note": "remember this updated"},
+    )
+    assert r.status_code == 200
+    assert r.json()["note"] == "remember this" + " updated"
+
+    # patch snapshot with empty note -> 422
+    r = await client.patch(
+        f"/api/items/{iid}/snapshots/{sid1}",
+        json={"note": "  "},
+    )
+    assert r.status_code == 422
 
     # delete one
-    r = await client.delete(f"/api/items/{iid}/snapshots/{sid}")
+    r = await client.delete(f"/api/items/{iid}/snapshots/{sid2}")
     assert r.status_code == 204
     r = await client.get(f"/api/items/{iid}/snapshots")
     remaining = r.json()
     assert len(remaining) == 1
-    assert remaining[0]["note"] == "remember this"
+    assert remaining[0]["note"] == "remember this updated"
 
 
 async def test_snapshot_unknown_item_404(client):

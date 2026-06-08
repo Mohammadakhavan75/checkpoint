@@ -32,14 +32,12 @@ export interface Snapshot {
   item_id: string;
   title?: string | null;
   note?: string | null;
-  url?: string | null;
   created_at: string;
 }
 
 export interface SnapshotPayload {
   title?: string;
   note?: string;
-  url?: string;
 }
 
 export interface ItemFields {

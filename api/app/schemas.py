@@ -81,12 +81,23 @@ class CheckpointOut(BaseModel):
 class SnapshotCreate(BaseModel):
     title: Optional[str] = None
     note: Optional[str] = None
-    url: Optional[str] = None
 
     @model_validator(mode="after")
     def _require_content(self) -> "SnapshotCreate":
-        if not (self.note and self.note.strip()) and not (self.url and self.url.strip()):
-            raise ValueError("a snapshot needs a note or a link")
+        if not (self.note and self.note.strip()):
+            raise ValueError("a snapshot needs a note")
+        return self
+
+
+class SnapshotUpdate(BaseModel):
+    title: Optional[str] = None
+    note: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _require_content(self) -> "SnapshotUpdate":
+        # If note is provided, it must not be empty
+        if self.note is not None and not self.note.strip():
+            raise ValueError("snapshot note cannot be empty")
         return self
 
 
@@ -96,7 +107,6 @@ class SnapshotOut(BaseModel):
     item_id: uuid.UUID
     title: Optional[str] = None
     note: Optional[str] = None
-    url: Optional[str] = None
     created_at: datetime
 
 

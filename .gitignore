@@ -4,6 +4,8 @@
 .env.*.local
 *.local
 checkpoint.db
+*.db
+.agents/
 __pycache__/
 .pytest_cache/
 .ruff_cache/

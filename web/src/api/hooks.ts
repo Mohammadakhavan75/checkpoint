@@ -122,6 +122,16 @@ export function useSaveSnapshot() {
   });
 }
 
+export function useUpdateSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; snapshotId: string; payload: SnapshotPayload }) =>
+      api.updateSnapshot(vars.id, vars.snapshotId, vars.payload),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({ queryKey: ["snapshots", vars.id] }),
+  });
+}
+
 export function useDeleteSnapshot() {
   const qc = useQueryClient();
   return useMutation({

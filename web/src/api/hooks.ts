@@ -62,7 +62,13 @@ export function useCreateDomain() {
 
 export function useCapture() {
   const invalidate = useInvalidateAll();
-  return useMutation({ mutationFn: (text: string) => api.captureItem(text), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: (vars: string | { text: string; domain?: string }) =>
+      typeof vars === "string"
+        ? api.captureItem(vars)
+        : api.captureItem(vars.text, vars.domain),
+    onSuccess: invalidate,
+  });
 }
 
 export function usePromote() {

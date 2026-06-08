@@ -169,7 +169,10 @@ async def capture_item(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ItemOut:
-    item = await capture(session, user.id, payload.text)
+    domain = (payload.domain or "").strip()
+    if domain and domain != RESERVOIR:
+        await ensure_domain(session, user.id, domain)
+    item = await capture(session, user.id, payload.text, domain or None)
     await session.commit()
     await session.refresh(item)
     return serialize_item(item)

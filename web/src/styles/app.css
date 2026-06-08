@@ -50,7 +50,9 @@ header{
 .cap input{flex:1;background:none;border:none;outline:none;font-size:13px}
 .cap input::placeholder{color:var(--faint)}
 .cap kbd{font-family:'JetBrains Mono';font-size:10px;color:var(--faint);border:1px solid var(--line2);
-  padding:1px 5px;border-radius:4px}
+  padding:1px 5px;border-radius:4px;cursor:pointer}
+.cap-target{background:var(--panel);color:var(--dim);border:1px solid var(--line2);border-radius:5px;
+  font-family:'JetBrains Mono';font-size:11px;padding:2px 4px;outline:none;cursor:pointer;max-width:120px}
 /* user menu (header avatar + profile panel) */
 .usermenu{position:relative}
 .usertrigger{display:flex;align-items:center;gap:9px}

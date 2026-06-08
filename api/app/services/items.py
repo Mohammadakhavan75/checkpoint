@@ -81,13 +81,26 @@ async def set_state(session: AsyncSession, item: Item, state: str) -> Item:
     return item
 
 
-async def capture(session: AsyncSession, owner_id: uuid.UUID, text: str) -> Item:
-    """Quick-capture: a new reservoir idea."""
+async def capture(
+    session: AsyncSession,
+    owner_id: uuid.UUID,
+    text: str,
+    domain: str | None = None,
+) -> Item:
+    """Quick-capture a new item.
+
+    By default lands in the reservoir as a parked ``idea``. When ``domain`` is
+    given (and isn't the reservoir), the item skips the reservoir and lands
+    directly in that domain as ``needsdef`` — the same end state as promoting a
+    brain rot, but in a single step ("Fast Task Domain").
+    """
+    target = (domain or "").strip()
+    direct = bool(target) and target != RESERVOIR
     item = Item(
         owner_id=owner_id,
         title=text.strip(),
-        domain=RESERVOIR,
-        state="idea",
+        domain=target if direct else RESERVOIR,
+        state="needsdef" if direct else "idea",
         daily=False,
         compiled=False,
         fields={},

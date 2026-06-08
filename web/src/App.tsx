@@ -71,9 +71,10 @@ export function App() {
     <>
       <div className="app">
         <Header
-          onCapture={(text) => {
-            capture.mutate(text);
-            setTab("reservoir");
+          onCapture={(text, captureDomain) => {
+            capture.mutate({ text, domain: captureDomain });
+            if (captureDomain) nav("domain", captureDomain);
+            else setTab("reservoir");
           }}
         />
         <div className="body">

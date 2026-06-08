@@ -324,7 +324,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
                   </button>
                   <button
                     type="button"
-                    className="linkbtn"
+                    className="linkbtn stackedit-link"
                     onClick={() => openStackeditEditor(note, null)}
                   >
                     ✎ Edit in StackEdit

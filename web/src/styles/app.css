@@ -3,7 +3,7 @@
 :root{
   --ink:#0b0d10; --panel:#13161b; --panel2:#171b21; --raise:#1d222a;
   --line:#242a32; --line2:#333b45;
-  --text:#dde3ea; --dim:#8b95a1; --faint:#586470;
+  --text:#dde3ea; --dim:#8b95a1; --faint:#74808d;
   --amber:#ffb454; --amber2:#7a4f1c;
   --cyan:#5ad1e6; --green:#5fd97a; --yellow:#e8c84a; --orange:#ff9d4d; --red:#ff5a52; --violet:#b08bff;
 }
@@ -31,12 +31,17 @@ input,textarea,select{font-family:inherit;color:var(--text)}
 ::selection{background:var(--amber);color:#000}
 
 /* ===== shell ===== */
-.app{position:relative;z-index:2;height:100%;display:grid;grid-template-rows:auto 1fr;}
+.app{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr;}
 header{
-  display:flex;align-items:center;gap:18px;padding:10px 18px;
+  display:flex;align-items:center;gap:18px;
+  padding:10px 18px;
+  padding-top:max(10px,env(safe-area-inset-top));
+  padding-left:max(18px,env(safe-area-inset-left));
+  padding-right:max(18px,env(safe-area-inset-right));
   border-bottom:1px solid var(--line);
   background:linear-gradient(var(--panel),var(--ink));
 }
+.hamburger{display:none}
 .brand{font-family:'JetBrains Mono';font-weight:800;letter-spacing:1px;font-size:16px;color:var(--text)}
 .brand b{color:var(--amber)}
 .led{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2.6s infinite}
@@ -85,7 +90,7 @@ header{
 
 .body{display:grid;grid-template-columns:248px 1fr;min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}
-main{overflow:auto;padding:22px 26px 80px}
+main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
 /* ===== sidebar ===== */
 .sect{padding:0 14px;margin:6px 0 18px}
@@ -126,6 +131,7 @@ main{overflow:auto;padding:22px 26px 80px}
 
 /* item rows */
 .rows{display:flex;flex-direction:column;gap:9px}
+.rowhead{display:flex;align-items:center;gap:12px}
 .row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
   border-radius:9px;padding:11px 13px;transition:border-color .15s,transform .15s}
 .row:hover{border-color:var(--line2)}
@@ -172,7 +178,7 @@ main{overflow:auto;padding:22px 26px 80px}
 .caret:hover{color:var(--text)}
 .prog{display:inline-block;width:90px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;vertical-align:middle}
 .prog .bar{display:block;height:100%;background:var(--violet);transition:width .3s}
-.row.child{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.row.child{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-left:26px}
 .row.child.next{border-color:var(--amber);box-shadow:0 0 16px -8px var(--amber)}
 .row.child.done{opacity:.7}
 .row.child.killed .name{text-decoration:line-through;color:var(--faint)}
@@ -346,16 +352,100 @@ main{overflow:auto;padding:22px 26px 80px}
 .gbtn{display:flex;justify-content:center;min-height:40px;color-scheme:light}
 .loading{color:var(--faint);font-family:'JetBrains Mono';font-size:12.5px;padding:26px;text-align:center}
 
-@media(max-width:880px){
-  .body{grid-template-columns:1fr} aside{display:none}
-  .cap{min-width:0} .session .stage{grid-template-columns:1fr}
-  .exec{grid-template-columns:1fr} .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
+/* ===== responsive: drawer nav, touch targets, reflow ===== */
+
+/* On tablet/desktop the drawer wrapper is transparent — the sidebar sits in the
+   grid as a normal column. The scrim/hamburger only exist on phones. */
+.nav-drawer{display:contents}
+.nav-scrim{display:none}
+
+/* Touch ergonomics — any coarse pointer (phones + tablets), regardless of size. */
+@media (pointer:coarse){
+  /* 16px form text stops iOS Safari auto-zooming the page on focus */
+  input,textarea,select,
+  .cap input,.field input,.field textarea,.field select,
+  .addinput,.subrow input,.cap-target,select.btn,.pomostep input{font-size:16px}
+  /* ≥44px hit areas */
+  button.btn{min-height:44px}
+  .btn{padding:10px 14px}
+  .navbtn{padding:11px 10px;min-height:44px}
+  .addbtn{width:30px;height:30px}
+  .caret{min-width:44px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+  .tab{padding:12px 16px}
+  .modal header .x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  .cap kbd{min-width:36px;min-height:32px;display:inline-flex;align-items:center;justify-content:center}
+  .pomostep button{width:40px;height:40px}
+  .snapedit,.snapdel{min-width:40px;min-height:40px;color:var(--dim)}
+}
+
+/* Tablet and below — content panels stack; the sidebar stays. The decorative
+   RULE ticker is dropped and the capture box flexes to fill the header. */
+@media (max-width:1024px){
+  .exec{grid-template-columns:1fr}
+  .session .stage{grid-template-columns:1fr}
+  .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
+  .ticker{display:none}
+  .cap{min-width:0;flex:1}
+}
+
+/* Phone — single column, slide-in drawer nav, reflowed header & modals. */
+@media (max-width:767px){
+  .body{grid-template-columns:1fr}
+
+  /* slide-in drawer (wraps the existing sidebar) */
+  .nav-drawer{
+    display:block;position:fixed;top:0;left:0;bottom:0;width:min(84vw,300px);z-index:61;
+    transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 60px -10px #000;
+    padding-top:env(safe-area-inset-top)
+  }
+  .nav-drawer.on{transform:none}
+  .nav-drawer aside{display:block;width:100%;height:100%}
+  .nav-scrim{
+    display:block;position:fixed;inset:0;z-index:60;background:rgba(4,5,7,.6);
+    opacity:0;pointer-events:none;transition:opacity .22s ease
+  }
+  .nav-scrim.on{opacity:1;pointer-events:auto}
+
+  /* header: hamburger + brand + avatar on row 1, capture as a full-width row 2 */
+  header{flex-wrap:wrap;gap:10px 12px}
+  .hamburger{
+    display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
+    font-size:18px;color:var(--dim);background:var(--panel2);border:1px solid var(--line2);border-radius:8px
+  }
+  .ticker{display:none}
+  .usermenu{margin-left:auto}
+  .cap{order:1;flex-basis:100%;min-width:0}
+
+  /* list rows — actions wrap to their own full-width line */
+  .row{flex-wrap:wrap}
+  .rowhead{flex-wrap:wrap}
+  .row>.acts,.rowhead .acts{flex:1 0 100%;justify-content:flex-end;margin-top:8px}
+  .row.child{margin-left:12px}
+
+  /* modals become a full-screen sheet with sticky header/footer */
+  .scrim{padding:0;align-items:stretch}
+  .modal{max-width:none;min-height:100%;border-radius:0}
+  .modal header{position:sticky;top:0;z-index:3;background:var(--panel)}
+  .modal footer{position:sticky;bottom:0;z-index:3;background:#0f1216;flex-wrap:wrap;
+    padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .grid2{grid-template-columns:1fr}
+  .subrow{flex-wrap:wrap}
+  .subrow .sub-title,.subrow .sub-fa{flex:1 0 100%}
+
+  /* session overlay */
+  .session .top{padding:12px 16px;flex-wrap:wrap}
+  .session .work{padding:18px 16px}
+  .session .clockwrap{padding:18px}
+  .swrow{flex-direction:column}
+
+  /* StackEdit is a desktop-grade editor — hide its triggers on phones, keep the textarea */
+  .stackedit-link,.snapedit-stack{display:none}
 }
 
 /* ===== StackEdit styles ===== */
 .stackedit-close-btn {
   position: fixed;
-  top: 16px;
+  top: max(16px, env(safe-area-inset-top));
   right: 16px;
   z-index: 1000000;
   padding: 10px 20px;

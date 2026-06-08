@@ -21,7 +21,7 @@ export function UnitRow({
   return (
     <div className={`row fade-in s${(idx % 4) + 1} ${item.state}`}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="rowhead">
           <Marker state={item.state} />
           <div className="ttl">
             <div className="name">{item.title}</div>

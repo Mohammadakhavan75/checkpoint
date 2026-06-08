@@ -5,6 +5,7 @@ import { useAuth } from "./auth";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
 import { Header } from "./components/Header";
+import { MobileDrawer } from "./components/MobileDrawer";
 import { SessionOverlay } from "./components/SessionOverlay";
 import { Sidebar } from "./components/Sidebar";
 import { AuthView } from "./views/AuthView";
@@ -22,6 +23,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [domain, setDomain] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [navOpen, setNavOpen] = useState(false);
 
   const [compileId, setCompileId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function App() {
   function nav(t: Tab, d?: string) {
     setTab(t);
     if (d) setDomain(d);
+    setNavOpen(false);
   }
 
   function toggleCollapse(id: string) {
@@ -71,6 +74,7 @@ export function App() {
     <>
       <div className="app">
         <Header
+          onMenuToggle={() => setNavOpen((v) => !v)}
           onCapture={(text, captureDomain) => {
             capture.mutate({ text, domain: captureDomain });
             if (captureDomain) nav("domain", captureDomain);
@@ -78,7 +82,9 @@ export function App() {
           }}
         />
         <div className="body">
-          <Sidebar tab={tab} domain={domain} onNav={nav} />
+          <MobileDrawer open={navOpen} onClose={() => setNavOpen(false)}>
+            <Sidebar tab={tab} domain={domain} onNav={nav} />
+          </MobileDrawer>
           <main>
             {tab === "today" && <TodayView onStart={setSessionId} onEdit={setCompileId} />}
             {tab === "ready" && <ReadyView onEdit={setCompileId} />}

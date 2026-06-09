@@ -11,8 +11,10 @@ import type {
   User,
 } from "../types";
 
+// `||` (not `??`): a build with the env var unset bakes an empty string,
+// which must also fall back to the default, not produce relative URLs.
 const BASE: string =
-  (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8000/api";
+  (import.meta.env.VITE_API_BASE as string | undefined) || "http://localhost:8000/api";
 
 export const TOKEN_KEY = "checkpoint_token";
 

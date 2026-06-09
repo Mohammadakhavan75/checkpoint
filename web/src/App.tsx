@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useCapture, useCompile, useItem } from "./api/hooks";
 import { useAuth } from "./auth";
+import { CheckpointLoader } from "./components/CheckpointLoader";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
 import { Header } from "./components/Header";
@@ -24,6 +25,7 @@ export function App() {
   const [domain, setDomain] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [navOpen, setNavOpen] = useState(false);
+  const [booting, setBooting] = useState(true);
 
   const [compileId, setCompileId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -31,12 +33,10 @@ export function App() {
 
   const { data: sessionItem } = useItem(sessionId);
 
-  if (loading) {
-    return (
-      <div className="authwrap">
-        <div className="loading">starting checkpoint…</div>
-      </div>
-    );
+  // Boot loader plays the full reveal once (booting) and also covers the auth
+  // check (loading); whichever finishes last hands off to the app.
+  if (loading || booting) {
+    return <CheckpointLoader onDone={() => setBooting(false)} />;
   }
   if (!user) return <AuthView />;
 

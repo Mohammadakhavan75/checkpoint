@@ -1,130 +1,49 @@
-import { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
 
-import { useCapture, useCompile, useItem } from "./api/hooks";
-import { useAuth } from "./auth";
-import { CheckpointLoader } from "./components/CheckpointLoader";
-import { CheckpointModal } from "./components/CheckpointModal";
-import { CompileModal } from "./components/CompileModal";
-import { Header } from "./components/Header";
-import { MobileDrawer } from "./components/MobileDrawer";
-import { SessionOverlay } from "./components/SessionOverlay";
-import { Sidebar } from "./components/Sidebar";
-import { WhatsNew } from "./components/WhatsNewModal";
-import { AuthView } from "./views/AuthView";
-import { DomainView } from "./views/DomainView";
-import { ReadyView } from "./views/ReadyView";
-import { ReservoirView } from "./views/ReservoirView";
-import { TodayView } from "./views/TodayView";
-import type { Tab } from "./types";
+import { AppShell } from "./components/AppShell";
+import { AuthPage } from "./pages/AuthPage";
+import { LifeIndexPage } from "./pages/LifeIndexPage";
+import { MissionSnapshotPage } from "./pages/MissionSnapshotPage";
+import { ParkingPage } from "./pages/ParkingPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { StopCheckpointPage } from "./pages/StopCheckpointPage";
+import { TodayPage } from "./pages/TodayPage";
+import { useAuth } from "./lib/auth";
+
+function Protected({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div className="boot-screen">Checkpoint</div>;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
 
 export function App() {
-  const { user, loading } = useAuth();
-  const capture = useCapture();
-  const compile = useCompile();
-
-  const [tab, setTab] = useState<Tab>("today");
-  const [domain, setDomain] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [navOpen, setNavOpen] = useState(false);
-  const [booting, setBooting] = useState(true);
-
-  const [compileId, setCompileId] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [checkpointOpen, setCheckpointOpen] = useState(false);
-
-  const { data: sessionItem } = useItem(sessionId);
-
-  // Boot loader plays the full reveal once (booting) and also covers the auth
-  // check (loading); whichever finishes last hands off to the app.
-  if (loading || booting) {
-    return <CheckpointLoader onDone={() => setBooting(false)} />;
-  }
-  if (!user) return <AuthView />;
-
-  function nav(t: Tab, d?: string) {
-    setTab(t);
-    if (d) setDomain(d);
-    setNavOpen(false);
-  }
-
-  function toggleCollapse(id: string) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function closeSession() {
-    setSessionId(null);
-    setCheckpointOpen(false);
-  }
-
-  // Fast path: skip the compile form. For an uncompiled item, quick-classify it
-  // as known|bounded ("just do it" → mode Do, compiled, active), then jump
-  // straight into a work session.
-  async function fastExecute(id: string, alreadyCompiled: boolean) {
-    if (!alreadyCompiled) {
-      await compile.mutateAsync({ id, payload: { procedure: "known", scope: "bounded" } });
-    }
-    setSessionId(id);
-  }
-
   return (
-    <>
-      <div className="app">
-        <Header
-          onMenuToggle={() => setNavOpen((v) => !v)}
-          onCapture={(text, captureDomain) => {
-            capture.mutate({ text, domain: captureDomain });
-            if (captureDomain) nav("domain", captureDomain);
-            else setTab("reservoir");
-          }}
-        />
-        <div className="body">
-          <MobileDrawer open={navOpen} onClose={() => setNavOpen(false)}>
-            <Sidebar tab={tab} domain={domain} onNav={nav} />
-          </MobileDrawer>
-          <main>
-            {tab === "today" && <TodayView onStart={setSessionId} onEdit={setCompileId} />}
-            {tab === "ready" && <ReadyView onEdit={setCompileId} />}
-            {tab === "reservoir" && <ReservoirView onNav={nav} />}
-            {tab === "domain" && (
-              <DomainView
-                domain={domain}
-                collapsed={collapsed}
-                onToggle={toggleCollapse}
-                onCompile={setCompileId}
-                onFastExecute={fastExecute}
-              />
-            )}
-          </main>
-        </div>
-      </div>
-
-      <WhatsNew user={user} />
-
-      {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
-
-      {sessionId && sessionItem && !checkpointOpen && (
-        <SessionOverlay
-          item={sessionItem}
-          onAbandon={() => setSessionId(null)}
-          onCheckpoint={() => setCheckpointOpen(true)}
-        />
-      )}
-
-      {sessionId && checkpointOpen && (
-        <CheckpointModal
-          id={sessionId}
-          onBack={() => setCheckpointOpen(false)}
-          onSaved={() => {
-            closeSession();
-            setTab("today");
-          }}
-        />
-      )}
-    </>
+    <Routes>
+      <Route path="/login" element={<AuthPage mode="login" />} />
+      <Route path="/signup" element={<AuthPage mode="signup" />} />
+      <Route
+        path="/"
+        element={
+          <Protected>
+            <AppShell />
+          </Protected>
+        }
+      >
+        <Route index element={<Navigate to="/today" replace />} />
+        <Route path="today" element={<TodayPage />} />
+        <Route path="today/checkpoint" element={<StopCheckpointPage />} />
+        <Route path="life-index" element={<LifeIndexPage />} />
+        <Route path="missions/:missionId" element={<MissionSnapshotPage />} />
+        <Route path="parking" element={<ParkingPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/today" replace />} />
+    </Routes>
   );
 }

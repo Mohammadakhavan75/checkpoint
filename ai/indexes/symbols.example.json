@@ -1,0 +1,10 @@
+{
+  "ExampleClass.exampleMethod": {
+    "defined_in": "example/path/file.ext",
+    "responsibility": "Short responsibility summary.",
+    "callers": [],
+    "callees": [],
+    "tests": [],
+    "invariants": []
+  }
+}

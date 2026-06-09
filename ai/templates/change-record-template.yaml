@@ -1,0 +1,18 @@
+change_id: ""
+task_id: ""
+status: "draft"
+risk_level: "low" # low | medium | high
+change_type: "feature" # bugfix | feature | refactor | test | docs | architecture | chore
+subsystems: []
+files_changed: []
+symbols_touched: []
+tests_added_or_modified: []
+adrs_referenced: []
+invariants_reviewed: []
+feature_flags: []
+verification_commands: []
+rollback_plan_exists: false
+compatibility_impact: "none" # none | backward-compatible | breaking | unknown
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

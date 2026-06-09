@@ -1,0 +1,32 @@
+change_id: "AI-2026-05-10-002"
+task_id: "TASK-0001"
+status: "complete"
+risk_level: "medium"
+change_type: "feature"
+subsystems: ["identity", "storage"]
+files_changed:
+  - "services/identity-service/app/database.py"
+  - "services/identity-service/app/main.py"
+  - "services/identity-service/app/models.py"
+  - "services/identity-service/app/schemas.py"
+  - "services/identity-service/app/security.py"
+  - "services/identity-service/tests/test_identity.py"
+  - "services/identity-service/pytest.ini"
+symbols_touched:
+  - "signup"
+  - "login"
+  - "refresh"
+  - "logout"
+  - "update_preferences"
+tests_added_or_modified:
+  - "services/identity-service/tests/test_identity.py"
+adrs_referenced: []
+invariants_reviewed: ["security", "storage"]
+feature_flags: []
+verification_commands:
+  - ".venv/bin/python -m pytest services/identity-service/tests"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: true
+concurrency_sensitive: false

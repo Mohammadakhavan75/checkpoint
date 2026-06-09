@@ -1,0 +1,42 @@
+change_id: "AI-2026-05-11-001"
+task_id: "004"
+status: "complete"
+risk_level: "low"
+change_type: "feature"
+subsystems: ["web"]
+files_changed:
+  - "ai/context-packs/004-gap-closure-m1-mission-snapshot.md"
+  - "ai/tasks/TASK-0004-gap-closure-m1/plan.md"
+  - "ai/context/subsystem-web.md"
+  - "ai/changes/AI-2026-05-11-001-gap-m1-mission-snapshot.md"
+  - "ai/changes/AI-2026-05-11-001-gap-m1-mission-snapshot.yaml"
+  - "web/src/App.tsx"
+  - "web/src/pages/TodayPage.tsx"
+  - "web/src/pages/LifeIndexPage.tsx"
+  - "web/src/pages/MissionSnapshotPage.tsx"
+  - "web/src/pages/MissionSnapshotPage.test.tsx"
+  - "web/src/styles/app.css"
+symbols_touched:
+  - "MissionSnapshotPage"
+  - "EditableSnapshotField"
+  - "CheckpointHistoryRow"
+  - "App"
+  - "TodayPage"
+  - "MissionRow"
+tests_added_or_modified:
+  - "web/src/pages/MissionSnapshotPage.test.tsx"
+adrs_referenced: []
+invariants_reviewed:
+  - "docs/invariants/api-compatibility.md"
+  - "docs/invariants/security.md"
+  - "docs/invariants/storage.md"
+  - "docs/invariants/concurrency.md"
+feature_flags: []
+verification_commands:
+  - "cd web && npm test -- --run"
+  - "cd web && npm run build"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

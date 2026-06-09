@@ -1,0 +1,9 @@
+{
+  "example/path/file.ext": [
+    {
+      "change_id": "AI-YYYY-MM-DD-001",
+      "summary": "Short reason this file changed.",
+      "change_record": "ai/changes/AI-YYYY-MM-DD-001-example.md"
+    }
+  ]
+}

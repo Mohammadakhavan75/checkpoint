@@ -1,0 +1,22 @@
+change_id: "AI-2026-05-10-008"
+task_id: "TASK-003"
+status: "complete"
+risk_level: "low"
+change_type: "fix"
+subsystems: ["web"]
+files_changed:
+  - "web/src/components/AppShell.tsx"
+  - "web/src/styles/app.css"
+symbols_touched:
+  - "AppShell"
+tests_added_or_modified: []
+adrs_referenced: []
+invariants_reviewed: []
+feature_flags: []
+verification_commands:
+  - "cd web && npm run test"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

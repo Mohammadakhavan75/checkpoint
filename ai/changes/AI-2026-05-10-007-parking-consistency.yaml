@@ -1,0 +1,35 @@
+change_id: "AI-2026-05-10-007"
+task_id: "TASK-0002"
+status: "complete"
+risk_level: "low"
+change_type: "bugfix"
+subsystems: ["web"]
+files_changed:
+  - "ai/context-packs/TASK-0002-parking-consistency.md"
+  - "ai/context/subsystem-web.md"
+  - "web/src/pages/LifeIndexPage.tsx"
+  - "web/src/pages/ParkingPage.tsx"
+  - "web/src/pages/LifeIndexPage.test.tsx"
+  - "web/src/pages/ParkingPage.test.tsx"
+symbols_touched:
+  - "LifeIndexPage"
+  - "ParkingPage"
+  - "ParkingItemRow"
+tests_added_or_modified:
+  - "web/src/pages/LifeIndexPage.test.tsx"
+  - "web/src/pages/ParkingPage.test.tsx"
+adrs_referenced: []
+invariants_reviewed:
+  - "docs/invariants/api-compatibility.md"
+  - "docs/invariants/concurrency.md"
+  - "docs/invariants/security.md"
+  - "docs/invariants/storage.md"
+feature_flags: []
+verification_commands:
+  - "cd web && npm test -- --run"
+  - "git diff --check"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

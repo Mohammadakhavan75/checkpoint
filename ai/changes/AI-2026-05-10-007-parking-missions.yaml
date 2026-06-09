@@ -1,0 +1,29 @@
+change_id: "AI-2026-05-10-007"
+task_id: "TASK-002"
+status: "complete"
+risk_level: "low"
+change_type: "feature"
+subsystems: ["web", "checkpoint"]
+files_changed:
+  - "services/checkpoint-service/app/main.py"
+  - "web/src/lib/api.ts"
+  - "web/src/pages/ParkingPage.tsx"
+  - "web/src/pages/LifeIndexPage.tsx"
+symbols_touched:
+  - "delete_mission"
+  - "api.deleteMission"
+  - "handlePark"
+  - "handleActivate"
+  - "MissionRow"
+tests_added_or_modified: []
+adrs_referenced: []
+invariants_reviewed: []
+feature_flags: []
+verification_commands:
+  - "cd services/checkpoint-service && ../../.venv/bin/python -m pytest tests"
+  - "cd web && npm run test"
+rollback_plan_exists: true
+compatibility_impact: "backward-compatible"
+migration_required: false
+security_sensitive: false
+concurrency_sensitive: false

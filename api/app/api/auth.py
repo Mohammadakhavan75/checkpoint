@@ -10,7 +10,14 @@ from ..auth import create_access_token, get_current_user, hash_password, verify_
 from ..config import settings
 from ..db import get_session
 from ..models import User
-from ..schemas import GoogleLoginRequest, LoginRequest, Token, UserCreate, UserOut
+from ..schemas import (
+    GoogleLoginRequest,
+    LoginRequest,
+    SeenVersionRequest,
+    Token,
+    UserCreate,
+    UserOut,
+)
 from ..services.google_auth import (
     GoogleAuthError,
     get_or_link_google_user,
@@ -85,3 +92,14 @@ async def google_login(
 @router.get("/me", response_model=UserOut)
 async def me(user: User = Depends(get_current_user)) -> UserOut:
     return UserOut.model_validate(user)
+
+
+@router.post("/seen", status_code=status.HTTP_204_NO_CONTENT)
+async def mark_seen_version(
+    payload: SeenVersionRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Record the app version this user has now seen release notes for."""
+    user.last_seen_version = payload.version
+    await session.commit()

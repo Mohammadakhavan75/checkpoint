@@ -9,8 +9,10 @@ const RESERVOIR = "";
 
 export function Header({
   onCapture,
+  onMenuToggle,
 }: {
   onCapture: (text: string, domain?: string) => void;
+  onMenuToggle: () => void;
 }) {
   const [text, setText] = useState("");
   const [target, setTarget] = useState(RESERVOIR);
@@ -30,6 +32,9 @@ export function Header({
 
   return (
     <header>
+      <button className="hamburger" aria-label="Open navigation" onClick={onMenuToggle}>
+        ☰
+      </button>
       <span className="led" />
       <span className="brand">
         CHECK<b>//</b>POINT
@@ -43,6 +48,7 @@ export function Header({
           value={text}
           placeholder="capture a thought, idea, task fragment…"
           autoComplete="off"
+          enterKeyHint="done"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();

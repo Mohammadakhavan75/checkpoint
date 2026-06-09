@@ -44,6 +44,10 @@ class User(Base):
     # display profile (populated from Google; null for password-only accounts)
     name: Mapped[str | None] = mapped_column(Text, nullable=True)
     picture: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # The app version this user last saw release notes for. NULL means "never
+    # shown" — new registrations and pre-feature accounts are baselined to the
+    # current version on first login, so they don't get a retroactive changelog.
+    last_seen_version: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

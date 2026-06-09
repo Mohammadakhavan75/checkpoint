@@ -14,7 +14,7 @@ import type {
 const BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8000/api";
 
-const TOKEN_KEY = "checkpoint_token";
+export const TOKEN_KEY = "checkpoint_token";
 
 let authToken: string | null =
   typeof localStorage !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
@@ -27,6 +27,14 @@ export function setToken(token: string | null): void {
 }
 
 export function getToken(): string | null {
+  return authToken;
+}
+
+// Refresh the in-memory token from localStorage WITHOUT writing it back. Used
+// when another tab changes the token, so we adopt its session without firing a
+// redundant storage event.
+export function syncToken(): string | null {
+  authToken = typeof localStorage !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
   return authToken;
 }
 
@@ -84,6 +92,9 @@ export const getProviders = () =>
   request<{ password: boolean; google: boolean }>("/auth/providers");
 
 export const me = () => request<User>("/auth/me");
+
+export const markSeenVersion = (version: string) =>
+  request<void>("/auth/seen", { method: "POST", ...body({ version }) });
 
 // ----- domains -----
 export const listDomains = () => request<Domain[]>("/domains");

@@ -44,12 +44,17 @@ class UserOut(BaseModel):
     email: EmailStr
     name: Optional[str] = None
     picture: Optional[str] = None
+    last_seen_version: Optional[str] = None
     created_at: datetime
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class SeenVersionRequest(BaseModel):
+    version: str = Field(min_length=1, max_length=40)
 
 
 # ----- checkpoints -----

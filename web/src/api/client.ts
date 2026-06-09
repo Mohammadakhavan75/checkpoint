@@ -93,6 +93,9 @@ export const getProviders = () =>
 
 export const me = () => request<User>("/auth/me");
 
+export const markSeenVersion = (version: string) =>
+  request<void>("/auth/seen", { method: "POST", ...body({ version }) });
+
 // ----- domains -----
 export const listDomains = () => request<Domain[]>("/domains");
 

@@ -9,6 +9,7 @@ import { Header } from "./components/Header";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { SessionOverlay } from "./components/SessionOverlay";
 import { Sidebar } from "./components/Sidebar";
+import { WhatsNew } from "./components/WhatsNewModal";
 import { AuthView } from "./views/AuthView";
 import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
@@ -101,6 +102,8 @@ export function App() {
           </main>
         </div>
       </div>
+
+      <WhatsNew user={user} />
 
       {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
 

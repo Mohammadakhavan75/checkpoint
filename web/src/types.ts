@@ -78,6 +78,7 @@ export interface User {
   email: string;
   name?: string | null;
   picture?: string | null;
+  last_seen_version?: string | null;
   created_at: string;
 }
 

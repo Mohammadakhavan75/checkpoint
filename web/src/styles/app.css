@@ -526,3 +526,15 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
 .ckl .loader.done{animation:ckl-fadeout .6s ease forwards .3s}
 @keyframes ckl-fadeout{to{opacity:0;transform:scale(.985)}}
+
+/* ===== what's new (release notes) ===== */
+.whatsnew .rel{border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  margin-bottom:12px;background:var(--panel)}
+.whatsnew .rel:last-child{margin-bottom:0}
+.whatsnew .rel-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.whatsnew .rel-ver{font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:#1a1206;
+  background:var(--amber);border-radius:5px;padding:1px 7px}
+.whatsnew .rel-title{font-weight:600;font-size:14px}
+.whatsnew .rel-date{margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint)}
+.whatsnew .rel-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.whatsnew .rel-notes li{font-size:13px;color:var(--dim);line-height:1.45}

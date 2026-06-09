@@ -1,5 +1,11 @@
 .DS_Store
 .env
+.env.local
+.env.*.local
+*.local
+checkpoint.db
+*.db
+.agents/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
@@ -12,3 +18,4 @@ playwright-report/
 test-results/
 .runtime/
 postgres-data/
+graphify-out/

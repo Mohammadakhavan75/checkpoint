@@ -1,101 +1,42 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15
     environment:
-      POSTGRES_USER: checkpoint
-      POSTGRES_PASSWORD: checkpoint
       POSTGRES_DB: checkpoint
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: checkpoint
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-checkpoint}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U checkpoint -d checkpoint"]
       interval: 5s
       timeout: 5s
       retries: 12
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 12
-
-  identity-service:
-    build:
-      context: ./services/identity-service
+  api:
+    build: ./api
     environment:
-      DATABASE_URL: postgresql+psycopg://checkpoint:checkpoint@postgres:5432/checkpoint
-      REDIS_URL: redis://redis:6379/0
-      JWT_SECRET: ${JWT_SECRET:-dev-checkpoint-secret-change-me}
-      ACCESS_TOKEN_SECONDS: 900
-      REFRESH_TOKEN_SECONDS: 2592000
+      DATABASE_URL: postgresql+asyncpg://checkpoint:${DB_PASSWORD:-checkpoint}@postgres:5432/checkpoint
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://infiniteai.space,https://www.infiniteai.space}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health').read()"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  checkpoint-service:
-    build:
-      context: ./services/checkpoint-service
-    environment:
-      DATABASE_URL: postgresql+psycopg://checkpoint:checkpoint@postgres:5432/checkpoint
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health').read()"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  api-gateway:
-    build:
-      context: ./services/api-gateway
-    environment:
-      IDENTITY_SERVICE_URL: http://identity-service:8001
-      CHECKPOINT_SERVICE_URL: http://checkpoint-service:8002
-      JWT_SECRET: ${JWT_SECRET:-dev-checkpoint-secret-change-me}
-      FRONTEND_ORIGIN: http://localhost:5173
-      COOKIE_SECURE: "false"
     ports:
       - "8000:8000"
-    depends_on:
-      identity-service:
-        condition: service_healthy
-      checkpoint-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
+    # entrypoint runs `alembic upgrade head` (+ optional seed) then uvicorn
 
   web:
-    build:
-      context: ./web
+    build: ./web
     environment:
-      VITE_API_BASE_URL: http://localhost:8000
+      VITE_API_BASE: ${VITE_API_BASE:-https://api.infiniteai.space/api}
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+    depends_on:
+      - api
     ports:
       - "5173:5173"
-    depends_on:
-      api-gateway:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5173').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
 
 volumes:
-  postgres-data:
+  pgdata:

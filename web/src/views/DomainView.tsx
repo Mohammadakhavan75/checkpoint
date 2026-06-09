@@ -107,7 +107,6 @@ function ContainerGroup({
           <div
             key={c.id}
             className={`row child ${c.state} ${c.id === nextId ? "next" : ""}`}
-            style={{ marginLeft: 26 }}
           >
             <span className="phase-no">{k + 1}</span>
             <Marker state={c.state} />

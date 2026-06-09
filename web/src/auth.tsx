@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import * as api from "./api/client";
+import { TOKEN_KEY } from "./api/client";
 import type { User } from "./types";
 
 interface AuthContextValue {
@@ -15,6 +17,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const qc = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +32,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => api.setToken(null))
       .finally(() => setLoading(false));
   }, []);
+
+  // Keep the login state consistent across tabs in this browser. When another
+  // tab logs in/out or switches account, the token in localStorage changes and
+  // fires a storage event here; adopt the new session and drop cached data that
+  // belonged to the old one.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== TOKEN_KEY) return;
+      const token = api.syncToken();
+      qc.clear();
+      if (!token) {
+        setUser(null);
+        return;
+      }
+      setLoading(true);
+      api
+        .me()
+        .then(setUser)
+        .catch(() => {
+          api.setToken(null);
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [qc]);
 
   async function login(email: string, password: string) {
     const { access_token } = await api.login(email, password);

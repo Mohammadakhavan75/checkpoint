@@ -2,11 +2,14 @@ import { useState } from "react";
 
 import { useCapture, useCompile, useItem } from "./api/hooks";
 import { useAuth } from "./auth";
+import { CheckpointLoader } from "./components/CheckpointLoader";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
 import { Header } from "./components/Header";
+import { MobileDrawer } from "./components/MobileDrawer";
 import { SessionOverlay } from "./components/SessionOverlay";
 import { Sidebar } from "./components/Sidebar";
+import { WhatsNew } from "./components/WhatsNewModal";
 import { AuthView } from "./views/AuthView";
 import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
@@ -22,6 +25,8 @@ export function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [domain, setDomain] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [navOpen, setNavOpen] = useState(false);
+  const [booting, setBooting] = useState(true);
 
   const [compileId, setCompileId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -29,18 +34,17 @@ export function App() {
 
   const { data: sessionItem } = useItem(sessionId);
 
-  if (loading) {
-    return (
-      <div className="authwrap">
-        <div className="loading">starting checkpoint…</div>
-      </div>
-    );
+  // Boot loader plays the full reveal once (booting) and also covers the auth
+  // check (loading); whichever finishes last hands off to the app.
+  if (loading || booting) {
+    return <CheckpointLoader onDone={() => setBooting(false)} />;
   }
   if (!user) return <AuthView />;
 
   function nav(t: Tab, d?: string) {
     setTab(t);
     if (d) setDomain(d);
+    setNavOpen(false);
   }
 
   function toggleCollapse(id: string) {
@@ -71,6 +75,7 @@ export function App() {
     <>
       <div className="app">
         <Header
+          onMenuToggle={() => setNavOpen((v) => !v)}
           onCapture={(text, captureDomain) => {
             capture.mutate({ text, domain: captureDomain });
             if (captureDomain) nav("domain", captureDomain);
@@ -78,7 +83,9 @@ export function App() {
           }}
         />
         <div className="body">
-          <Sidebar tab={tab} domain={domain} onNav={nav} />
+          <MobileDrawer open={navOpen} onClose={() => setNavOpen(false)}>
+            <Sidebar tab={tab} domain={domain} onNav={nav} />
+          </MobileDrawer>
           <main>
             {tab === "today" && <TodayView onStart={setSessionId} onEdit={setCompileId} />}
             {tab === "ready" && <ReadyView onEdit={setCompileId} />}
@@ -95,6 +102,8 @@ export function App() {
           </main>
         </div>
       </div>
+
+      <WhatsNew user={user} />
 
       {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
 

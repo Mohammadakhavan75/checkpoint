@@ -3,7 +3,7 @@
 :root{
   --ink:#0b0d10; --panel:#13161b; --panel2:#171b21; --raise:#1d222a;
   --line:#242a32; --line2:#333b45;
-  --text:#dde3ea; --dim:#8b95a1; --faint:#586470;
+  --text:#dde3ea; --dim:#8b95a1; --faint:#74808d;
   --amber:#ffb454; --amber2:#7a4f1c;
   --cyan:#5ad1e6; --green:#5fd97a; --yellow:#e8c84a; --orange:#ff9d4d; --red:#ff5a52; --violet:#b08bff;
 }
@@ -31,12 +31,17 @@ input,textarea,select{font-family:inherit;color:var(--text)}
 ::selection{background:var(--amber);color:#000}
 
 /* ===== shell ===== */
-.app{position:relative;z-index:2;height:100%;display:grid;grid-template-rows:auto 1fr;}
+.app{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr;}
 header{
-  display:flex;align-items:center;gap:18px;padding:10px 18px;
+  display:flex;align-items:center;gap:18px;
+  padding:10px 18px;
+  padding-top:max(10px,env(safe-area-inset-top));
+  padding-left:max(18px,env(safe-area-inset-left));
+  padding-right:max(18px,env(safe-area-inset-right));
   border-bottom:1px solid var(--line);
   background:linear-gradient(var(--panel),var(--ink));
 }
+.hamburger{display:none}
 .brand{font-family:'JetBrains Mono';font-weight:800;letter-spacing:1px;font-size:16px;color:var(--text)}
 .brand b{color:var(--amber)}
 .led{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2.6s infinite}
@@ -85,7 +90,7 @@ header{
 
 .body{display:grid;grid-template-columns:248px 1fr;min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}
-main{overflow:auto;padding:22px 26px 80px}
+main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
 /* ===== sidebar ===== */
 .sect{padding:0 14px;margin:6px 0 18px}
@@ -126,6 +131,7 @@ main{overflow:auto;padding:22px 26px 80px}
 
 /* item rows */
 .rows{display:flex;flex-direction:column;gap:9px}
+.rowhead{display:flex;align-items:center;gap:12px}
 .row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
   border-radius:9px;padding:11px 13px;transition:border-color .15s,transform .15s}
 .row:hover{border-color:var(--line2)}
@@ -172,7 +178,7 @@ main{overflow:auto;padding:22px 26px 80px}
 .caret:hover{color:var(--text)}
 .prog{display:inline-block;width:90px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;vertical-align:middle}
 .prog .bar{display:block;height:100%;background:var(--violet);transition:width .3s}
-.row.child{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.row.child{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-left:26px}
 .row.child.next{border-color:var(--amber);box-shadow:0 0 16px -8px var(--amber)}
 .row.child.done{opacity:.7}
 .row.child.killed .name{text-decoration:line-through;color:var(--faint)}
@@ -346,16 +352,100 @@ main{overflow:auto;padding:22px 26px 80px}
 .gbtn{display:flex;justify-content:center;min-height:40px;color-scheme:light}
 .loading{color:var(--faint);font-family:'JetBrains Mono';font-size:12.5px;padding:26px;text-align:center}
 
-@media(max-width:880px){
-  .body{grid-template-columns:1fr} aside{display:none}
-  .cap{min-width:0} .session .stage{grid-template-columns:1fr}
-  .exec{grid-template-columns:1fr} .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
+/* ===== responsive: drawer nav, touch targets, reflow ===== */
+
+/* On tablet/desktop the drawer wrapper is transparent — the sidebar sits in the
+   grid as a normal column. The scrim/hamburger only exist on phones. */
+.nav-drawer{display:contents}
+.nav-scrim{display:none}
+
+/* Touch ergonomics — any coarse pointer (phones + tablets), regardless of size. */
+@media (pointer:coarse){
+  /* 16px form text stops iOS Safari auto-zooming the page on focus */
+  input,textarea,select,
+  .cap input,.field input,.field textarea,.field select,
+  .addinput,.subrow input,.cap-target,select.btn,.pomostep input{font-size:16px}
+  /* ≥44px hit areas */
+  button.btn{min-height:44px}
+  .btn{padding:10px 14px}
+  .navbtn{padding:11px 10px;min-height:44px}
+  .addbtn{width:30px;height:30px}
+  .caret{min-width:44px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+  .tab{padding:12px 16px}
+  .modal header .x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  .cap kbd{min-width:36px;min-height:32px;display:inline-flex;align-items:center;justify-content:center}
+  .pomostep button{width:40px;height:40px}
+  .snapedit,.snapdel{min-width:40px;min-height:40px;color:var(--dim)}
+}
+
+/* Tablet and below — content panels stack; the sidebar stays. The decorative
+   RULE ticker is dropped and the capture box flexes to fill the header. */
+@media (max-width:1024px){
+  .exec{grid-template-columns:1fr}
+  .session .stage{grid-template-columns:1fr}
+  .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
+  .ticker{display:none}
+  .cap{min-width:0;flex:1}
+}
+
+/* Phone — single column, slide-in drawer nav, reflowed header & modals. */
+@media (max-width:767px){
+  .body{grid-template-columns:1fr}
+
+  /* slide-in drawer (wraps the existing sidebar) */
+  .nav-drawer{
+    display:block;position:fixed;top:0;left:0;bottom:0;width:min(84vw,300px);z-index:61;
+    transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 60px -10px #000;
+    padding-top:env(safe-area-inset-top)
+  }
+  .nav-drawer.on{transform:none}
+  .nav-drawer aside{display:block;width:100%;height:100%}
+  .nav-scrim{
+    display:block;position:fixed;inset:0;z-index:60;background:rgba(4,5,7,.6);
+    opacity:0;pointer-events:none;transition:opacity .22s ease
+  }
+  .nav-scrim.on{opacity:1;pointer-events:auto}
+
+  /* header: hamburger + brand + avatar on row 1, capture as a full-width row 2 */
+  header{flex-wrap:wrap;gap:10px 12px}
+  .hamburger{
+    display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
+    font-size:18px;color:var(--dim);background:var(--panel2);border:1px solid var(--line2);border-radius:8px
+  }
+  .ticker{display:none}
+  .usermenu{margin-left:auto}
+  .cap{order:1;flex-basis:100%;min-width:0}
+
+  /* list rows — actions wrap to their own full-width line */
+  .row{flex-wrap:wrap}
+  .rowhead{flex-wrap:wrap}
+  .row>.acts,.rowhead .acts{flex:1 0 100%;justify-content:flex-end;margin-top:8px}
+  .row.child{margin-left:12px}
+
+  /* modals become a full-screen sheet with sticky header/footer */
+  .scrim{padding:0;align-items:stretch}
+  .modal{max-width:none;min-height:100%;border-radius:0}
+  .modal header{position:sticky;top:0;z-index:3;background:var(--panel)}
+  .modal footer{position:sticky;bottom:0;z-index:3;background:#0f1216;flex-wrap:wrap;
+    padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .grid2{grid-template-columns:1fr}
+  .subrow{flex-wrap:wrap}
+  .subrow .sub-title,.subrow .sub-fa{flex:1 0 100%}
+
+  /* session overlay */
+  .session .top{padding:12px 16px;flex-wrap:wrap}
+  .session .work{padding:18px 16px}
+  .session .clockwrap{padding:18px}
+  .swrow{flex-direction:column}
+
+  /* StackEdit is a desktop-grade editor — hide its triggers on phones, keep the textarea */
+  .stackedit-link,.snapedit-stack{display:none}
 }
 
 /* ===== StackEdit styles ===== */
 .stackedit-close-btn {
   position: fixed;
-  top: 16px;
+  top: max(16px, env(safe-area-inset-top));
   right: 16px;
   z-index: 1000000;
   padding: 10px 20px;
@@ -376,3 +466,75 @@ main{overflow:auto;padding:22px 26px 80px}
   color: #1a1206;
   transform: translateY(-1px);
 }
+
+/* ===== boot loader (comment-reveal -> wordmark) ===== */
+.ckl{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ckl .loader{position:relative;z-index:2;width:100%;max-width:760px;padding:40px 24px;
+  display:flex;flex-direction:column;align-items:center;text-align:center}
+
+.ckl .statusrow{display:flex;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;
+  color:var(--faint);text-transform:uppercase;margin-bottom:34px;min-height:14px;
+  opacity:0;transition:opacity .4s ease}
+.ckl .statusrow.show{opacity:1}
+.ckl .led{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);
+  transition:background .4s ease,box-shadow .4s ease}
+.ckl .led.online{background:var(--green);box-shadow:0 0 8px var(--green);animation:ckl-blink 2.6s infinite}
+@keyframes ckl-blink{0%,92%,100%{opacity:1}95%{opacity:.25}}
+
+.ckl .line{display:flex;align-items:baseline;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-weight:500;
+  font-size:clamp(15px,3.6vw,23px);letter-spacing:0;white-space:nowrap;line-height:1.1;
+  transition:font-size .65s cubic-bezier(.2,.7,.2,1),letter-spacing .65s cubic-bezier(.2,.7,.2,1),font-weight .65s ease}
+.ckl .line.mark{font-size:clamp(30px,8.5vw,58px);letter-spacing:2px;font-weight:800}
+
+.ckl .seg{display:inline-block;white-space:nowrap;overflow:hidden;max-width:48ch;opacity:1;
+  transition:max-width .55s ease,opacity .4s ease}
+.ckl .seg.gone{max-width:0;opacity:0}
+.ckl .code{color:var(--text)}
+.ckl .cmt{color:var(--faint)}
+
+.ckl .flank{display:inline-block;white-space:nowrap;overflow:hidden;max-width:0;opacity:0;
+  color:var(--text);font-weight:800;
+  transition:max-width .6s cubic-bezier(.2,.7,.2,1),opacity .55s ease}
+.ckl .flank.show{max-width:8ch;opacity:1}
+
+.ckl .slash{color:var(--amber);text-shadow:0 0 18px rgba(255,180,84,.55);
+  transition:transform .4s cubic-bezier(.2,.7,.2,1);will-change:transform}
+.ckl .slash.appear{animation:ckl-slashpop .32s ease}
+.ckl .slash.pulse{transform:scale(1.2)}
+@keyframes ckl-slashpop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+
+.ckl .cursor{display:inline-block;width:.55em;height:1.05em;margin-left:2px;
+  background:var(--amber);box-shadow:0 0 12px rgba(255,180,84,.6);transform:translateY(.12em);
+  animation:ckl-caret 1s steps(1) infinite}
+.ckl .cursor.gone{display:none}
+@keyframes ckl-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.ckl .tagline{margin-top:22px;min-height:16px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--faint);letter-spacing:.3px;
+  opacity:0;transform:translateY(4px);transition:opacity .5s ease,transform .5s ease}
+.ckl .tagline .slash2{color:var(--amber)}
+.ckl .tagline.show{opacity:1;transform:none}
+
+.ckl .bar{margin-top:30px;width:min(300px,70%);height:2px;background:var(--line);
+  border-radius:2px;overflow:hidden;opacity:0;transition:opacity .4s ease}
+.ckl .bar.show{opacity:1}
+.ckl .bar>i{display:block;height:100%;width:0%;
+  background:linear-gradient(90deg,var(--amber2),var(--amber));box-shadow:0 0 10px rgba(255,180,84,.5);
+  transition:width .7s cubic-bezier(.3,.7,.3,1)}
+
+.ckl .loader.done{animation:ckl-fadeout .6s ease forwards .3s}
+@keyframes ckl-fadeout{to{opacity:0;transform:scale(.985)}}
+
+/* ===== what's new (release notes) ===== */
+.whatsnew .rel{border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  margin-bottom:12px;background:var(--panel)}
+.whatsnew .rel:last-child{margin-bottom:0}
+.whatsnew .rel-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.whatsnew .rel-ver{font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:#1a1206;
+  background:var(--amber);border-radius:5px;padding:1px 7px}
+.whatsnew .rel-title{font-weight:600;font-size:14px}
+.whatsnew .rel-date{margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint)}
+.whatsnew .rel-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.whatsnew .rel-notes li{font-size:13px;color:var(--dim);line-height:1.45}

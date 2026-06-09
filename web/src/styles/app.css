@@ -9,6 +9,7 @@
 }
 *{box-sizing:border-box}
 html,body,#root{margin:0;height:100%}
+html,body{overflow-x:hidden} /* guard: never let stray width make the page pan sideways */
 body{
   background:
     radial-gradient(120% 90% at 80% -10%, #14181e 0%, var(--ink) 55%),
@@ -414,6 +415,7 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
   }
   .ticker{display:none}
   .usermenu{margin-left:auto}
+  .usertrigger .uname{display:none} /* avatar-only on phones; full name is in the menu */
   .cap{order:1;flex-basis:100%;min-width:0}
 
   /* list rows — actions wrap to their own full-width line */

@@ -20,6 +20,7 @@ from ..schemas import (
 )
 from ..services.google_auth import (
     GoogleAuthError,
+    GoogleAuthUnavailableError,
     get_or_link_google_user,
     verify_google_credential,
 )
@@ -68,6 +69,11 @@ async def google_login(
         raise HTTPException(status_code=503, detail="Google sign-in is not configured")
     try:
         claims = await run_in_threadpool(verify_google_credential, payload.credential)
+    except GoogleAuthUnavailableError:
+        raise HTTPException(
+            status_code=503,
+            detail="Google sign-in is temporarily unavailable — please try again",
+        )
     except GoogleAuthError:
         raise HTTPException(status_code=401, detail="Invalid Google credential")
 

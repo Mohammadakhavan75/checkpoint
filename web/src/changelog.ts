@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.3",
+    date: "2026-06-10",
+    title: "Google sign-in resilience",
+    notes: [
+      "When our server can't reach Google during sign-in you now see “temporarily unavailable — try again” instead of a misleading “Invalid Google credential”.",
+      "Google sign-in is faster: Google's signing keys are now cached on the server instead of fetched on every login.",
+    ],
+  },
+  {
     version: "0.3.2",
     date: "2026-06-10",
     title: "Phones fit the screen again",

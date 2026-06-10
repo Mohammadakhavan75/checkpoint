@@ -21,6 +21,36 @@ class GoogleAuthError(Exception):
     """Raised when a Google credential cannot be verified."""
 
 
+class GoogleAuthUnavailableError(GoogleAuthError):
+    """Raised when Google can't be reached to verify a credential.
+
+    The credential may be perfectly valid — distinguishing this from a bad
+    token lets the API answer 503 instead of a misleading 401.
+    """
+
+
+_transport = None
+
+
+def _google_transport():
+    """Shared HTTP transport for cert fetches, built lazily like the imports.
+
+    Google's signing certs ship with cache headers (hours of freshness);
+    CacheControl honors them, so most verifications never touch the network
+    and a warm cache rides out brief egress outages.
+    """
+    global _transport
+    if _transport is None:
+        import cachecontrol
+        import requests
+        from google.auth.transport import requests as google_requests
+
+        _transport = google_requests.Request(
+            session=cachecontrol.CacheControl(requests.Session())
+        )
+    return _transport
+
+
 def verify_google_credential(credential: str) -> dict:
     """Verify a Google ID token and return its claims.
 
@@ -30,12 +60,11 @@ def verify_google_credential(credential: str) -> dict:
     if not settings.google_client_id:
         raise GoogleAuthError("Google sign-in is not configured")
     try:
-        from google.auth.transport import requests as google_requests
         from google.oauth2 import id_token as google_id_token
 
         return google_id_token.verify_oauth2_token(
             credential,
-            google_requests.Request(),
+            _google_transport(),
             settings.google_client_id,
             # tolerate small container/host clock drift
             clock_skew_in_seconds=10,
@@ -43,6 +72,14 @@ def verify_google_credential(credential: str) -> dict:
     except GoogleAuthError:
         raise
     except Exception as exc:  # noqa: BLE001 - normalize any verification failure
+        import requests
+        from google.auth.exceptions import TransportError
+
+        if isinstance(exc, (TransportError, requests.RequestException)):
+            logger.warning("Google cert fetch failed: %s", exc)
+            raise GoogleAuthUnavailableError(
+                "Google sign-in is temporarily unavailable"
+            ) from exc
         # Log the real reason (e.g. wrong audience / clock skew) for diagnosis.
         logger.warning("Google credential verification failed: %s", exc)
         raise GoogleAuthError("Invalid Google credential") from exc

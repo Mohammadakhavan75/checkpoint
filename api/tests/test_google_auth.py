@@ -70,3 +70,18 @@ async def test_google_login_disabled_returns_503(client, monkeypatch):
     monkeypatch.setattr(settings, "google_client_id", "")
     r = await client.post("/api/auth/google", json={"credential": "tok"})
     assert r.status_code == 503
+
+
+async def test_google_unreachable_returns_503_not_401(client, monkeypatch):
+    # cert fetch failed — the credential may be fine, so this must not be a 401
+    from app.services.google_auth import GoogleAuthUnavailableError
+
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+
+    def unavailable(credential):
+        raise GoogleAuthUnavailableError("Google sign-in is temporarily unavailable")
+
+    monkeypatch.setattr(auth_api, "verify_google_credential", unavailable)
+    r = await client.post("/api/auth/google", json={"credential": "tok"})
+    assert r.status_code == 503
+    assert "temporarily unavailable" in r.json()["detail"]

@@ -32,7 +32,10 @@ input,textarea,select{font-family:inherit;color:var(--text)}
 ::selection{background:var(--amber);color:#000}
 
 /* ===== shell ===== */
-.app{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr;}
+.app{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr;
+  /* minmax(0,…): an auto track minimum would let the header's min-content widen
+     the whole page past the viewport (iOS lays everything out at that width) */
+  grid-template-columns:minmax(0,1fr);}
 header{
   display:flex;align-items:center;gap:18px;
   padding:10px 18px;
@@ -53,7 +56,9 @@ header{
 .cap{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line2);
   border-radius:7px;padding:6px 8px 6px 12px;min-width:340px}
 .cap span{color:var(--amber);font-family:'JetBrains Mono';font-weight:700;font-size:12px}
-.cap input{flex:1;background:none;border:none;outline:none;font-size:13px}
+/* min-width:0 — an input's intrinsic width (~175px at the 16px coarse-pointer
+   size) would otherwise floor the row and overflow phone viewports */
+.cap input{flex:1;min-width:0;background:none;border:none;outline:none;font-size:13px}
 .cap input::placeholder{color:var(--faint)}
 .cap kbd{font-family:'JetBrains Mono';font-size:10px;color:var(--faint);border:1px solid var(--line2);
   padding:1px 5px;border-radius:4px;cursor:pointer}
@@ -89,7 +94,7 @@ header{
   color:var(--red);font-family:'JetBrains Mono';font-size:12.5px;font-weight:700;letter-spacing:.5px}
 .btn-danger:hover{background:rgba(255,90,82,.10)}
 
-.body{display:grid;grid-template-columns:248px 1fr;min-height:0}
+.body{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}
 main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
@@ -164,7 +169,7 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
   border-radius:9px;padding:26px;text-align:center}
 
 /* compiled summary block on daily rows */
-.exec{display:grid;grid-template-columns:repeat(2,1fr);gap:0;margin-top:10px;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.exec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:10px;border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .exec div{padding:8px 11px;border-right:1px solid var(--line)}
 .exec div:last-child{border-right:none}
 .exec .k{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:1px;color:var(--faint);text-transform:uppercase}
@@ -391,7 +396,7 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
 /* Phone — single column, slide-in drawer nav, reflowed header & modals. */
 @media (max-width:767px){
-  .body{grid-template-columns:1fr}
+  .body{grid-template-columns:minmax(0,1fr)}
 
   /* slide-in drawer (wraps the existing sidebar) */
   .nav-drawer{

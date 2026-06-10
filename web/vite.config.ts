@@ -66,7 +66,9 @@ const port = Number(process.env.PORT) || 5173;
 
 export default defineConfig({
   plugins: [react(), stackeditFallback, legacyDevUrlSelfHeal],
-  server: { host: "0.0.0.0", port },
+  // /api proxy pairs with VITE_API_BASE=/api in .env.development — same-origin
+  // API calls from whatever port the dev server lands on.
+  server: { host: "0.0.0.0", port, proxy: { "/api": "http://localhost:8000" } },
   // Production preview (used by the Docker image to serve the built app).
   preview: { host: "0.0.0.0", port, allowedHosts: true },
 });

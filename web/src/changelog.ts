@@ -1,6 +1,10 @@
 // Release notes shown to returning users after an update. Ordered NEWEST FIRST;
 // the top entry's version is the current app version. Add a new entry on top
 // each release — the backend only stores which version a user last saw.
+//
+// Release process: add the entry here, mirror the version in web/package.json,
+// then after merging tag the release commit:
+//   git tag -a vX.Y.Z -m "vX.Y.Z" && git push origin vX.Y.Z
 
 export interface Release {
   version: string;
@@ -10,6 +14,16 @@ export interface Release {
 }
 
 export const CHANGELOG: Release[] = [
+  {
+    version: "0.3.1",
+    date: "2026-06-10",
+    title: "Polish & fixes",
+    notes: [
+      "The boot animation now plays everywhere — including desktops with Reduce Motion enabled.",
+      "Fixed the browser tab icon.",
+      "The app version is now shown at the bottom of the page.",
+    ],
+  },
   {
     version: "0.3.0",
     date: "2026-06-09",

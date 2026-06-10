@@ -24,10 +24,22 @@ async def list_domains(session: AsyncSession, owner_id: uuid.UUID) -> list[dict]
         .scalars()
         .all()
     )
+    item_domain_rows = (
+        await session.execute(
+            select(Item.domain)
+            .where(Item.owner_id == owner_id, Item.domain != RESERVOIR)
+            .distinct()
+            .order_by(Item.domain)
+        )
+    ).all()
     count_rows = (
         await session.execute(
             select(Item.domain, func.count())
-            .where(Item.owner_id == owner_id, Item.domain != RESERVOIR)
+            .where(
+                Item.owner_id == owner_id,
+                Item.domain != RESERVOIR,
+                Item.state != "done",
+            )
             .group_by(Item.domain)
         )
     ).all()
@@ -35,9 +47,11 @@ async def list_domains(session: AsyncSession, owner_id: uuid.UUID) -> list[dict]
 
     id_by_name = {d.name: d.id for d in regs}
     ordered = [d.name for d in regs]
-    for name in counts:
-        if name not in id_by_name:
+    seen = set(ordered)
+    for (name,) in item_domain_rows:
+        if name not in seen:
             ordered.append(name)
+            seen.add(name)
 
     return [
         {"id": id_by_name.get(name), "name": name, "count": counts.get(name, 0)}

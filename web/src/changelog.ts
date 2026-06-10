@@ -15,6 +15,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.2",
+    date: "2026-06-10",
+    title: "Phones fit the screen again",
+    notes: [
+      "Fixed the page laying out wider than phone screens — content was getting cut off at the right edge.",
+    ],
+  },
+  {
     version: "0.3.1",
     date: "2026-06-10",
     title: "Polish & fixes",

@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import * as api from "../api/client";
+import { ApiError } from "../api/client";
 import { useAuth } from "../auth";
 import type { User } from "../types";
 
@@ -16,6 +18,47 @@ function Avatar({ user, className }: { user: User; className: string }) {
     );
   }
   return <span className={`${className} uavatar-fallback`}>{initial}</span>;
+}
+
+/** Google-only accounts can add a local password here, enabling email sign-in. */
+function SetPasswordForm() {
+  const { refresh } = useAuth();
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setBusy(true);
+    try {
+      await api.setPassword(pw);
+      await refresh(); // has_password flips; this form unmounts
+    } catch (ex) {
+      setErr(ex instanceof ApiError ? ex.message : "Something went wrong");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="setpw" onSubmit={submit}>
+      <p>This account signs in with Google. Set a password to also sign in with email.</p>
+      <input
+        className="addinput"
+        type="password"
+        placeholder="new password (min 6 chars)"
+        autoComplete="new-password"
+        minLength={6}
+        required
+        value={pw}
+        onChange={(e) => setPw(e.target.value)}
+      />
+      {err && <div className="err">{err}</div>}
+      <button className="btn" type="submit" disabled={busy || pw.length < 6}>
+        {busy ? "…" : "Set password"}
+      </button>
+    </form>
+  );
 }
 
 export function UserMenu() {
@@ -73,7 +116,11 @@ export function UserMenu() {
               <span>Member since</span>
               <span>{new Date(user.created_at).toLocaleDateString()}</span>
             </div>
-            <div className="userpanel-section">Settings · coming soon</div>
+            {user.has_password ? (
+              <div className="userpanel-section">Settings · coming soon</div>
+            ) : (
+              <SetPasswordForm />
+            )}
           </div>
 
           <button className="btn-danger" onClick={logout}>

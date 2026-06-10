@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -108,7 +108,10 @@ async def get_or_link_google_user(
         return user
 
     # 2) same email exists (e.g. email/password account) -> link them
-    result = await session.execute(select(User).where(User.email == email))
+    # (case-insensitive: rows created before email normalization may be mixed case)
+    result = await session.execute(
+        select(User).where(func.lower(User.email) == email.lower())
+    )
     user = result.scalar_one_or_none()
     if user is not None:
         if not user.google_sub:

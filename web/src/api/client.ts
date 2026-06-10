@@ -95,6 +95,13 @@ export const getProviders = () =>
 
 export const me = () => request<User>("/auth/me");
 
+// Set (Google-only account) or change the local password.
+export const setPassword = (password: string, currentPassword?: string) =>
+  request<void>("/auth/password", {
+    method: "POST",
+    ...body({ password, current_password: currentPassword }),
+  });
+
 export const markSeenVersion = (version: string) =>
   request<void>("/auth/seen", { method: "POST", ...body({ version }) });
 

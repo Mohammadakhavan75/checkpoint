@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.4",
+    date: "2026-06-10",
+    title: "Passwords for Google accounts",
+    notes: [
+      "Signed up with Google? You can now set a password from the account menu and sign in either way.",
+      "Trying to password-sign-in to a Google-only account now explains what to do instead of claiming the password is wrong.",
+      "Registering an email that already exists now always says so — regardless of letter case, and with a pointer to Google when that's how the account signs in.",
+    ],
+  },
+  {
     version: "0.3.3",
     date: "2026-06-10",
     title: "Google sign-in resilience",

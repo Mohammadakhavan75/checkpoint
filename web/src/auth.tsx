@@ -12,6 +12,7 @@ interface AuthContextValue {
   register: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -82,9 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  // Re-pull the profile after server-side account changes (e.g. set password).
+  async function refresh() {
+    setUser(await api.me());
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, loginWithGoogle, logout }}
+      value={{ user, loading, login, register, loginWithGoogle, logout, refresh }}
     >
       {children}
     </AuthContext.Provider>

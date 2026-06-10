@@ -540,3 +540,9 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 .whatsnew .rel-date{margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint)}
 .whatsnew .rel-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
 .whatsnew .rel-notes li{font-size:13px;color:var(--dim);line-height:1.45}
+
+/* Current release, pinned bottom-center (see VersionBadge) */
+.version-badge{position:fixed;left:50%;transform:translateX(-50%);z-index:5;
+  bottom:calc(6px + env(safe-area-inset-bottom));
+  font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint);opacity:.7;
+  pointer-events:none;user-select:none}

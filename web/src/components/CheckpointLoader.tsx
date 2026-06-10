@@ -79,26 +79,10 @@ export function CheckpointLoader({ onDone }: { onDone?: () => void }) {
 
     reset();
 
-    // Reduced motion: skip the choreography, show the resolved brand, hand off.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      statusrow.classList.add("show");
-      code.classList.add("gone");
-      cmt.classList.add("gone");
-      cursor.classList.add("gone");
-      slash.style.opacity = "1";
-      line.classList.add("mark");
-      check.classList.add("show");
-      point.classList.add("show");
-      led.classList.add("online");
-      syslabel.textContent = "online";
-      bar.classList.add("show");
-      barfill.style.width = "100%";
-      tagline.innerHTML = '<span class="slash2">//</span> resume where you left off';
-      tagline.classList.add("show");
-      after(900, finish);
-      return () => timers.forEach(clearTimeout);
-    }
-
+    // The typing sequence is the boot narrative, not decorative motion — it
+    // plays everywhere. (An earlier prefers-reduced-motion branch jumped
+    // straight to the resolved wordmark, which made desktops with macOS
+    // "Reduce Motion" enabled look like they ran an older loader.)
     after(150, () => statusrow.classList.add("show"));
 
     // 1. type the machine action

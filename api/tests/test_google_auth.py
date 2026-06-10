@@ -72,6 +72,107 @@ async def test_google_login_disabled_returns_503(client, monkeypatch):
     assert r.status_code == 503
 
 
+async def test_password_login_on_google_only_account_says_use_google(
+    client, monkeypatch
+):
+    _patch_google(monkeypatch, "gonly@example.com", "google-sub-4")
+    await client.post("/api/auth/google", json={"credential": "tok"})
+
+    r = await client.post(
+        "/api/auth/login", json={"email": "gonly@example.com", "password": "whatever1"}
+    )
+    assert r.status_code == 401
+    assert "signs in with Google" in r.json()["detail"]
+
+
+async def test_register_on_google_only_account_says_use_google(client, monkeypatch):
+    _patch_google(monkeypatch, "greg@example.com", "google-sub-5")
+    await client.post("/api/auth/google", json={"credential": "tok"})
+
+    r = await client.post(
+        "/api/auth/register", json={"email": "greg@example.com", "password": "pw123456"}
+    )
+    assert r.status_code == 400
+    assert "Google" in r.json()["detail"]
+
+
+async def test_google_only_account_can_set_password_then_login(auth_client, monkeypatch):
+    _patch_google(monkeypatch, "setpw@example.com", "google-sub-6")
+    r = await auth_client.post("/api/auth/google", json={"credential": "tok"})
+    token = r.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    r = await auth_client.get("/api/auth/me", headers=headers)
+    assert r.json()["has_password"] is False
+
+    r = await auth_client.post(
+        "/api/auth/password", json={"password": "newpw123"}, headers=headers
+    )
+    assert r.status_code == 204
+
+    r = await auth_client.get("/api/auth/me", headers=headers)
+    assert r.json()["has_password"] is True
+
+    r = await auth_client.post(
+        "/api/auth/login", json={"email": "setpw@example.com", "password": "newpw123"}
+    )
+    assert r.status_code == 200
+    assert "access_token" in r.json()
+
+
+async def test_change_password_requires_current_password(auth_client, monkeypatch):
+    _patch_google(monkeypatch, "chpw@example.com", "google-sub-7")
+    r = await auth_client.post("/api/auth/google", json={"credential": "tok"})
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    await auth_client.post(
+        "/api/auth/password", json={"password": "first123"}, headers=headers
+    )
+
+    # change without / with wrong current password -> rejected
+    r = await auth_client.post(
+        "/api/auth/password", json={"password": "second123"}, headers=headers
+    )
+    assert r.status_code == 400
+    r = await auth_client.post(
+        "/api/auth/password",
+        json={"password": "second123", "current_password": "wrong999"},
+        headers=headers,
+    )
+    assert r.status_code == 400
+
+    # correct current password -> changed
+    r = await auth_client.post(
+        "/api/auth/password",
+        json={"password": "second123", "current_password": "first123"},
+        headers=headers,
+    )
+    assert r.status_code == 204
+    r = await auth_client.post(
+        "/api/auth/login", json={"email": "chpw@example.com", "password": "second123"}
+    )
+    assert r.status_code == 200
+
+
+async def test_register_case_variant_email_is_rejected_not_duplicated(
+    client, monkeypatch, sessionmaker_
+):
+    _patch_google(monkeypatch, "case@example.com", "google-sub-8")
+    await client.post("/api/auth/google", json={"credential": "tok"})
+
+    r = await client.post(
+        "/api/auth/register", json={"email": "Case@Example.com", "password": "pw123456"}
+    )
+    assert r.status_code == 400
+
+    async with sessionmaker_() as s:
+        users = (
+            await s.execute(
+                select(User).where(User.email.ilike("case@example.com"))
+            )
+        ).scalars().all()
+        assert len(users) == 1
+
+
 async def test_google_unreachable_returns_503_not_401(client, monkeypatch):
     # cert fetch failed — the credential may be fine, so this must not be a 401
     from app.services.google_auth import GoogleAuthUnavailableError

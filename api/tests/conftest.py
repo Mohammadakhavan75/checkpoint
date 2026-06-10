@@ -55,6 +55,28 @@ async def user(sessionmaker_):
 
 
 @pytest_asyncio.fixture
+async def auth_client(sessionmaker_):
+    """Like `client`, but without the get_current_user override — exercises the
+    real bearer-token path for tests about authentication itself."""
+
+    async def override_session():
+        async with sessionmaker_() as s:
+            try:
+                yield s
+            except Exception:
+                await s.rollback()
+                raise
+
+    app.dependency_overrides[get_session] = override_session
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
 async def client(sessionmaker_, user):
     async def override_session():
         async with sessionmaker_() as s:

@@ -52,6 +52,11 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+    @property
+    def has_password(self) -> bool:
+        """Exposed via UserOut so the client can offer "set a password"."""
+        return self.hashed_password is not None
+
 
 class Domain(Base):
     """A user's custom domain (the sidebar categories). Items reference a domain

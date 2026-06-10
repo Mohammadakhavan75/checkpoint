@@ -46,6 +46,14 @@ class UserOut(BaseModel):
     picture: Optional[str] = None
     last_seen_version: Optional[str] = None
     created_at: datetime
+    # lets the client offer "set a password" to Google-only accounts
+    has_password: bool = True
+
+
+class SetPasswordRequest(BaseModel):
+    password: str = Field(min_length=6)
+    # required when the account already has a password (change vs first set)
+    current_password: Optional[str] = None
 
 
 class Token(BaseModel):

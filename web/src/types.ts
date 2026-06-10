@@ -80,6 +80,7 @@ export interface User {
   picture?: string | null;
   last_seen_version?: string | null;
   created_at: string;
+  has_password: boolean;
 }
 
 export interface Domain {

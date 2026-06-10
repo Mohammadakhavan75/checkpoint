@@ -23,9 +23,19 @@ async def test_list_includes_counts_and_item_domains(client):
     # an item in a domain that was never explicitly registered still shows up
     await client.post("/api/items", json={"title": "t1", "domain": "Ad-hoc", "state": "idea"})
     await client.post("/api/items", json={"title": "t2", "domain": "Ad-hoc", "state": "idea"})
+    await client.post("/api/items", json={"title": "t3", "domain": "Ad-hoc", "state": "done"})
     r = await client.get("/api/domains")
     by_name = {d["name"]: d for d in r.json()}
     assert by_name["Ad-hoc"]["count"] == 2
+
+
+async def test_done_only_item_domain_still_lists_with_zero_count(client):
+    await client.post("/api/items", json={"title": "finished", "domain": "Archive", "state": "done"})
+
+    r = await client.get("/api/domains")
+
+    by_name = {d["name"]: d for d in r.json()}
+    assert by_name["Archive"]["count"] == 0
 
 
 async def test_promote_registers_new_domain(client):

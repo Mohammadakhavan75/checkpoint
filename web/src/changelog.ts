@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.5",
+    date: "2026-06-10",
+    title: "Domain status filters",
+    notes: [
+      "Domains now have a status filter, with done tasks hidden by default.",
+      "Domain task counters now ignore done tasks.",
+    ],
+  },
+  {
     version: "0.3.4",
     date: "2026-06-10",
     title: "Passwords for Google accounts",

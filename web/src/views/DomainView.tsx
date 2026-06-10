@@ -1,6 +1,23 @@
+import { useMemo, useState } from "react";
+
 import { useItems, useSetState } from "../api/hooks";
 import { Chip, Loading, Marker, ModeChip, StateSelect } from "../components/atoms";
+import { STATE_ORDER, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
+
+type DomainStateFilter = "undone" | "all" | ItemState;
+
+const STATE_FILTERS: { value: DomainStateFilter; label: string }[] = [
+  { value: "undone", label: "Not done" },
+  { value: "all", label: "All" },
+  ...STATE_ORDER.map((state) => ({ value: state, label: STATES[state].label })),
+];
+
+function matchesStateFilter(item: Item, filter: DomainStateFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "undone") return item.state !== "done";
+  return item.state === filter;
+}
 
 function BacklogRow({
   item,
@@ -53,6 +70,7 @@ function BacklogRow({
 
 function ContainerGroup({
   item,
+  visibleChildren,
   idx,
   open,
   onToggle,
@@ -60,6 +78,7 @@ function ContainerGroup({
   onCompile,
 }: {
   item: Item;
+  visibleChildren: Item[];
   idx: number;
   open: boolean;
   onToggle: (id: string) => void;
@@ -103,7 +122,7 @@ function ContainerGroup({
         </div>
       </div>
       {open &&
-        children.map((c, k) => (
+        visibleChildren.map((c, k) => (
           <div
             key={c.id}
             className={`row child ${c.state} ${c.id === nextId ? "next" : ""}`}
@@ -150,8 +169,23 @@ export function DomainView({
 }) {
   const { data, isLoading } = useItems("domain", domain);
   const setState = useSetState();
-  if (isLoading) return <Loading />;
+  const [stateFilter, setStateFilter] = useState<DomainStateFilter>("undone");
   const list = data ?? [];
+  const visibleItems = useMemo(
+    () =>
+      list.flatMap((item) => {
+        const itemMatches = matchesStateFilter(item, stateFilter);
+        if (!item.is_parent) return itemMatches ? [{ item, visibleChildren: [] }] : [];
+
+        const visibleChildren = item.children.filter((child) =>
+          matchesStateFilter(child, stateFilter),
+        );
+        if (!itemMatches && visibleChildren.length === 0) return [];
+        return [{ item, visibleChildren }];
+      }),
+    [list, stateFilter],
+  );
+  if (isLoading) return <Loading />;
 
   const onState = (id: string, state: ItemState) => setState.mutate({ id, state });
 
@@ -161,18 +195,34 @@ export function DomainView({
         <h1>{domain}</h1>
         <span className="sub">// domain backlog</span>
       </div>
+      <div className="domain-tools" aria-label="Domain filters">
+        <label className="domain-filter">
+          <span>Status</span>
+          <select
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value as DomainStateFilter)}
+          >
+            {STATE_FILTERS.map((filter) => (
+              <option key={filter.value} value={filter.value}>
+                {filter.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <p className="lead">
         An inventory of possible work states — not a todo list. Set each item's state. The
         dangerous state is <b style={{ color: "var(--yellow)" }}>important-but-undefined</b>:
         compile it, defer it, or kill it.
       </p>
       <div className="rows">
-        {list.length ? (
-          list.map((item, idx) =>
+        {visibleItems.length ? (
+          visibleItems.map(({ item, visibleChildren }, idx) =>
             item.is_parent ? (
               <ContainerGroup
                 key={item.id}
                 item={item}
+                visibleChildren={visibleChildren}
                 idx={idx}
                 open={!collapsed.has(item.id)}
                 onToggle={onToggle}
@@ -191,7 +241,7 @@ export function DomainView({
             ),
           )
         ) : (
-          <div className="empty">No items in {domain} yet.</div>
+          <div className="empty">No matching items in {domain}.</div>
         )}
       </div>
     </>

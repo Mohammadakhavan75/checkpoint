@@ -9,6 +9,7 @@ import { Header } from "./components/Header";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { SessionOverlay } from "./components/SessionOverlay";
 import { Sidebar } from "./components/Sidebar";
+import { VersionBadge } from "./components/VersionBadge";
 import { WhatsNew } from "./components/WhatsNewModal";
 import { AuthView } from "./views/AuthView";
 import { DomainView } from "./views/DomainView";
@@ -39,7 +40,13 @@ export function App() {
   if (loading || booting) {
     return <CheckpointLoader onDone={() => setBooting(false)} />;
   }
-  if (!user) return <AuthView />;
+  if (!user)
+    return (
+      <>
+        <AuthView />
+        <VersionBadge />
+      </>
+    );
 
   function nav(t: Tab, d?: string) {
     setTab(t);
@@ -104,6 +111,7 @@ export function App() {
       </div>
 
       <WhatsNew user={user} />
+      <VersionBadge />
 
       {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
 

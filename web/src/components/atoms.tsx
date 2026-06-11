@@ -1,4 +1,4 @@
-import { STATES } from "../constants";
+import { MODE_HINTS, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
 
 export function Chip({ state }: { state: ItemState }) {
@@ -21,7 +21,11 @@ export function Marker({ state, symbol }: { state: ItemState; symbol?: string })
 
 export function ModeChip({ mode }: { mode?: string | null }) {
   if (!mode) return null;
-  return <span className="mode-chip">{mode}</span>;
+  return (
+    <span className="mode-chip" title={MODE_HINTS[mode] ?? `Mode: ${mode}`}>
+      {mode}
+    </span>
+  );
 }
 
 export function StateSelect({

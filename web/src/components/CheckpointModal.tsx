@@ -28,11 +28,14 @@ export function CheckpointModal({
   const [more, setMore] = useState(false);
   const full = !trimmed || more;
 
-  const ok = !!(lastState.trim() && nextAction.trim() && resumeFrom.trim());
+  // Done means finished — there is no next step, so the resume fields
+  // (next action / resume from / do-not-redo) don't apply.
+  const isDone = outcome === "done";
+  const ok = !!(lastState.trim() && (isDone || (nextAction.trim() && resumeFrom.trim())));
 
   async function submit() {
     if (!ok) {
-      setErr("⚠ fill last state · next action · resume from");
+      setErr(isDone ? "⚠ fill last state" : "⚠ fill last state · next action · resume from");
       return;
     }
     const cp = await save.mutateAsync({
@@ -42,9 +45,9 @@ export function CheckpointModal({
         last_state: lastState,
         what_changed: whatChanged || undefined,
         problems: problems || undefined,
-        next_action: nextAction,
-        resume_from: resumeFrom,
-        do_not_redo: doNotRedo || undefined,
+        next_action: isDone ? undefined : nextAction,
+        resume_from: isDone ? undefined : resumeFrom,
+        do_not_redo: isDone ? undefined : doNotRedo || undefined,
       },
     });
     onSaved(cp);
@@ -59,8 +62,9 @@ export function CheckpointModal({
         </header>
         <div className="pad">
           <div className="note">
-            Externalize the state so future-you resumes without rebuilding context. This is
-            mandatory to close.
+            {isDone
+              ? "Record how it ended so future-you trusts it's finished. This is mandatory to close."
+              : "Externalize the state so future-you resumes without rebuilding context. This is mandatory to close."}
           </div>
           {full && (
             <div className="field">
@@ -95,32 +99,44 @@ export function CheckpointModal({
             </div>
           )}
           {full ? (
-            <>
-              <div className="grid2">
+            isDone ? (
+              <>
                 <div className="field">
                   <label>Problems found</label>
                   <input value={problems} onChange={(e) => setProblems(e.target.value)} />
                 </div>
-                <div className="field">
-                  <label>
-                    Next action <span className="req">*</span>
-                  </label>
-                  <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+                <div className="note">
+                  ✓ Done — no next action or resume point needed; this receipt is the record.
                 </div>
-              </div>
-              <div className="grid2">
-                <div className="field">
-                  <label>
-                    Resume from <span className="req">*</span>
-                  </label>
-                  <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
+              </>
+            ) : (
+              <>
+                <div className="grid2">
+                  <div className="field">
+                    <label>Problems found</label>
+                    <input value={problems} onChange={(e) => setProblems(e.target.value)} />
+                  </div>
+                  <div className="field">
+                    <label>
+                      Next action <span className="req">*</span>
+                    </label>
+                    <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+                  </div>
                 </div>
-                <div className="field">
-                  <label>Do not redo</label>
-                  <input value={doNotRedo} onChange={(e) => setDoNotRedo(e.target.value)} />
+                <div className="grid2">
+                  <div className="field">
+                    <label>
+                      Resume from <span className="req">*</span>
+                    </label>
+                    <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
+                  </div>
+                  <div className="field">
+                    <label>Do not redo</label>
+                    <input value={doNotRedo} onChange={(e) => setDoNotRedo(e.target.value)} />
+                  </div>
                 </div>
-              </div>
-            </>
+              </>
+            )
           ) : (
             <>
               <div className="grid2">
@@ -145,7 +161,10 @@ export function CheckpointModal({
         </div>
         <footer>
           <span className="gate" style={{ color: err ? "var(--red)" : undefined }}>
-            {err || "⚠ last state · next action · resume from are required"}
+            {err ||
+              (isDone
+                ? "⚠ last state is required"
+                : "⚠ last state · next action · resume from are required")}
           </span>
           <button className="btn" onClick={onBack}>
             Back

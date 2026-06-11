@@ -69,9 +69,21 @@ async def rollup(session: AsyncSession, parent_id: uuid.UUID, owner_id: uuid.UUI
         parent.state = "active"
 
 
+def couple_scout_axes(item: Item) -> None:
+    """"Needs reconnaissance" lives on both axes — the scout *state* and the
+    Scout *mode* — so keep them from contradicting each other: the scout state
+    implies Scout mode, and starting work on a Scout-mode item means scouting,
+    not executing (rule: unknown task → scout, do not execute)."""
+    if item.state == "scout":
+        item.mode = "Scout"
+    elif item.state == "active" and item.mode == "Scout":
+        item.state = "scout"
+
+
 async def set_state(session: AsyncSession, item: Item, state: str) -> Item:
     """Set state; containers cascade kill/done/defer to phases; roll up parent."""
     item.state = state
+    couple_scout_axes(item)
     children = await get_children(session, item.id)
     if children and state in ("killed", "done", "deferred"):
         for child in children:
@@ -230,6 +242,12 @@ async def compile_item(
         item.compiled = True
         if item.state in ("idea", "needsdef"):
             item.state = "scout" if item.mode == "Scout" else "active"
+        elif item.state == "scout" and item.mode != "Scout":
+            # classification says the procedure is known now — scouting is over
+            item.state = "active"
+        elif item.state == "active" and item.mode == "Scout":
+            # first move still unknown — sessions on this are reconnaissance
+            item.state = "scout"
         if item.parent_id:
             await rollup(session, item.parent_id, owner_id)
 

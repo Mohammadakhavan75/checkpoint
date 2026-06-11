@@ -71,9 +71,20 @@ class CheckpointCreate(BaseModel):
     last_state: str = Field(min_length=1)
     what_changed: Optional[str] = None
     problems: Optional[str] = None
-    next_action: str = Field(min_length=1)
-    resume_from: str = Field(min_length=1)
+    # A "done" outcome has no next step, so resume fields only apply to
+    # outcomes that will be picked up again.
+    next_action: Optional[str] = None
+    resume_from: Optional[str] = None
     do_not_redo: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _require_resume_fields_unless_done(self) -> "CheckpointCreate":
+        if self.outcome != "done":
+            if not (self.next_action and self.next_action.strip()):
+                raise ValueError("next_action is required unless outcome is done")
+            if not (self.resume_from and self.resume_from.strip()):
+                raise ValueError("resume_from is required unless outcome is done")
+        return self
 
 
 class CheckpointOut(BaseModel):

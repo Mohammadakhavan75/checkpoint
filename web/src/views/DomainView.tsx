@@ -39,7 +39,7 @@ function BacklogRow({
         <div className="name">{item.title}</div>
         <div className="meta">
           {item.compiled ? (
-            <span style={{ color: "var(--green)" }}>compiled</span>
+            <span style={{ color: "var(--dim)" }}>compiled</span>
           ) : (
             <span style={{ color: "var(--orange)" }}>not compiled</span>
           )}

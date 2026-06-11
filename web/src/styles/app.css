@@ -6,6 +6,7 @@
   --text:#dde3ea; --dim:#8b95a1; --faint:#74808d;
   --amber:#ffb454; --amber2:#7a4f1c;
   --cyan:#5ad1e6; --green:#5fd97a; --yellow:#e8c84a; --orange:#ff9d4d; --red:#ff5a52; --violet:#b08bff;
+  --slate:#8ba3c2; /* parked/low-energy states — cool so it can't be mistaken for the amber "now" family */
 }
 *{box-sizing:border-box}
 html,body,#root{margin:0;height:100%}
@@ -163,10 +164,12 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 .chip{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;text-transform:uppercase;
   padding:2px 8px;border-radius:20px;border:1px solid currentColor;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.mode-chip{font-family:'JetBrains Mono';font-size:10px;color:var(--cyan);border:1px solid var(--line2);
-  padding:1px 7px;border-radius:5px;letter-spacing:.5px}
+.mode-chip{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);border:1px solid var(--line2);
+  padding:1px 7px;border-radius:5px;letter-spacing:.5px} /* dim, not a status color — mode is metadata, state is the signal */
 
 .acts{display:flex;gap:6px;flex:none}
+.acts select.btn{width:122px} /* one shared option list — size once to widest label so the column aligns */
+.acts .btn.amber{min-width:92px;text-align:center} /* fits "Recompile" so the Compile→Recompile relabel doesn't shift the row */
 .btn{font-family:'JetBrains Mono';font-size:11.5px;padding:6px 11px;border-radius:6px;
   border:1px solid var(--line2);color:var(--dim);background:var(--panel2)}
 .btn:hover{color:var(--text);border-color:var(--text)}

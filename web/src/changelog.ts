@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.5.0",
+    date: "2026-06-11",
+    title: "Done means done",
+    notes: [
+      "Closing a task as Done no longer asks for a next action or resume point — finished work has no next step, and the receipt says so.",
+      "Scout is one idea now: setting an item's state to scout makes its mode match, and starting work on a Scout item begins reconnaissance instead of execution.",
+      "Hover any mode chip (Do · Scout · Plan · Deep) to see what it means.",
+      "Action buttons line up in clean columns, Deferred has its own calm color, and green is reserved for Done.",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-06-11",
     title: "Your first ten seconds",

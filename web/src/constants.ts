@@ -7,7 +7,7 @@ export const STATES: Record<ItemState, { label: string; color: string; sym: stri
   active: { label: "Active", color: "var(--amber)", sym: "▸" },
   waiting: { label: "Waiting", color: "var(--dim)", sym: "…" },
   blocked: { label: "Blocked", color: "var(--red)", sym: "!" },
-  deferred: { label: "Deferred", color: "var(--orange)", sym: "→" },
+  deferred: { label: "Deferred", color: "var(--slate)", sym: "→" },
   killed: { label: "Killed", color: "var(--red)", sym: "✕" },
   done: { label: "Done", color: "var(--green)", sym: "✓" },
 };

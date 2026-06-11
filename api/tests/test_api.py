@@ -93,6 +93,31 @@ async def test_checkpoint_required_fields_and_history(client):
     assert len(r.json()) == 1
 
 
+async def test_done_checkpoint_needs_no_resume_fields(client):
+    r = await client.post("/api/items", json={"title": "work", "domain": "DDWS", "state": "active"})
+    iid = r.json()["id"]
+
+    # non-done outcomes still require the resume fields
+    r = await client.post(
+        f"/api/items/{iid}/checkpoints",
+        json={"outcome": "active", "last_state": "midway"},
+    )
+    assert r.status_code == 422
+
+    # done has no next step — last_state alone is enough
+    r = await client.post(
+        f"/api/items/{iid}/checkpoints",
+        json={"outcome": "done", "last_state": "shipped"},
+    )
+    assert r.status_code == 201
+    body = r.json()
+    assert body["next_action"] == ""
+    assert body["resume_from"] == ""
+
+    r = await client.get(f"/api/items/{iid}")
+    assert r.json()["state"] == "done"
+
+
 async def test_compile_container_nests_phases_in_domain_view(client):
     r = await client.post("/api/items", json={"title": "cluster", "domain": "HPC", "state": "needsdef"})
     iid = r.json()["id"]

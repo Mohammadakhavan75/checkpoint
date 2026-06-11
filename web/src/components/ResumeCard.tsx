@@ -40,14 +40,19 @@ export function ResumeCard({
       <div className="rc-title">{title}</div>
       <div className="rc-state">{cp.last_state}</div>
       <div className="rc-grid">
-        <div>
-          <div className="k">Resume from</div>
-          <div className="v">{cp.resume_from}</div>
-        </div>
-        <div>
-          <div className="k">Next action</div>
-          <div className="v">{cp.next_action}</div>
-        </div>
+        {/* "done" checkpoints carry no resume fields — finished work has no next step */}
+        {cp.resume_from && (
+          <div>
+            <div className="k">Resume from</div>
+            <div className="v">{cp.resume_from}</div>
+          </div>
+        )}
+        {cp.next_action && (
+          <div>
+            <div className="k">Next action</div>
+            <div className="v">{cp.next_action}</div>
+          </div>
+        )}
         {cp.do_not_redo && (
           <div>
             <div className="k">Do not redo</div>

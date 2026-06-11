@@ -126,7 +126,8 @@ export interface CheckpointPayload {
   last_state: string;
   what_changed?: string;
   problems?: string;
-  next_action: string;
-  resume_from: string;
+  // Required unless outcome is "done" — finished work has no next step.
+  next_action?: string;
+  resume_from?: string;
   do_not_redo?: string;
 }

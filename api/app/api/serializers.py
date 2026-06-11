@@ -25,6 +25,7 @@ def serialize_item(
         procedure=item.procedure,
         scope=item.scope,
         fields=item.fields or {},
+        is_tutorial=item.is_tutorial,
         created_at=item.created_at,
         updated_at=item.updated_at,
         is_parent=is_parent,

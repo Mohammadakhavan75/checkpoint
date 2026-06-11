@@ -24,10 +24,16 @@ async def list_domains(session: AsyncSession, owner_id: uuid.UUID) -> list[dict]
         .scalars()
         .all()
     )
+    # is_tutorial filter: the seeded tutorial item must not surface its
+    # "welcome" domain in the sidebar — the first-run flow bypasses the ontology.
     item_domain_rows = (
         await session.execute(
             select(Item.domain)
-            .where(Item.owner_id == owner_id, Item.domain != RESERVOIR)
+            .where(
+                Item.owner_id == owner_id,
+                Item.domain != RESERVOIR,
+                Item.is_tutorial.is_(False),
+            )
             .distinct()
             .order_by(Item.domain)
         )
@@ -39,6 +45,7 @@ async def list_domains(session: AsyncSession, owner_id: uuid.UUID) -> list[dict]
                 Item.owner_id == owner_id,
                 Item.domain != RESERVOIR,
                 Item.state != "done",
+                Item.is_tutorial.is_(False),
             )
             .group_by(Item.domain)
         )

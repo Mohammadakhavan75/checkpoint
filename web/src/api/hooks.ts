@@ -4,6 +4,7 @@ import type {
   CheckpointPayload,
   CompilePayload,
   ItemState,
+  ItemUpdatePayload,
   SnapshotPayload,
   Tab,
 } from "../types";
@@ -84,6 +85,15 @@ export function useCompile() {
   return useMutation({
     mutationFn: (vars: { id: string; payload: CompilePayload }) =>
       api.compileItem(vars.id, vars.payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateItem() {
+  const invalidate = useInvalidateAll();
+  return useMutation({
+    mutationFn: (vars: { id: string; payload: ItemUpdatePayload }) =>
+      api.updateItem(vars.id, vars.payload),
     onSuccess: invalidate,
   });
 }

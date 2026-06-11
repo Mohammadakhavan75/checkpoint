@@ -27,6 +27,13 @@ export interface Checkpoint {
   created_at: string;
 }
 
+// POST /items/{id}/checkpoints response: the server flags the user's first
+// self-authored checkpoint (seeded tutorial receipts never count) so the
+// client can show the one-time first-checkpoint reveal.
+export interface CheckpointSaved extends Checkpoint {
+  first_user_checkpoint?: boolean;
+}
+
 export interface Snapshot {
   id: string;
   item_id: string;
@@ -66,6 +73,7 @@ export interface Item {
   procedure?: Procedure | null;
   scope?: Scope | null;
   fields: ItemFields;
+  is_tutorial: boolean;
   created_at: string;
   updated_at: string;
   is_parent: boolean;
@@ -104,6 +112,13 @@ export interface CompilePayload {
   procedure?: Procedure | null;
   scope?: Scope | null;
   phases?: PhaseInput[];
+}
+
+export interface ItemUpdatePayload {
+  title?: string;
+  domain?: string;
+  state?: ItemState;
+  daily?: boolean;
 }
 
 export interface CheckpointPayload {

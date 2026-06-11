@@ -178,6 +178,42 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 
 .empty{color:var(--faint);font-family:'JetBrains Mono';font-size:12.5px;border:1px dashed var(--line2);
   border-radius:9px;padding:26px;text-align:center}
+.empty .empty-q{font-family:'IBM Plex Sans';font-size:15px;color:var(--text);margin-bottom:14px}
+.empty-cap{display:flex;gap:8px;justify-content:center;max-width:480px;margin:0 auto}
+.empty-cap input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line2);border-radius:7px;
+  padding:9px 11px;font-size:13px;outline:none}
+.empty-cap input:focus{border-color:var(--amber)}
+.empty .empty-hint{margin-top:14px;line-height:1.6}
+
+/* ===== resume card (the first screen of every return) ===== */
+.resumecard{background:linear-gradient(var(--panel),#0d1410);border:1px solid #1d3a28;border-radius:11px;
+  padding:16px 18px;margin-bottom:18px;box-shadow:0 0 36px -22px var(--green)}
+.resumecard .rc-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-family:'JetBrains Mono';font-size:11px;letter-spacing:1px}
+.resumecard .rc-lab{color:var(--green);font-weight:700}
+.resumecard .rc-when{color:var(--faint)}
+.resumecard .rc-title{font-family:'JetBrains Mono';font-weight:700;font-size:18px;margin-top:9px}
+.resumecard .rc-state{color:var(--dim);font-size:13px;margin-top:4px}
+.resumecard .rc-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px}
+.resumecard .rc-grid>div{flex:1 1 180px;min-width:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:7px;padding:9px 12px}
+.resumecard .k{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:1px;color:var(--faint);text-transform:uppercase}
+.resumecard .v{font-size:12.5px;margin-top:3px;color:var(--text)}
+.resumecard .rc-grid>div:first-child .k{color:var(--green)}
+.rc-acts{display:flex;align-items:center;gap:16px;margin-top:15px}
+.rc-resume{padding:10px 22px;font-size:13px}
+.rc-dismiss{font-family:'JetBrains Mono';font-size:11.5px;color:var(--faint)}
+.rc-dismiss:hover{color:var(--text)}
+
+/* tutorial bridge (one-question capture inside the session overlay) */
+.bridge{display:flex;gap:10px;max-width:560px}
+.bridge input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line2);border-radius:7px;
+  padding:11px 13px;font-size:14px;outline:none}
+.bridge input:focus{border-color:var(--amber)}
+
+/* "more" disclosure on the trimmed first-run checkpoint form */
+.morebtn{display:block;font-family:'JetBrains Mono';font-size:11.5px;color:var(--cyan);padding:0;margin:-2px 0 12px}
+.morebtn:hover{color:var(--text)}
 
 /* compiled summary block on daily rows */
 .exec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:10px;border:1px solid var(--line);border-radius:7px;overflow:hidden}
@@ -456,6 +492,10 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
   .session .work{padding:18px 16px}
   .session .clockwrap{padding:18px}
   .swrow{flex-direction:column}
+
+  /* one-question inputs stack on phones */
+  .bridge{flex-direction:column}
+  .empty-cap{flex-direction:column}
 
   /* StackEdit is a desktop-grade editor — hide its triggers on phones, keep the textarea */
   .stackedit-link,.snapedit-stack{display:none}

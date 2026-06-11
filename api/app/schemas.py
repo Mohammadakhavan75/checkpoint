@@ -90,6 +90,14 @@ class CheckpointOut(BaseModel):
     created_at: datetime
 
 
+class CheckpointCreatedOut(CheckpointOut):
+    """POST response only: tells the client whether this was the user's first
+    self-authored checkpoint (seeded tutorial checkpoints never count), so it
+    can show the one-time first-checkpoint reveal."""
+
+    first_user_checkpoint: bool = False
+
+
 # ----- snapshots -----
 class SnapshotCreate(BaseModel):
     title: Optional[str] = None
@@ -207,6 +215,7 @@ class ItemOut(BaseModel):
     procedure: Optional[str] = None
     scope: Optional[str] = None
     fields: dict
+    is_tutorial: bool = False
     created_at: datetime
     updated_at: datetime
     # computed / assembled fields

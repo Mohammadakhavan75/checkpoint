@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-import { useCapture, useCompile, useItem } from "./api/hooks";
+import { useCapture, useCompile, useItem, useSetDaily, useUpdateItem } from "./api/hooks";
 import { useAuth } from "./auth";
 import { CheckpointLoader } from "./components/CheckpointLoader";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
+import { FirstCheckpointReveal } from "./components/FirstCheckpointReveal";
 import { Header } from "./components/Header";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { SessionOverlay } from "./components/SessionOverlay";
@@ -16,12 +17,14 @@ import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
 import { ReservoirView } from "./views/ReservoirView";
 import { TodayView } from "./views/TodayView";
-import type { Tab } from "./types";
+import type { Checkpoint, Tab } from "./types";
 
 export function App() {
   const { user, loading } = useAuth();
   const capture = useCapture();
   const compile = useCompile();
+  const setDaily = useSetDaily();
+  const updateItem = useUpdateItem();
 
   const [tab, setTab] = useState<Tab>("today");
   const [domain, setDomain] = useState("");
@@ -32,6 +35,10 @@ export function App() {
   const [compileId, setCompileId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [checkpointOpen, setCheckpointOpen] = useState(false);
+  // The session was born from the tutorial bridge (or the empty-TODAY capture):
+  // its closing checkpoint form is trimmed to the three required fields.
+  const [firstRunSession, setFirstRunSession] = useState(false);
+  const [reveal, setReveal] = useState<{ title: string; checkpoint: Checkpoint } | null>(null);
 
   const { data: sessionItem } = useItem(sessionId);
 
@@ -66,6 +73,12 @@ export function App() {
   function closeSession() {
     setSessionId(null);
     setCheckpointOpen(false);
+    setFirstRunSession(false);
+  }
+
+  function openSession(id: string) {
+    setFirstRunSession(false);
+    setSessionId(id);
   }
 
   // Fast path: skip the compile form. For an uncompiled item, quick-classify it
@@ -75,7 +88,27 @@ export function App() {
     if (!alreadyCompiled) {
       await compile.mutateAsync({ id, payload: { procedure: "known", scope: "bounded" } });
     }
-    setSessionId(id);
+    openSession(id);
+  }
+
+  // Tutorial bridge: capture the user's answer, auto-compile it (known|bounded),
+  // put it on TODAY, retire the tutorial item, and swap the session onto it.
+  // No reservoir/domain/compile form in the path.
+  async function bridgeCapture(text: string, tutorialId?: string) {
+    const captured = await capture.mutateAsync({ text });
+    await compile.mutateAsync({
+      id: captured.id,
+      payload: { procedure: "known", scope: "bounded" },
+    });
+    await setDaily.mutateAsync({ id: captured.id, daily: true });
+    if (tutorialId) {
+      await updateItem.mutateAsync({
+        id: tutorialId,
+        payload: { state: "done", daily: false },
+      });
+    }
+    setFirstRunSession(true);
+    setSessionId(captured.id);
   }
 
   return (
@@ -94,7 +127,13 @@ export function App() {
             <Sidebar tab={tab} domain={domain} onNav={nav} />
           </MobileDrawer>
           <main>
-            {tab === "today" && <TodayView onStart={setSessionId} onEdit={setCompileId} />}
+            {tab === "today" && (
+              <TodayView
+                onStart={openSession}
+                onEdit={setCompileId}
+                onBridgeCapture={bridgeCapture}
+              />
+            )}
             {tab === "ready" && <ReadyView onEdit={setCompileId} />}
             {tab === "reservoir" && <ReservoirView onNav={nav} />}
             {tab === "domain" && (
@@ -120,17 +159,29 @@ export function App() {
           item={sessionItem}
           onAbandon={() => setSessionId(null)}
           onCheckpoint={() => setCheckpointOpen(true)}
+          onBridge={(text) => bridgeCapture(text, sessionItem.id)}
         />
       )}
 
       {sessionId && checkpointOpen && (
         <CheckpointModal
           id={sessionId}
+          trimmed={firstRunSession}
           onBack={() => setCheckpointOpen(false)}
-          onSaved={() => {
+          onSaved={(cp) => {
+            const title = sessionItem?.title ?? "";
             closeSession();
             setTab("today");
+            if (cp.first_user_checkpoint) setReveal({ title, checkpoint: cp });
           }}
+        />
+      )}
+
+      {reveal && (
+        <FirstCheckpointReveal
+          title={reveal.title}
+          checkpoint={reveal.checkpoint}
+          onClose={() => setReveal(null)}
         />
       )}
     </>

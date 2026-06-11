@@ -25,6 +25,7 @@ from ..services.google_auth import (
     get_or_link_google_user,
     verify_google_credential,
 )
+from ..services.tutorial import seed_tutorial
 
 router = APIRouter()
 
@@ -61,6 +62,10 @@ async def register(
         email=payload.email.lower(), hashed_password=hash_password(payload.password)
     )
     session.add(user)
+    await session.flush()
+    # First-run activation: the first screen a new user sees is the resume
+    # card pointed at this seeded, already-checkpointed tutorial item.
+    await seed_tutorial(session, user.id)
     await session.commit()
     await session.refresh(user)
     return UserOut.model_validate(user)

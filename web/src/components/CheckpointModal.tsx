@@ -1,16 +1,20 @@
 import { useState } from "react";
 
 import { useSaveCheckpoint } from "../api/hooks";
-import type { Outcome } from "../types";
+import type { CheckpointSaved, Outcome } from "../types";
 
 export function CheckpointModal({
   id,
   onBack,
   onSaved,
+  trimmed = false,
 }: {
   id: string;
   onBack: () => void;
-  onSaved: () => void;
+  onSaved: (cp: CheckpointSaved) => void;
+  // First-run (tutorial bridge) sessions: only the three required fields,
+  // everything else behind a "more" disclosure.
+  trimmed?: boolean;
 }) {
   const save = useSaveCheckpoint();
   const [outcome, setOutcome] = useState<Outcome>("active");
@@ -21,6 +25,8 @@ export function CheckpointModal({
   const [resumeFrom, setResumeFrom] = useState("");
   const [doNotRedo, setDoNotRedo] = useState("");
   const [err, setErr] = useState("");
+  const [more, setMore] = useState(false);
+  const full = !trimmed || more;
 
   const ok = !!(lastState.trim() && nextAction.trim() && resumeFrom.trim());
 
@@ -29,7 +35,7 @@ export function CheckpointModal({
       setErr("⚠ fill last state · next action · resume from");
       return;
     }
-    await save.mutateAsync({
+    const cp = await save.mutateAsync({
       id,
       payload: {
         outcome,
@@ -41,7 +47,7 @@ export function CheckpointModal({
         do_not_redo: doNotRedo || undefined,
       },
     });
-    onSaved();
+    onSaved(cp);
   }
 
   return (
@@ -56,15 +62,17 @@ export function CheckpointModal({
             Externalize the state so future-you resumes without rebuilding context. This is
             mandatory to close.
           </div>
-          <div className="field">
-            <label>Outcome</label>
-            <select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
-              <option value="active">↻ Continue later (still active)</option>
-              <option value="deferred">→ Deferred</option>
-              <option value="blocked">! Blocked</option>
-              <option value="done">✓ Done</option>
-            </select>
-          </div>
+          {full && (
+            <div className="field">
+              <label>Outcome</label>
+              <select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
+                <option value="active">↻ Continue later (still active)</option>
+                <option value="deferred">→ Deferred</option>
+                <option value="blocked">! Blocked</option>
+                <option value="done">✓ Done</option>
+              </select>
+            </div>
+          )}
           <div className="field">
             <label>
               Last state <span className="req">*</span>
@@ -75,39 +83,65 @@ export function CheckpointModal({
               onChange={(e) => setLastState(e.target.value)}
             />
           </div>
-          <div className="field">
-            <label>What changed / what I tried</label>
-            <textarea
-              rows={2}
-              placeholder="evidence, commands, what happened"
-              value={whatChanged}
-              onChange={(e) => setWhatChanged(e.target.value)}
-            />
-          </div>
-          <div className="grid2">
+          {full && (
             <div className="field">
-              <label>Problems found</label>
-              <input value={problems} onChange={(e) => setProblems(e.target.value)} />
+              <label>What changed / what I tried</label>
+              <textarea
+                rows={2}
+                placeholder="evidence, commands, what happened"
+                value={whatChanged}
+                onChange={(e) => setWhatChanged(e.target.value)}
+              />
             </div>
-            <div className="field">
-              <label>
-                Next action <span className="req">*</span>
-              </label>
-              <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
-            </div>
-          </div>
-          <div className="grid2">
-            <div className="field">
-              <label>
-                Resume from <span className="req">*</span>
-              </label>
-              <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Do not redo</label>
-              <input value={doNotRedo} onChange={(e) => setDoNotRedo(e.target.value)} />
-            </div>
-          </div>
+          )}
+          {full ? (
+            <>
+              <div className="grid2">
+                <div className="field">
+                  <label>Problems found</label>
+                  <input value={problems} onChange={(e) => setProblems(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>
+                    Next action <span className="req">*</span>
+                  </label>
+                  <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid2">
+                <div className="field">
+                  <label>
+                    Resume from <span className="req">*</span>
+                  </label>
+                  <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>Do not redo</label>
+                  <input value={doNotRedo} onChange={(e) => setDoNotRedo(e.target.value)} />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid2">
+                <div className="field">
+                  <label>
+                    Next action <span className="req">*</span>
+                  </label>
+                  <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>
+                    Resume from <span className="req">*</span>
+                  </label>
+                  <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
+                </div>
+              </div>
+              <button className="morebtn" type="button" onClick={() => setMore(true)}>
+                + more — outcome · what changed · problems · do-not-redo
+              </button>
+            </>
+          )}
         </div>
         <footer>
           <span className="gate" style={{ color: err ? "var(--red)" : undefined }}>

@@ -124,4 +124,8 @@ async def get_or_link_google_user(
     apply_profile(user)
     session.add(user)
     await session.flush()
+    # First Google sign-in is a registration: seed the first-run tutorial.
+    from .tutorial import seed_tutorial  # local import avoids cycle noise
+
+    await seed_tutorial(session, user.id)
     return user

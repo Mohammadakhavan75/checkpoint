@@ -102,6 +102,12 @@ class Item(Base):
     mode: Mapped[str | None] = mapped_column(Text, nullable=True)
     daily: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     compiled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Seeded first-run tutorial item. Its checkpoint never counts as the user's
+    # own (first-checkpoint reveal), it stays out of the sidebar domain list,
+    # and the client styles/dismisses it specially.
+    is_tutorial: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     procedure: Mapped[str | None] = mapped_column(Text, nullable=True)  # known|unknown
     scope: Mapped[str | None] = mapped_column(Text, nullable=True)  # bounded|unbounded
     fields: Mapped[dict] = mapped_column(JSONVariant, nullable=False, default=dict)

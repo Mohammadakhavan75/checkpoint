@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.4.0",
+    date: "2026-06-11",
+    title: "Your first ten seconds",
+    notes: [
+      "New accounts now open on a resume card you can press right away — feel what the app does before learning a single term.",
+      "Returning visits greet you with your latest checkpoint and a one-click resume, instead of a list to scan.",
+      "The intro is a real, working session: answer one question and it hands off to your own work.",
+      "Closing your first session shows you the receipt that will greet you next time — and the first checkpoint form is trimmed to the essentials.",
+    ],
+  },
+  {
     version: "0.3.5",
     date: "2026-06-10",
     title: "Domain status filters",

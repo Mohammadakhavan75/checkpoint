@@ -1,17 +1,50 @@
-import { useItems } from "../api/hooks";
+import { useState, type FormEvent } from "react";
+
+import { useDeleteItem, useItems } from "../api/hooks";
 import { Loading } from "../components/atoms";
+import { ResumeCard } from "../components/ResumeCard";
 import { UnitRow } from "../components/UnitRow";
 
 export function TodayView({
   onStart,
   onEdit,
+  onBridgeCapture,
 }: {
   onStart: (id: string) => void;
   onEdit: (id: string) => void;
+  onBridgeCapture: (text: string) => Promise<void>;
 }) {
   const { data, isLoading } = useItems("today");
+  const del = useDeleteItem();
+  const [captureText, setCaptureText] = useState("");
+  const [captureBusy, setCaptureBusy] = useState(false);
+
   if (isLoading) return <Loading />;
-  const list = data ?? [];
+  const all = data ?? [];
+
+  // Resume card: the newest checkpoint across today's still-open items.
+  const resumable = all.filter((i) => i.latest_checkpoint && i.state !== "done");
+  const card = resumable.length
+    ? resumable.reduce((a, b) =>
+        a.latest_checkpoint!.created_at >= b.latest_checkpoint!.created_at ? a : b,
+      )
+    : null;
+  // The tutorial item is fully represented by its card — no row underneath.
+  const list = all.filter((i) => !i.is_tutorial);
+
+  async function submitCapture(e: FormEvent) {
+    e.preventDefault();
+    const text = captureText.trim();
+    if (!text || captureBusy) return;
+    setCaptureBusy(true);
+    try {
+      await onBridgeCapture(text);
+      setCaptureText("");
+    } finally {
+      setCaptureBusy(false);
+    }
+  }
+
   return (
     <>
       <div className="viewhead">
@@ -22,6 +55,14 @@ export function TodayView({
         Nothing vague is allowed to compete here. Every row has already been compiled into a
         resumable unit with a concrete first action — so starting is safe, not dangerous.
       </p>
+      {card && (
+        <ResumeCard
+          title={card.title}
+          checkpoint={card.latest_checkpoint!}
+          onResume={() => onStart(card.id)}
+          onDismiss={card.is_tutorial ? () => del.mutate(card.id) : undefined}
+        />
+      )}
       <div className="rows">
         {list.length ? (
           list.map((item, idx) => (
@@ -35,13 +76,29 @@ export function TodayView({
               onEdit={onEdit}
             />
           ))
-        ) : (
+        ) : !card ? (
           <div className="empty">
-            Nothing on today's list yet.
-            <br />
-            Pull a compiled task in from <b>Ready to GO!</b>
+            <div className="empty-q">What were you working on before you opened this?</div>
+            <form className="empty-cap" onSubmit={submitCapture}>
+              <input
+                value={captureText}
+                placeholder="one line is enough"
+                onChange={(e) => setCaptureText(e.target.value)}
+              />
+              <button
+                className="btn amber"
+                type="submit"
+                disabled={captureBusy || !captureText.trim()}
+              >
+                → resume it
+              </button>
+            </form>
+            <div className="empty-hint">
+              It becomes a session; closing the session writes the checkpoint your next visit
+              starts from. Or pull a compiled task in from <b>Ready to GO!</b>
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
     </>
   );

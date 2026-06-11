@@ -1,10 +1,12 @@
 import type {
   Checkpoint,
   CheckpointPayload,
+  CheckpointSaved,
   CompilePayload,
   Domain,
   Item,
   ItemState,
+  ItemUpdatePayload,
   Snapshot,
   SnapshotPayload,
   Tab,
@@ -129,6 +131,9 @@ export const promoteItem = (id: string, domain: string) =>
 export const compileItem = (id: string, payload: CompilePayload) =>
   request<Item>(`/items/${id}/compile`, { method: "POST", ...body(payload) });
 
+export const updateItem = (id: string, payload: ItemUpdatePayload) =>
+  request<Item>(`/items/${id}`, { method: "PATCH", ...body(payload) });
+
 export const setItemState = (id: string, state: ItemState) =>
   request<Item>(`/items/${id}/state`, { method: "POST", ...body({ state }) });
 
@@ -143,7 +148,7 @@ export const listCheckpoints = (id: string) =>
   request<Checkpoint[]>(`/items/${id}/checkpoints`);
 
 export const createCheckpoint = (id: string, payload: CheckpointPayload) =>
-  request<Checkpoint>(`/items/${id}/checkpoints`, { method: "POST", ...body(payload) });
+  request<CheckpointSaved>(`/items/${id}/checkpoints`, { method: "POST", ...body(payload) });
 
 // ----- snapshots -----
 export const listSnapshots = (id: string) =>

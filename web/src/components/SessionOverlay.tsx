@@ -16,15 +16,32 @@ export function SessionOverlay({
   item,
   onAbandon,
   onCheckpoint,
+  onBridge,
 }: {
   item: Item;
   onAbandon: () => void;
   onCheckpoint: () => void;
+  // Tutorial bridge: hands the one-question answer to the app, which captures
+  // it, compiles it, and swaps this session onto the user's real item.
+  onBridge?: (text: string) => Promise<void>;
 }) {
   const [minutes, setMinutes] = useState(DEFAULT_MIN);
   const [remaining, setRemaining] = useState(DEFAULT_MIN * 60);
   const [running, setRunning] = useState(true);
   const [snapOpen, setSnapOpen] = useState(false);
+  const [bridgeText, setBridgeText] = useState("");
+  const [bridgeBusy, setBridgeBusy] = useState(false);
+
+  async function submitBridge() {
+    const text = bridgeText.trim();
+    if (!text || bridgeBusy || !onBridge) return;
+    setBridgeBusy(true);
+    try {
+      await onBridge(text);
+    } finally {
+      setBridgeBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!running) return;
@@ -117,36 +134,66 @@ export function SessionOverlay({
             </button>
           </div>
         </div>
-        <div className="work">
-          <div className="focus">First action — start here, nothing else</div>
-          <div className="fa">{f.firstAction || item.title}</div>
-          <div className="swrow">
-            <div className="scard">
-              <div className="k">Description</div>
-              <div className="v">{f.description || "—"}</div>
+        {item.is_tutorial && onBridge ? (
+          <div className="work">
+            <div className="focus">One question — this is the whole tutorial</div>
+            <div className="fa">What were you working on before you opened this?</div>
+            <div className="bridge">
+              <input
+                autoFocus
+                value={bridgeText}
+                placeholder="one line is enough"
+                onChange={(e) => setBridgeText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitBridge();
+                }}
+              />
+              <button
+                className="btn amber"
+                disabled={bridgeBusy || !bridgeText.trim()}
+                onClick={submitBridge}
+              >
+                {bridgeBusy ? "…" : "→ make it resumable"}
+              </button>
             </div>
-            {f.risk && (
+            <p className="lead" style={{ marginTop: 18, color: "var(--faint)", fontSize: 12 }}>
+              This session becomes a session on <i>that</i>. Work as long as you like — closing
+              writes a checkpoint, and your next visit starts from that receipt instead of a
+              blank page.
+            </p>
+          </div>
+        ) : (
+          <div className="work">
+            <div className="focus">First action — start here, nothing else</div>
+            <div className="fa">{f.firstAction || item.title}</div>
+            <div className="swrow">
               <div className="scard">
-                <div className="k" style={{ color: "var(--orange)" }}>
-                  ! Risk
-                </div>
-                <div className="v">{f.risk}</div>
+                <div className="k">Description</div>
+                <div className="v">{f.description || "—"}</div>
               </div>
-            )}
+              {f.risk && (
+                <div className="scard">
+                  <div className="k" style={{ color: "var(--orange)" }}>
+                    ! Risk
+                  </div>
+                  <div className="v">{f.risk}</div>
+                </div>
+              )}
+            </div>
+            <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 10 }}>
+              <button className="btn" style={{ padding: "11px 18px" }} onClick={() => setSnapOpen(true)}>
+                ⊞ Snapshot — add notes &amp; links
+              </button>
+              <button className="btn amber" style={{ padding: "11px 18px" }} onClick={onCheckpoint}>
+                ⊟ Close session → write checkpoint
+              </button>
+            </div>
+            <p className="lead" style={{ marginTop: 18, color: "var(--faint)", fontSize: 12 }}>
+              A session is finished when the checkpoint exists — not when the task is done. You
+              can't close cleanly without it.
+            </p>
           </div>
-          <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 10 }}>
-            <button className="btn" style={{ padding: "11px 18px" }} onClick={() => setSnapOpen(true)}>
-              ⊞ Snapshot — add notes &amp; links
-            </button>
-            <button className="btn amber" style={{ padding: "11px 18px" }} onClick={onCheckpoint}>
-              ⊟ Close session → write checkpoint
-            </button>
-          </div>
-          <p className="lead" style={{ marginTop: 18, color: "var(--faint)", fontSize: 12 }}>
-            A session is finished when the checkpoint exists — not when the task is done. You can't
-            close cleanly without it.
-          </p>
-        </div>
+        )}
       </div>
 
       {snapOpen && <SnapshotModal id={item.id} onClose={() => setSnapOpen(false)} />}

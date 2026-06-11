@@ -118,6 +118,39 @@ async def test_done_checkpoint_needs_no_resume_fields(client):
     assert r.json()["state"] == "done"
 
 
+async def test_scout_state_and_scout_mode_cannot_contradict(client):
+    # creating with scout state forces Scout mode
+    r = await client.post(
+        "/api/items",
+        json={"title": "recon", "domain": "DDWS", "state": "scout", "mode": "Do"},
+    )
+    body = r.json()
+    assert body["mode"] == "Scout"
+    iid = body["id"]
+
+    # setting a Scout-mode item to active means scouting, not executing
+    r = await client.post(f"/api/items/{iid}/state", json={"state": "active"})
+    assert r.json()["state"] == "scout"
+
+    # compiling to a known|bounded procedure ends scouting
+    r = await client.post(
+        f"/api/items/{iid}/compile",
+        json={"procedure": "known", "scope": "bounded", "firstAction": "step 1"},
+    )
+    body = r.json()
+    assert body["mode"] == "Do"
+    assert body["state"] == "active"
+
+    # and re-classifying as unknown sends an active item back to scouting
+    r = await client.post(
+        f"/api/items/{iid}/compile",
+        json={"procedure": "unknown", "scope": "bounded"},
+    )
+    body = r.json()
+    assert body["mode"] == "Scout"
+    assert body["state"] == "scout"
+
+
 async def test_compile_container_nests_phases_in_domain_view(client):
     r = await client.post("/api/items", json={"title": "cluster", "domain": "HPC", "state": "needsdef"})
     iid = r.json()["id"]

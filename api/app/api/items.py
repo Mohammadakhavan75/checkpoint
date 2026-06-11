@@ -26,6 +26,7 @@ from ..services.domains import ensure_domain
 from ..services.items import (
     capture,
     compile_item,
+    couple_scout_axes,
     get_children,
     get_item,
     is_parent,
@@ -157,6 +158,7 @@ async def create_item(
         daily=False,
         compiled=False,
     )
+    couple_scout_axes(item)
     session.add(item)
     await session.commit()
     await session.refresh(item)
@@ -217,8 +219,11 @@ async def update_item(
     session: AsyncSession = Depends(get_session),
 ) -> ItemOut:
     item = await _require_item(item_id, user, session)
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    touched = payload.model_dump(exclude_unset=True)
+    for key, value in touched.items():
         setattr(item, key, value)
+    if "state" in touched or "mode" in touched:
+        couple_scout_axes(item)
     await session.commit()
     await session.refresh(item)
     return serialize_item(item, is_parent=await is_parent(session, item.id))

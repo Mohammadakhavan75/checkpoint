@@ -56,6 +56,14 @@ export const CLASS_MODE: Record<string, string> = {
   "unknown|unbounded": "",
 };
 
+// mode = how to run a session on this item (state = where it sits in the lifecycle)
+export const MODE_HINTS: Record<string, string> = {
+  Do: "Mode: Do — procedure known, scope bounded. Just execute.",
+  Scout: "Mode: Scout — first move unknown. Map it, don't execute.",
+  Plan: "Mode: Plan — known but unbounded. Break it into phases.",
+  Deep: "Mode: Deep — long focus block (architecture · debug · design).",
+};
+
 export const QUAD: Record<string, { n: string; t: string; c: string; d: string }> = {
   "known|bounded": {
     n: "Easy execution",

@@ -164,8 +164,8 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 .chip{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;text-transform:uppercase;
   padding:2px 8px;border-radius:20px;border:1px solid currentColor;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.mode-chip{font-family:'JetBrains Mono';font-size:10px;color:var(--cyan);border:1px solid var(--line2);
-  padding:1px 7px;border-radius:5px;letter-spacing:.5px}
+.mode-chip{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);border:1px solid var(--line2);
+  padding:1px 7px;border-radius:5px;letter-spacing:.5px} /* dim, not a status color — mode is metadata, state is the signal */
 
 .acts{display:flex;gap:6px;flex:none}
 .acts select.btn{width:122px} /* one shared option list — size once to widest label so the column aligns */

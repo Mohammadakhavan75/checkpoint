@@ -271,6 +271,10 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
 .modal header .x{margin-left:auto;color:var(--faint);font-size:20px;line-height:1}
 .modal .pad{padding:20px 22px}
 .modal .note{font-size:12.5px;color:var(--dim);margin:-4px 0 16px}
+/* confirm dialog: small, centered, stacked above the modal that opened it */
+.confirm-scrim{z-index:40;align-items:center}
+.confirm-modal{max-width:420px}
+.confirm-msg{margin:0;font-size:13.5px;line-height:1.55;color:var(--text)}
 
 .field{margin-bottom:13px}
 .field label{display:block;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:1px;

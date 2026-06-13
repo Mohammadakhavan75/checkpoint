@@ -28,6 +28,9 @@ export function Header({
     if (!text.trim()) return;
     onCapture(text.trim(), target === RESERVOIR ? undefined : target);
     setText("");
+    // Snap the target back to the reservoir so the next fast capture defaults
+    // there rather than sticking on the domain you just captured into.
+    setTarget(RESERVOIR);
   }
 
   return (

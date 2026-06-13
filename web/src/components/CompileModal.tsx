@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useCompile, useDeleteItem, useItem } from "../api/hooks";
 import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 export function CompileModal({ id, onClose }: { id: string; onClose: () => void }) {
   const { data: item, isLoading } = useItem(id);
@@ -18,6 +19,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const [phases, setPhases] = useState<PhaseInput[]>([]);
   const [subtasks, setSubtasks] = useState(false);
   const [ready, setReady] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!item || ready) return;
@@ -119,9 +121,6 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   }
 
   async function handleDelete() {
-    if (!item) return;
-    const what = cont ? "this container and all its phases" : `"${item.title}"`;
-    if (!window.confirm(`Delete ${what}? This can't be undone.`)) return;
     await del.mutateAsync(id);
     onClose();
   }
@@ -144,8 +143,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   };
 
   return (
-    // No backdrop-click close: compiling is data entry, and an accidental
-    // click outside the box shouldn't discard the work. Use ✕ or Cancel.
+    <>
+    {/* No backdrop-click close: compiling is data entry, and an accidental
+        click outside the box shouldn't discard the work. Use ✕ or Cancel. */}
     <div className="scrim">
       <div className="modal">
         <header>
@@ -305,7 +305,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
         </div>
         <footer>
           <span className={`gate ${gateCls}`}>{gateTxt}</span>
-          <button className="btn danger" onClick={handleDelete} disabled={del.isPending}>
+          <button className="btn danger" onClick={() => setConfirmDelete(true)} disabled={del.isPending}>
             Delete
           </button>
           <button className="btn" onClick={onClose}>
@@ -317,5 +317,18 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
         </footer>
       </div>
     </div>
+    {confirmDelete && (
+      <ConfirmDialog
+        title="Delete task"
+        message={`Delete ${
+          cont ? "this container and all its phases" : `"${item.title}"`
+        }? This can't be undone.`}
+        confirmLabel="Delete"
+        busy={del.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={handleDelete}
+      />
+    )}
+    </>
   );
 }

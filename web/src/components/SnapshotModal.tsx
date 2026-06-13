@@ -10,6 +10,7 @@ import {
   useUpdateSnapshot,
 } from "../api/hooks";
 import { Snapshot } from "../types";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 // Quick Markdown reference shown as an in-app help/lookup while editing notes.
 const MARKDOWN_HELP: ReadonlyArray<readonly [string, string]> = [
@@ -57,6 +58,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
   const [err, setErr] = useState("");
 
   // Edit state
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editNote, setEditNote] = useState("");
@@ -129,10 +131,10 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
     setEditingId(null);
   }
 
-  async function handleDelete(snapshotId: string) {
-    if (window.confirm("Are you sure you want to delete this snapshot?")) {
-      await del.mutateAsync({ id, snapshotId });
-    }
+  async function confirmDelete() {
+    if (!confirmDeleteId) return;
+    await del.mutateAsync({ id, snapshotId: confirmDeleteId });
+    setConfirmDeleteId(null);
   }
 
   const saveExistingSnapshot = async (snapshotId: string, text: string) => {
@@ -438,7 +440,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
                       <button
                         className="snapdel"
                         title="Delete snapshot"
-                        onClick={() => handleDelete(s.id)}
+                        onClick={() => setConfirmDeleteId(s.id)}
                         disabled={del.isPending || update.isPending}
                       >
                         ⨯
@@ -464,6 +466,16 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
           </footer>
         </div>
       </div>
+      {confirmDeleteId && (
+        <ConfirmDialog
+          title="Delete snapshot"
+          message="Delete this snapshot? This can't be undone."
+          confirmLabel="Delete"
+          busy={del.isPending}
+          onCancel={() => setConfirmDeleteId(null)}
+          onConfirm={confirmDelete}
+        />
+      )}
     </>
   );
 }

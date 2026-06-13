@@ -145,12 +145,14 @@ export function App() {
                 onFastExecute={fastExecute}
               />
             )}
+            {/* In the scroll flow, so the version sits at the bottom of the
+                page instead of floating over the cards. */}
+            <VersionBadge variant="inline" />
           </main>
         </div>
       </div>
 
       <WhatsNew user={user} />
-      <VersionBadge />
 
       {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
 

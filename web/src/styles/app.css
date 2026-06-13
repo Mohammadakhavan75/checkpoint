@@ -102,7 +102,7 @@ header{
 
 .body{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}
-main{overflow:auto;padding:22px 26px 80px;min-width:0}
+main{overflow:auto;padding:22px 26px 26px;min-width:0}
 
 /* ===== sidebar ===== */
 .sect{padding:0 14px;margin:6px 0 18px}
@@ -606,3 +606,6 @@ main{overflow:auto;padding:22px 26px 80px;min-width:0}
   bottom:calc(6px + env(safe-area-inset-bottom));
   font-family:'JetBrains Mono';font-size:10.5px;color:var(--faint);opacity:.7;
   pointer-events:none;user-select:none}
+/* In-flow at the bottom of the scrolling page, so it never floats over a card. */
+.version-badge.inline{position:static;transform:none;left:auto;bottom:auto;z-index:auto;
+  display:block;width:100%;text-align:center;margin-top:22px}

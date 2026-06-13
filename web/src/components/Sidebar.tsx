@@ -42,6 +42,7 @@ export function Sidebar({
   const today = useItems("today");
   const ready = useItems("ready");
   const reservoir = useItems("reservoir");
+  const trash = useItems("trash");
   const domains = useDomains();
   const createDomain = useCreateDomain();
   const capture = useCapture();
@@ -131,6 +132,12 @@ export function Sidebar({
           onClick={() => onNav("reservoir")}
         >
           ~ Brain Rots<span className="cnt">{reservoir.data?.length ?? 0}</span>
+        </button>
+        <button
+          className={`navbtn ${tab === "trash" ? "on" : ""}`}
+          onClick={() => onNav("trash")}
+        >
+          🗑 Trash<span className="cnt">{trash.data?.length ?? 0}</span>
         </button>
       </div>
 

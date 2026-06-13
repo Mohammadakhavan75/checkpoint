@@ -26,6 +26,7 @@ def serialize_item(
         scope=item.scope,
         fields=item.fields or {},
         is_tutorial=item.is_tutorial,
+        deleted_at=item.deleted_at,
         created_at=item.created_at,
         updated_at=item.updated_at,
         is_parent=is_parent,

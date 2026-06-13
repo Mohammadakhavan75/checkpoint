@@ -119,6 +119,24 @@ export function useDeleteItem() {
   return useMutation({ mutationFn: (id: string) => api.deleteItem(id), onSuccess: invalidate });
 }
 
+export function useRestoreItem() {
+  const invalidate = useInvalidateAll();
+  return useMutation({ mutationFn: (id: string) => api.restoreItem(id), onSuccess: invalidate });
+}
+
+export function usePermanentlyDeleteItem() {
+  const invalidate = useInvalidateAll();
+  return useMutation({
+    mutationFn: (id: string) => api.permanentlyDeleteItem(id),
+    onSuccess: invalidate,
+  });
+}
+
+export function useEmptyTrash() {
+  const invalidate = useInvalidateAll();
+  return useMutation({ mutationFn: () => api.emptyTrash(), onSuccess: invalidate });
+}
+
 export function useSaveCheckpoint() {
   const invalidate = useInvalidateAll();
   return useMutation({

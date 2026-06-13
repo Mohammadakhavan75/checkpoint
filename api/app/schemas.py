@@ -227,6 +227,7 @@ class ItemOut(BaseModel):
     scope: Optional[str] = None
     fields: dict
     is_tutorial: bool = False
+    deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     # computed / assembled fields

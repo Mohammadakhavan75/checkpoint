@@ -319,11 +319,11 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     </div>
     {confirmDelete && (
       <ConfirmDialog
-        title="Delete task"
-        message={`Delete ${
+        title="Move to Trash"
+        message={`Move ${
           cont ? "this container and all its phases" : `"${item.title}"`
-        }? This can't be undone.`}
-        confirmLabel="Delete"
+        } to Trash? You can restore it within 30 days.`}
+        confirmLabel="Move to Trash"
         busy={del.isPending}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={handleDelete}

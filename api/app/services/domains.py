@@ -45,6 +45,8 @@ async def list_domains(session: AsyncSession, owner_id: uuid.UUID) -> list[dict]
                 Item.owner_id == owner_id,
                 Item.domain != RESERVOIR,
                 Item.state != "done",
+                # trashed items live in Trash, not the domain count
+                Item.state != "killed",
                 Item.is_tutorial.is_(False),
             )
             .group_by(Item.domain)

@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.6.0",
+    date: "2026-06-13",
+    title: "Tidy up, stay put",
+    notes: [
+      "Delete a task right from Today, Ready to GO, and your domain backlog — with a quick confirm so nothing disappears by accident.",
+      "Ready to GO can be filtered by category, so a long list narrows to just the domain you're working on.",
+      "The capture bar snaps back to the reservoir after each entry — no more accidentally filing your next thought into the domain you just used.",
+      "The compile pop-up no longer vanishes when you click outside it; your in-progress work stays put until you press Cancel or ✕.",
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-06-11",
     title: "Done means done",

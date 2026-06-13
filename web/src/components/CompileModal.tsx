@@ -135,7 +135,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   };
 
   return (
-    <div className="scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    // No backdrop-click close: compiling is data entry, and an accidental
+    // click outside the box shouldn't discard the work. Use ✕ or Cancel.
+    <div className="scrim">
       <div className="modal">
         <header>
           <span className="ic">⚙</span>

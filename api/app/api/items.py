@@ -52,6 +52,34 @@ _DOMAIN_ORDER = [
 ]
 
 
+async def _serialize_top_level(
+    session: AsyncSession,
+    rows: list[Item],
+    parents: set[uuid.UUID],
+) -> list[ItemOut]:
+    """Serialize top-level rows for the Today / Ready views.
+
+    A container (a row that has phases) is returned with its phases nested, so
+    the whole container moves through Ready → Today as one unit instead of its
+    phases scattering across the views. Leaf rows carry their latest checkpoint.
+    """
+    leaf_ids = [i.id for i in rows if i.id not in parents]
+    latest = await latest_checkpoints_for(session, leaf_ids)
+    out: list[ItemOut] = []
+    for i in rows:
+        if i.id in parents:
+            kids = await get_children(session, i.id)
+            child_latest = await latest_checkpoints_for(session, [k.id for k in kids])
+            children = [
+                serialize_item(k, is_parent=k.id in parents, latest=child_latest.get(k.id))
+                for k in kids
+            ]
+            out.append(serialize_item(i, is_parent=True, children=children))
+        else:
+            out.append(serialize_item(i, is_parent=False, latest=latest.get(i.id)))
+    return out
+
+
 @router.get("", response_model=list[ItemOut])
 async def list_items(
     tab: str = Query("today"),
@@ -63,31 +91,30 @@ async def list_items(
     parents = await parent_id_set(session, uid)
 
     if tab == "today":
+        # Top-level only: a container rides into Today as one unit (its phases
+        # nested), rather than each phase showing as a separate row.
         result = await session.execute(
             select(Item).where(
-                Item.owner_id == uid, Item.daily.is_(True), Item.state != "killed"
+                Item.owner_id == uid,
+                Item.daily.is_(True),
+                Item.state != "killed",
+                Item.parent_id.is_(None),
             )
         )
-        rows = [i for i in result.scalars().all() if i.id not in parents]
-        latest = await latest_checkpoints_for(session, [i.id for i in rows])
-        return [
-            serialize_item(i, is_parent=False, latest=latest.get(i.id)) for i in rows
-        ]
+        return await _serialize_top_level(session, list(result.scalars().all()), parents)
 
     if tab == "ready":
+        # Same as Today: containers appear as whole units, phases stay nested.
         result = await session.execute(
             select(Item).where(
                 Item.owner_id == uid,
                 Item.compiled.is_(True),
                 Item.daily.is_(False),
                 Item.state.not_in(["killed", "done"]),
+                Item.parent_id.is_(None),
             )
         )
-        rows = [i for i in result.scalars().all() if i.id not in parents]
-        latest = await latest_checkpoints_for(session, [i.id for i in rows])
-        return [
-            serialize_item(i, is_parent=False, latest=latest.get(i.id)) for i in rows
-        ]
+        return await _serialize_top_level(session, list(result.scalars().all()), parents)
 
     if tab == "reservoir":
         result = await session.execute(

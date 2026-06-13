@@ -176,6 +176,46 @@ async def test_compile_container_nests_phases_in_domain_view(client):
     assert len(top["children"]) == 2
 
 
+async def test_container_moves_as_whole_unit_through_ready_and_today(client):
+    r = await client.post("/api/items", json={"title": "cluster", "domain": "HPC", "state": "needsdef"})
+    iid = r.json()["id"]
+    r = await client.post(
+        f"/api/items/{iid}/compile",
+        json={
+            "procedure": "known",
+            "scope": "unbounded",
+            "description": "big",
+            "phases": [
+                {"title": "P1", "firstAction": "a"},
+                {"title": "P2", "firstAction": "b"},
+            ],
+        },
+    )
+    phase_ids = {c["id"] for c in r.json()["children"]}
+
+    # The compiled container shows in Ready as one unit with its phases nested...
+    r = await client.get("/api/items", params={"tab": "ready"})
+    ready = r.json()
+    container = next(i for i in ready if i["id"] == iid)
+    assert container["is_parent"] is True
+    assert len(container["children"]) == 2
+    # ...and the phases never appear as their own top-level Ready rows.
+    assert not (phase_ids & {i["id"] for i in ready})
+
+    # Pulling the container into Today carries the whole thing.
+    r = await client.post(f"/api/items/{iid}/daily", json={"daily": True})
+    assert r.json()["daily"] is True
+    r = await client.get("/api/items", params={"tab": "today"})
+    today = r.json()
+    container = next(i for i in today if i["id"] == iid)
+    assert container["is_parent"] is True
+    assert len(container["children"]) == 2
+    assert not (phase_ids & {i["id"] for i in today})
+    # It also leaves Ready now that it's on Today.
+    r = await client.get("/api/items", params={"tab": "ready"})
+    assert all(i["id"] != iid for i in r.json())
+
+
 async def test_delete_is_soft(client):
     r = await client.post("/api/items", json={"title": "x", "domain": "DDWS"})
     iid = r.json()["id"]

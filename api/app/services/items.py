@@ -63,6 +63,8 @@ async def rollup(session: AsyncSession, parent_id: uuid.UUID, owner_id: uuid.UUI
     resolved = sum(1 for c in children if c.state in ("done", "killed"))
     if done == len(children):
         parent.state = "done"
+        # A finished container leaves Today the same way a finished leaf does.
+        parent.daily = False
     elif resolved == len(children):
         parent.state = "deferred"
     elif any(c.state in ("active", "scout") for c in children):

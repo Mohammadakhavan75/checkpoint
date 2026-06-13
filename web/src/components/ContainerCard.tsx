@@ -11,7 +11,6 @@ export function ContainerCard({
   onStart,
   onToDaily,
   onEdit,
-  onDelete,
 }: {
   item: Item;
   idx: number;
@@ -19,7 +18,6 @@ export function ContainerCard({
   onStart: (id: string) => void;
   onToDaily: (id: string) => void;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
 }) {
   const children = item.children;
   const total = children.length;
@@ -60,9 +58,6 @@ export function ContainerCard({
           ) : null}
           <button className="btn" onClick={() => onEdit(item.id)}>
             Edit phases
-          </button>
-          <button className="btn ghost" title="Delete container" onClick={() => onDelete(item.id)}>
-            ✕
           </button>
         </div>
       </div>

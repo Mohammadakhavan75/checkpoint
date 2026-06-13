@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { useDeleteItem, useItems, useSetDaily } from "../api/hooks";
+import { useItems, useSetDaily } from "../api/hooks";
 import { Loading } from "../components/atoms";
 import { ContainerCard } from "../components/ContainerCard";
 import { UnitRow } from "../components/UnitRow";
@@ -8,7 +8,6 @@ import { UnitRow } from "../components/UnitRow";
 export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
   const { data, isLoading } = useItems("ready");
   const setDaily = useSetDaily();
-  const del = useDeleteItem();
   const [category, setCategory] = useState("all");
   const categories = useMemo(
     () => Array.from(new Set((data ?? []).map((i) => i.domain))).sort(),
@@ -44,12 +43,8 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
       </p>
       <div className="rows">
         {list.length ? (
-          list.map((item, idx) => {
-            const onDelete = (id: string) => {
-              if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
-                del.mutate(id);
-            };
-            return item.is_parent ? (
+          list.map((item, idx) =>
+            item.is_parent ? (
               <ContainerCard
                 key={item.id}
                 item={item}
@@ -58,7 +53,6 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
                 onStart={() => undefined}
                 onToDaily={(id) => setDaily.mutate({ id, daily: true })}
                 onEdit={onEdit}
-                onDelete={onDelete}
               />
             ) : (
               <UnitRow
@@ -69,10 +63,9 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
                 onStart={() => undefined}
                 onToDaily={(id) => setDaily.mutate({ id, daily: true })}
                 onEdit={onEdit}
-                onDelete={onDelete}
               />
-            );
-          })
+            ),
+          )
         ) : category !== "all" ? (
           <div className="empty">No compiled tasks in {category}.</div>
         ) : (

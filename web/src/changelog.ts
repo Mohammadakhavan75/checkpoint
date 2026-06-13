@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.7.0",
+    date: "2026-06-13",
+    title: "Move the whole container",
+    notes: [
+      "A multi-phase task now travels as one piece: pull the whole container into Ready to GO and then Today, instead of shuttling each phase across on its own.",
+      "On Today a container shows all its phases with the next one flagged — start any phase right from the card.",
+      "Finishing every phase rolls the container up to done and clears it from Today automatically.",
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-06-13",
     title: "Tidy up, stay put",

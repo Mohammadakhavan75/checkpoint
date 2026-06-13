@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { useCompile, useItem } from "../api/hooks";
+import { useCompile, useDeleteItem, useItem } from "../api/hooks";
 import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
 
 export function CompileModal({ id, onClose }: { id: string; onClose: () => void }) {
   const { data: item, isLoading } = useItem(id);
   const compile = useCompile();
+  const del = useDeleteItem();
 
   const [procedure, setProcedure] = useState<Procedure | "">("");
   const [scope, setScope] = useState<Scope | "">("");
@@ -114,6 +115,14 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     if (cont) payload.phases = phases.filter((p) => p.title.trim());
     else payload.firstAction = firstAction;
     await compile.mutateAsync({ id, payload });
+    onClose();
+  }
+
+  async function handleDelete() {
+    if (!item) return;
+    const what = cont ? "this container and all its phases" : `"${item.title}"`;
+    if (!window.confirm(`Delete ${what}? This can't be undone.`)) return;
+    await del.mutateAsync(id);
     onClose();
   }
 
@@ -296,6 +305,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
         </div>
         <footer>
           <span className={`gate ${gateCls}`}>{gateTxt}</span>
+          <button className="btn danger" onClick={handleDelete} disabled={del.isPending}>
+            Delete
+          </button>
           <button className="btn" onClick={onClose}>
             Cancel
           </button>

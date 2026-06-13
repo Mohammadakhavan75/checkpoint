@@ -30,8 +30,9 @@ export function TodayView({
         a.latest_checkpoint!.created_at >= b.latest_checkpoint!.created_at ? a : b,
       )
     : null;
-  // The tutorial item is fully represented by its card — no row underneath.
-  const list = all.filter((i) => !i.is_tutorial);
+  // The resume card already represents one item (the tutorial, or whatever was
+  // worked most recently) — don't repeat it as a row underneath.
+  const list = all.filter((i) => !i.is_tutorial && i.id !== card?.id);
 
   async function submitCapture(e: FormEvent) {
     e.preventDefault();
@@ -66,12 +67,8 @@ export function TodayView({
       )}
       <div className="rows">
         {list.length ? (
-          list.map((item, idx) => {
-            const onDelete = (id: string) => {
-              if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
-                del.mutate(id);
-            };
-            return item.is_parent ? (
+          list.map((item, idx) =>
+            item.is_parent ? (
               <ContainerCard
                 key={item.id}
                 item={item}
@@ -80,7 +77,6 @@ export function TodayView({
                 onStart={onStart}
                 onToDaily={() => undefined}
                 onEdit={onEdit}
-                onDelete={onDelete}
               />
             ) : (
               <UnitRow
@@ -91,10 +87,9 @@ export function TodayView({
                 onStart={onStart}
                 onToDaily={() => undefined}
                 onEdit={onEdit}
-                onDelete={onDelete}
               />
-            );
-          })
+            ),
+          )
         ) : !card ? (
           <div className="empty">
             <div className="empty-q">What were you working on before you opened this?</div>

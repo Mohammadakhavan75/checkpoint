@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.7.1",
+    date: "2026-06-13",
+    title: "One row, one delete",
+    notes: [
+      "Whatever sits in the Today resume card no longer shows up a second time as a row below it.",
+      "Deleting a task now lives inside its Edit form — a red Delete button next to Cancel and Compile, with a confirmation — instead of a stray ✕ on every row.",
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-06-13",
     title: "Move the whole container",

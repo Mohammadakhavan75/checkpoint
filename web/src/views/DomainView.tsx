@@ -117,6 +117,11 @@ function ContainerGroup({
             <span className="mono" style={{ fontSize: 11, color: "var(--dim)" }}>
               {done}/{total} phases
             </span>
+            {item.daily ? (
+              <span style={{ color: "var(--amber)" }}>on today</span>
+            ) : item.compiled ? (
+              <span style={{ color: "var(--cyan)" }}>ready to go</span>
+            ) : null}
           </div>
         </div>
         <div className="acts">

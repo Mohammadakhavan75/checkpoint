@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 
 import { useDeleteItem, useItems } from "../api/hooks";
 import { Loading } from "../components/atoms";
+import { ContainerCard } from "../components/ContainerCard";
 import { ResumeCard } from "../components/ResumeCard";
 import { UnitRow } from "../components/UnitRow";
 
@@ -65,21 +66,35 @@ export function TodayView({
       )}
       <div className="rows">
         {list.length ? (
-          list.map((item, idx) => (
-            <UnitRow
-              key={item.id}
-              item={item}
-              idx={idx}
-              ctx="today"
-              onStart={onStart}
-              onToDaily={() => undefined}
-              onEdit={onEdit}
-              onDelete={(id) => {
-                if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
-                  del.mutate(id);
-              }}
-            />
-          ))
+          list.map((item, idx) => {
+            const onDelete = (id: string) => {
+              if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
+                del.mutate(id);
+            };
+            return item.is_parent ? (
+              <ContainerCard
+                key={item.id}
+                item={item}
+                idx={idx}
+                ctx="today"
+                onStart={onStart}
+                onToDaily={() => undefined}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ) : (
+              <UnitRow
+                key={item.id}
+                item={item}
+                idx={idx}
+                ctx="today"
+                onStart={onStart}
+                onToDaily={() => undefined}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            );
+          })
         ) : !card ? (
           <div className="empty">
             <div className="empty-q">What were you working on before you opened this?</div>

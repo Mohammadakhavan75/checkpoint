@@ -1,10 +1,11 @@
-import { useItems, useSetDaily } from "../api/hooks";
+import { useDeleteItem, useItems, useSetDaily } from "../api/hooks";
 import { Loading } from "../components/atoms";
 import { UnitRow } from "../components/UnitRow";
 
 export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
   const { data, isLoading } = useItems("ready");
   const setDaily = useSetDaily();
+  const del = useDeleteItem();
   if (isLoading) return <Loading />;
   const list = data ?? [];
   return (
@@ -28,6 +29,10 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
               onStart={() => undefined}
               onToDaily={(id) => setDaily.mutate({ id, daily: true })}
               onEdit={onEdit}
+              onDelete={(id) => {
+                if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
+                  del.mutate(id);
+              }}
             />
           ))
         ) : (

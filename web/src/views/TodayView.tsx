@@ -74,6 +74,10 @@ export function TodayView({
               onStart={onStart}
               onToDaily={() => undefined}
               onEdit={onEdit}
+              onDelete={(id) => {
+                if (window.confirm(`Delete "${item.title}"? This can't be undone.`))
+                  del.mutate(id);
+              }}
             />
           ))
         ) : !card ? (

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { useItems, useSetState } from "../api/hooks";
+import { useDeleteItem, useItems, useSetState } from "../api/hooks";
 import { Chip, Loading, Marker, ModeChip, StateSelect } from "../components/atoms";
 import { STATE_ORDER, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
@@ -25,12 +25,14 @@ function BacklogRow({
   onState,
   onCompile,
   onFastExecute,
+  onDelete,
 }: {
   item: Item;
   idx: number;
   onState: (id: string, state: ItemState) => void;
   onCompile: (id: string) => void;
   onFastExecute: (id: string, compiled: boolean) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <div className={`row fade-in s${(idx % 4) + 1} ${item.state}`}>
@@ -62,6 +64,9 @@ function BacklogRow({
         </button>
         <button className="btn amber" onClick={() => onCompile(item.id)}>
           {item.compiled ? "Recompile" : "Compile"}
+        </button>
+        <button className="btn ghost" title="Delete task" onClick={() => onDelete(item.id)}>
+          ✕
         </button>
       </div>
     </div>
@@ -169,6 +174,7 @@ export function DomainView({
 }) {
   const { data, isLoading } = useItems("domain", domain);
   const setState = useSetState();
+  const del = useDeleteItem();
   const [stateFilter, setStateFilter] = useState<DomainStateFilter>("undone");
   const list = data ?? [];
   const visibleItems = useMemo(
@@ -188,6 +194,11 @@ export function DomainView({
   if (isLoading) return <Loading />;
 
   const onState = (id: string, state: ItemState) => setState.mutate({ id, state });
+  const onDelete = (id: string) => {
+    const target = list.find((i) => i.id === id);
+    if (window.confirm(`Delete "${target?.title ?? "this task"}"? This can't be undone.`))
+      del.mutate(id);
+  };
 
   return (
     <>
@@ -237,6 +248,7 @@ export function DomainView({
                 onState={onState}
                 onCompile={onCompile}
                 onFastExecute={onFastExecute}
+                onDelete={onDelete}
               />
             ),
           )

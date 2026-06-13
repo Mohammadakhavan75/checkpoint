@@ -8,6 +8,7 @@ export function UnitRow({
   onStart,
   onToDaily,
   onEdit,
+  onDelete,
 }: {
   item: Item;
   idx: number;
@@ -15,6 +16,7 @@ export function UnitRow({
   onStart: (id: string) => void;
   onToDaily: (id: string) => void;
   onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const f = item.fields;
   const cp = item.latest_checkpoint;
@@ -44,6 +46,9 @@ export function UnitRow({
             )}
             <button className="btn" onClick={() => onEdit(item.id)}>
               Edit
+            </button>
+            <button className="btn ghost" title="Delete task" onClick={() => onDelete(item.id)}>
+              ✕
             </button>
           </div>
         </div>

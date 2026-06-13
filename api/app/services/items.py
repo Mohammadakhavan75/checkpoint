@@ -6,13 +6,18 @@ not in the client. Every function is scoped by ``owner_id``.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..constants import CLASS_MODE, RESERVOIR
 from ..models import Item
 from ..schemas import CompileRequest, PhaseInput
+
+# How long a trashed (killed) item lives before it's permanently purged.
+TRASH_TTL_DAYS = 30
 
 
 async def get_item(
@@ -82,17 +87,70 @@ def couple_scout_axes(item: Item) -> None:
         item.state = "scout"
 
 
-async def set_state(session: AsyncSession, item: Item, state: str) -> Item:
-    """Set state; containers cascade kill/done/defer to phases; roll up parent."""
+def _apply_state(item: Item, state: str) -> None:
+    """Set an item's state, keeping trash bookkeeping in sync.
+
+    Moving to ``killed`` is "move to trash": stamp ``deleted_at`` and remember
+    the prior state in ``fields["prevState"]`` so a restore can return it.
+    Moving off ``killed`` (a restore) clears ``deleted_at``.
+    """
+    prev = item.state
+    if state == "killed" and prev != "killed":
+        item.fields = {**(item.fields or {}), "prevState": prev}
+        item.deleted_at = datetime.now(timezone.utc)
+    elif state != "killed" and prev == "killed":
+        item.deleted_at = None
     item.state = state
     couple_scout_axes(item)
+
+
+async def set_state(session: AsyncSession, item: Item, state: str) -> Item:
+    """Set state; containers cascade kill/done/defer to phases; roll up parent."""
+    _apply_state(item, state)
     children = await get_children(session, item.id)
     if children and state in ("killed", "done", "deferred"):
         for child in children:
-            child.state = state
+            _apply_state(child, state)
     if item.parent_id:
         await rollup(session, item.parent_id, item.owner_id)
     return item
+
+
+def _restore_one(item: Item) -> None:
+    """Take a single item out of the trash, back to its pre-trash state."""
+    prev = (item.fields or {}).get("prevState") or "needsdef"
+    if prev == "killed":  # guard against a corrupt/legacy value
+        prev = "needsdef"
+    fields = dict(item.fields or {})
+    fields.pop("prevState", None)
+    item.fields = fields
+    _apply_state(item, prev)
+
+
+async def restore(session: AsyncSession, item: Item) -> Item:
+    """Bring a trashed item (and any phases trashed with it) back to life."""
+    _restore_one(item)
+    for child in await get_children(session, item.id):
+        if child.state == "killed":
+            _restore_one(child)
+    if item.parent_id:
+        await rollup(session, item.parent_id, item.owner_id)
+    return item
+
+
+async def purge_expired_trash(session: AsyncSession, owner_id: uuid.UUID) -> None:
+    """Hard-delete trashed items whose 30 days are up (FK cascade clears phases,
+    checkpoints, and snapshots). Cheap to call on every list — it's a single
+    indexed delete and a no-op when nothing has expired."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=TRASH_TTL_DAYS)
+    await session.execute(
+        sa_delete(Item).where(
+            Item.owner_id == owner_id,
+            Item.state == "killed",
+            Item.deleted_at.is_not(None),
+            Item.deleted_at < cutoff,
+        )
+    )
 
 
 async def capture(

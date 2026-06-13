@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.8.0",
+    date: "2026-06-14",
+    title: "A net under delete",
+    notes: [
+      "Deleting a task now sends it to a new Trash instead of removing it outright — restore it any time in the next 30 days.",
+      "Restore puts a task back exactly where it was; after 30 days the Trash clears itself, or you can empty it yourself.",
+      "Delete and other confirmations are now styled in-app dialogs that match the rest of the app, not the browser's gray popup.",
+    ],
+  },
+  {
     version: "0.7.1",
     date: "2026-06-13",
     title: "One row, one delete",

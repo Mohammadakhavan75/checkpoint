@@ -10,7 +10,11 @@ type DomainStateFilter = "undone" | "all" | ItemState;
 const STATE_FILTERS: { value: DomainStateFilter; label: string }[] = [
   { value: "undone", label: "Not done" },
   { value: "all", label: "All" },
-  ...STATE_ORDER.map((state) => ({ value: state, label: STATES[state].label })),
+  // "killed" is omitted: killed items live in Trash, never the backlog.
+  ...STATE_ORDER.filter((s) => s !== "killed").map((state) => ({
+    value: state,
+    label: STATES[state].label,
+  })),
 ];
 
 function matchesStateFilter(item: Item, filter: DomainStateFilter): boolean {

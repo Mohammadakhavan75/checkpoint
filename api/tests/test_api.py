@@ -223,6 +223,53 @@ async def test_delete_is_soft(client):
     assert r.json()["state"] == "killed"
 
 
+async def test_trash_restore_and_permanent_delete(client):
+    r = await client.post(
+        "/api/items", json={"title": "trash me", "domain": "DDWS", "state": "active"}
+    )
+    iid = r.json()["id"]
+
+    # delete → moves to trash (killed + deleted_at stamped)
+    r = await client.delete(f"/api/items/{iid}")
+    assert r.json()["state"] == "killed"
+    assert r.json()["deleted_at"] is not None
+
+    # shows in trash, and is gone from the domain backlog
+    r = await client.get("/api/items", params={"tab": "trash"})
+    assert any(i["id"] == iid for i in r.json())
+    r = await client.get("/api/items", params={"tab": "domain", "domain": "DDWS"})
+    assert all(i["id"] != iid for i in r.json())
+
+    # restore → back to its pre-trash state, cleared from trash
+    r = await client.post(f"/api/items/{iid}/restore")
+    assert r.json()["state"] == "active"
+    assert r.json()["deleted_at"] is None
+    r = await client.get("/api/items", params={"tab": "trash"})
+    assert all(i["id"] != iid for i in r.json())
+
+    # delete again, then purge permanently → 404 afterwards
+    await client.delete(f"/api/items/{iid}")
+    r = await client.delete(f"/api/items/{iid}/permanent")
+    assert r.status_code == 204
+    r = await client.get(f"/api/items/{iid}")
+    assert r.status_code == 404
+
+
+async def test_empty_trash_purges_all(client):
+    ids = []
+    for n in range(2):
+        r = await client.post("/api/items", json={"title": f"t{n}", "domain": "DDWS"})
+        ids.append(r.json()["id"])
+        await client.delete(f"/api/items/{ids[-1]}")
+    r = await client.get("/api/items", params={"tab": "trash"})
+    assert len([i for i in r.json() if i["id"] in ids]) == 2
+
+    r = await client.delete("/api/items/trash/empty")
+    assert r.status_code == 204
+    r = await client.get("/api/items", params={"tab": "trash"})
+    assert r.json() == []
+
+
 async def test_ai_endpoints_are_stubbed_501(client):
     r = await client.post("/api/items", json={"title": "x", "domain": "DDWS"})
     iid = r.json()["id"]

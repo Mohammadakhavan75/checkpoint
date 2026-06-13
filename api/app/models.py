@@ -110,6 +110,12 @@ class Item(Base):
     )
     procedure: Mapped[str | None] = mapped_column(Text, nullable=True)  # known|unknown
     scope: Mapped[str | None] = mapped_column(Text, nullable=True)  # bounded|unbounded
+    # When the item was moved to trash (state set to "killed"). NULL = not trashed.
+    # Trash is auto-purged 30 days after this timestamp; the pre-trash state is
+    # stashed in fields["prevState"] so a restore returns it where it came from.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     fields: Mapped[dict] = mapped_column(JSONVariant, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

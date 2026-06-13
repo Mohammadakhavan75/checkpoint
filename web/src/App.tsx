@@ -17,6 +17,7 @@ import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
 import { ReservoirView } from "./views/ReservoirView";
 import { TodayView } from "./views/TodayView";
+import { TrashView } from "./views/TrashView";
 import type { Checkpoint, Tab } from "./types";
 
 export function App() {
@@ -136,6 +137,7 @@ export function App() {
             )}
             {tab === "ready" && <ReadyView onEdit={setCompileId} />}
             {tab === "reservoir" && <ReservoirView onNav={nav} />}
+            {tab === "trash" && <TrashView />}
             {tab === "domain" && (
               <DomainView
                 domain={domain}

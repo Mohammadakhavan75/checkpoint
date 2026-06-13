@@ -143,6 +143,16 @@ export const setItemDaily = (id: string, daily: boolean) =>
 export const deleteItem = (id: string) =>
   request<Item>(`/items/${id}`, { method: "DELETE" });
 
+// ----- trash -----
+export const restoreItem = (id: string) =>
+  request<Item>(`/items/${id}/restore`, { method: "POST" });
+
+export const permanentlyDeleteItem = (id: string) =>
+  request<void>(`/items/${id}/permanent`, { method: "DELETE" });
+
+export const emptyTrash = () =>
+  request<void>("/items/trash/empty", { method: "DELETE" });
+
 // ----- checkpoints -----
 export const listCheckpoints = (id: string) =>
   request<Checkpoint[]>(`/items/${id}/checkpoints`);

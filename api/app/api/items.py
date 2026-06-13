@@ -32,6 +32,8 @@ from ..services.items import (
     is_parent,
     parent_id_set,
     promote,
+    purge_expired_trash,
+    restore,
     set_state,
 )
 from .serializers import serialize_item
@@ -88,7 +90,22 @@ async def list_items(
     session: AsyncSession = Depends(get_session),
 ) -> list[ItemOut]:
     uid = user.id
+    # Sweep expired trash on every list so it's purged even if the user never
+    # opens the Trash view (commit since this is otherwise a read-only path).
+    await purge_expired_trash(session, uid)
+    await session.commit()
     parents = await parent_id_set(session, uid)
+
+    if tab == "trash":
+        result = await session.execute(
+            select(Item)
+            .where(Item.owner_id == uid, Item.state == "killed")
+            .order_by(Item.deleted_at.desc())
+        )
+        return [
+            serialize_item(i, is_parent=i.id in parents)
+            for i in result.scalars().all()
+        ]
 
     if tab == "today":
         # Top-level only: a container rides into Today as one unit (its phases
@@ -139,6 +156,8 @@ async def list_items(
                 Item.owner_id == uid,
                 Item.domain == domain,
                 Item.parent_id.is_(None),
+                # killed items live in Trash, not the backlog
+                Item.state != "killed",
             )
             .order_by(Item.created_at)
         )
@@ -147,7 +166,9 @@ async def list_items(
         for top in tops:
             children: list[ItemOut] = []
             if top.id in parents:
-                kids = await get_children(session, top.id)
+                kids = [
+                    k for k in await get_children(session, top.id) if k.state != "killed"
+                ]
                 child_latest = await latest_checkpoints_for(session, [k.id for k in kids])
                 children = [
                     serialize_item(
@@ -256,15 +277,56 @@ async def update_item(
     return serialize_item(item, is_parent=await is_parent(session, item.id))
 
 
+@router.delete("/trash/empty", status_code=status.HTTP_204_NO_CONTENT)
+async def empty_trash(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Permanently delete every trashed (killed) item for the user."""
+    from sqlalchemy import delete as sa_delete
+
+    await session.execute(
+        sa_delete(Item).where(Item.owner_id == user.id, Item.state == "killed")
+    )
+    await session.commit()
+
+
 @router.delete("/{item_id}", response_model=ItemOut)
 async def delete_item(
     item_id: uuid.UUID,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ItemOut:
-    """Soft delete: set state='killed' (cascades to phases for containers)."""
+    """Move to trash: set state='killed' (cascades to phases for containers).
+    Items in trash are restorable and auto-purged after 30 days."""
     item = await _require_item(item_id, user, session)
     await set_state(session, item, "killed")
+    await session.commit()
+    await session.refresh(item)
+    return serialize_item(item, is_parent=await is_parent(session, item.id))
+
+
+@router.delete("/{item_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+async def permanently_delete_item(
+    item_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Hard delete a single item now (FK cascade clears phases/checkpoints)."""
+    item = await _require_item(item_id, user, session)
+    await session.delete(item)
+    await session.commit()
+
+
+@router.post("/{item_id}/restore", response_model=ItemOut)
+async def restore_item(
+    item_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ItemOut:
+    """Bring an item back from trash to the state it had before deletion."""
+    item = await _require_item(item_id, user, session)
+    await restore(session, item)
     await session.commit()
     await session.refresh(item)
     return serialize_item(item, is_parent=await is_parent(session, item.id))

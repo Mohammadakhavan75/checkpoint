@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.8.1",
+    date: "2026-06-16",
+    title: "Phases, tidied",
+    notes: [
+      "Finished phases now drop to the bottom of a container's list, so the work still ahead of you stays on top — each phase keeps its original number.",
+      "On phones, the full-screen task editor no longer tucks its title and close button under the status bar / notch.",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-06-14",
     title: "A net under delete",

@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.9.1",
+    date: "2026-06-16",
+    title: "Resume, everywhere",
+    notes: [
+      "Every task you've checkpointed now glows green and carries a one-click Resume button right where Start used to be — not just the single most-recent one.",
+      "Closing a session now asks where the task should go: keep it on Today to pick up soon, or move it back to Ready to GO! to clear your list.",
+      "The checkpoint receipt no longer asks for a separate “next action” — your resume point is the one thing that matters.",
+    ],
+  },
+  {
     version: "0.9.0",
     date: "2026-06-16",
     title: "The session became a workspace",

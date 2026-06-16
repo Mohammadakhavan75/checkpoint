@@ -160,6 +160,9 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row.killed .name{text-decoration:line-through;color:var(--faint)}
 .row.done{opacity:.8}
+/* a resumable task (carries a checkpoint) — same green signal as the receipt card */
+.row.resumable{border-color:#1d3a28;box-shadow:0 0 28px -20px var(--green)}
+.row.resumable:hover{border-color:#2a5740}
 
 .chip{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;text-transform:uppercase;
   padding:2px 8px;border-radius:20px;border:1px solid currentColor;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
@@ -209,6 +212,9 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .rc-resume{padding:10px 22px;font-size:13px}
 .rc-dismiss{font-family:'JetBrains Mono';font-size:11.5px;color:var(--faint)}
 .rc-dismiss:hover{color:var(--text)}
+
+/* placement choice shown after a non-done checkpoint closes a session */
+.placement{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 
 /* tutorial bridge (one-question capture inside the session overlay) */
 .bridge{display:flex;gap:10px;max-width:560px}

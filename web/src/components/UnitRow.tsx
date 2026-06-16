@@ -18,8 +18,11 @@ export function UnitRow({
 }) {
   const f = item.fields;
   const cp = item.latest_checkpoint;
+  // A task with a checkpoint can be resumed rather than freshly started — give
+  // it the green glow and a Resume button (same size / slot as Start).
+  const resumable = ctx === "today" && !!cp && item.state !== "done";
   return (
-    <div className={`row fade-in s${(idx % 4) + 1} ${item.state}`}>
+    <div className={`row fade-in s${(idx % 4) + 1} ${item.state} ${resumable ? "resumable" : ""}`}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="rowhead">
           <Marker state={item.state} />
@@ -35,7 +38,7 @@ export function UnitRow({
           <div className="acts">
             {ctx === "today" ? (
               <button className="btn amber" onClick={() => onStart(item.id)}>
-                ▸ Start
+                {resumable ? "⟲ Resume" : "▸ Start"}
               </button>
             ) : (
               <button className="btn amber" onClick={() => onToDaily(item.id)}>

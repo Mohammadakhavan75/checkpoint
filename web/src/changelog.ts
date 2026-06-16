@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.9.0",
+    date: "2026-06-16",
+    title: "The session became a workspace",
+    notes: [
+      "Your notes now live right on the session page — an always-open composer over a running log of everything you've captured this session, newest first, instead of hidden behind a button.",
+      "The Pomodoro timer is now the session's heartbeat: a focus pulse plus live vitals — time focused, notes captured, and when you started.",
+      "Closing to a checkpoint is now a calm exit in the top bar; the bright accent moved onto Capture, where the action is.",
+      "On phones the timer collapses into a compact strip so the capture box and your notes aren't buried beneath it.",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-06-14",
     title: "A net under delete",

@@ -24,6 +24,12 @@ export function ContainerCard({
   const done = children.filter((c) => c.state === "done").length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   const nextId = children.find((c) => c.state !== "done" && c.state !== "killed")?.id;
+  // Completed phases sink to the bottom so the still-open work stays up top.
+  // Each phase keeps its original number (its place in the plan) rather than
+  // being renumbered as it completes; sort() is stable so the rest hold order.
+  const ordered = children
+    .map((c, k) => ({ c, no: k + 1 }))
+    .sort((a, b) => Number(a.c.state === "done") - Number(b.c.state === "done"));
 
   return (
     <div className={`fade-in s${(idx % 4) + 1}`}>
@@ -61,11 +67,11 @@ export function ContainerCard({
           </button>
         </div>
       </div>
-      {children.map((c, k) => {
+      {ordered.map(({ c, no }) => {
         const startable = c.state !== "done" && c.state !== "killed";
         return (
           <div key={c.id} className={`row child ${c.state} ${c.id === nextId ? "next" : ""}`}>
-            <span className="phase-no">{k + 1}</span>
+            <span className="phase-no">{no}</span>
             <Marker state={c.state} />
             <div className="ttl">
               <div className="name">{c.title}</div>

@@ -561,7 +561,9 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   /* modals become a full-screen sheet with sticky header/footer */
   .scrim{padding:0;align-items:stretch}
   .modal{max-width:none;min-height:100%;border-radius:0}
-  .modal header{position:sticky;top:0;z-index:3;background:var(--panel)}
+  /* clear the notch / status bar — mirror the footer's safe-area guard */
+  .modal header{position:sticky;top:0;z-index:3;background:var(--panel);
+    padding-top:max(16px,env(safe-area-inset-top))}
   .modal footer{position:sticky;bottom:0;z-index:3;background:#0f1216;flex-wrap:wrap;
     padding-bottom:max(14px,env(safe-area-inset-bottom))}
   .grid2{grid-template-columns:1fr}

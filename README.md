@@ -127,6 +127,22 @@ npm install
 VITE_API_BASE=http://localhost:8000/api npm run dev
 ```
 
+## Backups
+
+The database is the only source of truth. Two ops scripts give you a
+disaster-recovery net — a `pg_dump` to a timestamped file plus an optional
+upload to Google Drive (via rclone), and a guarded restore:
+
+```bash
+cp ops/backup.env.example ops/backup.env   # configure once
+./ops/backup-checkpoint.sh                  # dump + upload (run nightly via cron)
+./ops/restore-checkpoint.sh --list          # see local + Drive dumps
+./ops/restore-checkpoint.sh --latest        # restore (overwrites the live DB)
+```
+
+Full setup — Google service account, rclone remote, cron line, and fresh-machine
+recovery — is in [docs/ops/BACKUP_RESTORE.md](docs/ops/BACKUP_RESTORE.md).
+
 ## Screens
 
 1. **Today / Resume** — executable units only; each shows its first action + last checkpoint + Start.
@@ -157,6 +173,7 @@ checkpoint/
 ├── .env.example
 ├── brain_os.html            # the original prototype (reference)
 ├── api/                     # FastAPI app, services, Alembic migrations, tests
+├── ops/                     # deploy + backup/restore scripts
 └── web/                     # React + TS + Vite SPA
 ```
 

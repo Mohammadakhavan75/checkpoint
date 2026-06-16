@@ -1,15 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Item } from "../types";
-import { SnapshotModal } from "./SnapshotModal";
+import { useSnapshots } from "../api/hooks";
+import { SnapshotLog } from "./SnapshotLog";
 
 const DEFAULT_MIN = 25;
 const MIN_MIN = 1;
 const MAX_MIN = 180;
+const MAX_DOTS = 8;
 
 function clampMin(m: number): number {
   if (Number.isNaN(m)) return DEFAULT_MIN;
   return Math.min(MAX_MIN, Math.max(MIN_MIN, Math.round(m)));
+}
+
+function fmtFocused(sec: number): string {
+  const m = Math.floor(sec / 60);
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+function fmtClock(ms: number): string {
+  return new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 export function SessionOverlay({
@@ -28,9 +40,18 @@ export function SessionOverlay({
   const [minutes, setMinutes] = useState(DEFAULT_MIN);
   const [remaining, setRemaining] = useState(DEFAULT_MIN * 60);
   const [running, setRunning] = useState(true);
-  const [snapOpen, setSnapOpen] = useState(false);
   const [bridgeText, setBridgeText] = useState("");
   const [bridgeBusy, setBridgeBusy] = useState(false);
+  const [descOpen, setDescOpen] = useState(false);
+
+  // Session vitals — the timer is the heartbeat, so the rail reports on it.
+  const [startedAt] = useState(() => Date.now());
+  const [focusedSec, setFocusedSec] = useState(0);
+  const [pomosDone, setPomosDone] = useState(0);
+  const pomoCounted = useRef(false);
+
+  const tutorial = !!(item.is_tutorial && onBridge);
+  const { data: snapshots = [] } = useSnapshots(item.id);
 
   async function submitBridge() {
     const text = bridgeText.trim();
@@ -45,9 +66,22 @@ export function SessionOverlay({
 
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    const id = setInterval(() => {
+      setRemaining((r) => Math.max(0, r - 1));
+      setFocusedSec((s) => s + 1);
+    }, 1000);
     return () => clearInterval(id);
   }, [running]);
+
+  // A finished pomodoro stops the clock and ticks the rail's "done" count once.
+  useEffect(() => {
+    if (remaining === 0 && !pomoCounted.current) {
+      pomoCounted.current = true;
+      setRunning(false);
+      setPomosDone((p) => p + 1);
+    }
+    if (remaining > 0) pomoCounted.current = false;
+  }, [remaining]);
 
   function applyMinutes(m: number) {
     const clamped = clampMin(m);
@@ -68,6 +102,7 @@ export function SessionOverlay({
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
   const done = remaining === 0;
+  const hasDetails = !!(f.description || f.risk);
 
   return (
     <div className="session">
@@ -75,9 +110,16 @@ export function SessionOverlay({
         <span className="lab">SESSION //</span>
         <h2>{item.title}</h2>
         {item.mode && <span className="mode-chip">{item.mode}</span>}
-        <button className="close" onClick={onAbandon}>
-          ⨯ abandon
-        </button>
+        <div className="top-acts">
+          {!tutorial && (
+            <button className="ckpt" onClick={onCheckpoint}>
+              ⊟ Close → checkpoint
+            </button>
+          )}
+          <button className="close" onClick={onAbandon}>
+            ⨯ abandon
+          </button>
+        </div>
       </div>
       <div className="stage">
         <div className="clockwrap">
@@ -103,6 +145,14 @@ export function SessionOverlay({
               </div>
               <div className="bt">{done ? "TIME'S UP" : "POMODORO"}</div>
             </div>
+          </div>
+
+          <div className="pulse">
+            {Array.from({ length: Math.min(pomosDone, MAX_DOTS) }).map((_, i) => (
+              <span key={i} className="dot on" />
+            ))}
+            {!done && <span className="dot" />}
+            <span className="pulselab">{pomosDone} done</span>
           </div>
 
           <div className="pomo">
@@ -133,8 +183,24 @@ export function SessionOverlay({
               ↺ Reset
             </button>
           </div>
+
+          <div className="vitals">
+            <div className="vital">
+              <span className="vk">Focused</span>
+              <span className="vv">{fmtFocused(focusedSec)}</span>
+            </div>
+            <div className="vital">
+              <span className="vk">Notes</span>
+              <span className="vv amber">{snapshots.length}</span>
+            </div>
+            <div className="vital">
+              <span className="vk">Started</span>
+              <span className="vv dim">{fmtClock(startedAt)}</span>
+            </div>
+          </div>
         </div>
-        {item.is_tutorial && onBridge ? (
+
+        {tutorial ? (
           <div className="work">
             <div className="focus">One question — this is the whole tutorial</div>
             <div className="fa">What were you working on before you opened this?</div>
@@ -164,39 +230,36 @@ export function SessionOverlay({
           </div>
         ) : (
           <div className="work">
-            <div className="focus">First action — start here, nothing else</div>
-            <div className="fa">{f.firstAction || item.title}</div>
-            <div className="swrow">
-              <div className="scard">
-                <div className="k">Description</div>
-                <div className="v">{f.description || "—"}</div>
-              </div>
-              {f.risk && (
-                <div className="scard">
-                  <div className="k" style={{ color: "var(--orange)" }}>
-                    ! Risk
-                  </div>
-                  <div className="v">{f.risk}</div>
-                </div>
+            <div className="ctxstrip">
+              <span className="ctxlab">First action</span>
+              <span className="ctxfa">{f.firstAction || item.title}</span>
+              {hasDetails && (
+                <button className="ctxmore" onClick={() => setDescOpen((v) => !v)}>
+                  {descOpen ? "hide ⌃" : "details ⌄"}
+                </button>
               )}
             </div>
-            <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 10 }}>
-              <button className="btn" style={{ padding: "11px 18px" }} onClick={() => setSnapOpen(true)}>
-                ⊞ Snapshot — add notes &amp; links
-              </button>
-              <button className="btn amber" style={{ padding: "11px 18px" }} onClick={onCheckpoint}>
-                ⊟ Close session → write checkpoint
-              </button>
-            </div>
-            <p className="lead" style={{ marginTop: 18, color: "var(--faint)", fontSize: 12 }}>
-              A session is finished when the checkpoint exists — not when the task is done. You
-              can't close cleanly without it.
-            </p>
+            {descOpen && hasDetails && (
+              <div className="ctxdesc">
+                {f.description && (
+                  <div className="ctxdesc-row">
+                    <span className="k">Description</span>
+                    <span className="v">{f.description}</span>
+                  </div>
+                )}
+                {f.risk && (
+                  <div className="ctxdesc-row">
+                    <span className="k risk">! Risk</span>
+                    <span className="v">{f.risk}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <SnapshotLog id={item.id} />
           </div>
         )}
       </div>
-
-      {snapOpen && <SnapshotModal id={item.id} onClose={() => setSnapOpen(false)} />}
     </div>
   );
 }

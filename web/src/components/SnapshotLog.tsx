@@ -47,7 +47,25 @@ function MarkdownHelp() {
   );
 }
 
-export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void }) {
+// Relative "12m ago" stamp. Recomputed on render — the session overlay ticks
+// every second, so these stay fresh without their own timer.
+function relTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const sec = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (sec < 45) return "just now";
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.round(hr / 24);
+  return `${d}d ago`;
+}
+
+// The session's running log: an always-open composer over a stream of notes,
+// newest first. Lifted out of the old SnapshotModal so it can live inline in
+// the session workspace instead of behind a button.
+export function SnapshotLog({ id }: { id: string }) {
   const { data: snapshots = [], isLoading } = useSnapshots(id);
   const save = useSaveSnapshot();
   const del = useDeleteSnapshot();
@@ -99,7 +117,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
 
   async function add() {
     if (!ok) {
-      setErr("⚠ add a note");
+      setErr("⚠ write something first");
       return;
     }
     setErr("");
@@ -160,7 +178,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
       autoSaveTimerRef.current = null;
     }
 
-    const stackedit = new Stackedit({ url: '/stackedit/app' });
+    const stackedit = new Stackedit({ url: "/stackedit/app" });
     stackeditInstanceRef.current = stackedit;
     currentEditNoteRef.current = initialText;
     currentEditIdRef.current = snapshotId;
@@ -179,12 +197,14 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
     // Setting pointer-events:none on the outer container lets click events reach our button,
     // while the inner iframe-container retains pointer-events:auto for normal iframe use.
     const fixPointerEvents = () => {
-      const container = document.querySelector('.stackedit-container') as HTMLElement | null;
+      const container = document.querySelector(".stackedit-container") as HTMLElement | null;
       if (container) {
-        container.style.pointerEvents = 'none';
-        const iframeContainer = container.querySelector('.stackedit-iframe-container') as HTMLElement | null;
+        container.style.pointerEvents = "none";
+        const iframeContainer = container.querySelector(
+          ".stackedit-iframe-container"
+        ) as HTMLElement | null;
         if (iframeContainer) {
-          iframeContainer.style.pointerEvents = 'auto';
+          iframeContainer.style.pointerEvents = "auto";
         }
       } else {
         // Retry until container is mounted by stackedit-js
@@ -254,7 +274,7 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
         const checkboxRegex = /^(\s*([-*+]|\d+\.)\s+\[)([ xX])(\])/gm;
         const updatedNote = noteText.replace(
           checkboxRegex,
-          (match, prefix, marker, char, suffix) => {
+          (match, prefix, _marker, _char, suffix) => {
             if (currentIndex === clickedIndex) {
               currentIndex++;
               return `${prefix}${isChecked ? "x" : " "}${suffix}`;
@@ -278,198 +298,180 @@ export function SnapshotModal({ id, onClose }: { id: string; onClose: () => void
       const rawHtml = marked.parse(text, { gfm: true, breaks: true }) as string;
       const enabledHtml = rawHtml.replace(/<input([^>]*?)disabled([^>]*?)>/g, "<input$1$2>");
       return { __html: enabledHtml };
-    } catch (err) {
-      console.error("Markdown parse error", err);
+    } catch (e) {
+      console.error("Markdown parse error", e);
       return { __html: text };
     }
   };
 
   return (
     <>
-      {isStackeditOpen && createPortal(
-        <button className="stackedit-close-btn" onClick={handleCloseStackedit}>
-          Save & Close ✕
-        </button>,
-        document.body
-      )}
-      <div className="scrim">
-        <div className="modal">
-          <header>
-            <span className="ic">⊞</span>
-            <h3>Snapshots</h3>
-          </header>
-          <div className="pad">
-            <div className="note">
-              Keep notes with this task. They support Markdown, persist across sessions,
-              and stay attached to the task. (Checklists inside Markdown are interactive!)
-            </div>
+      {isStackeditOpen &&
+        createPortal(
+          <button className="stackedit-close-btn" onClick={handleCloseStackedit}>
+            Save & Close ✕
+          </button>,
+          document.body
+        )}
 
-            <div className="field">
-              <label>Title</label>
-              <input
-                value={title}
-                placeholder="optional label"
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                <label style={{ margin: 0 }}>Note (Markdown compatible)</label>
-                <div className="notebar">
-                  <button
-                    type="button"
-                    className={`linkbtn${showHelp ? " on" : ""}`}
-                    aria-pressed={showHelp}
-                    onClick={() => setShowHelp((v) => !v)}
-                  >
-                    ? Markdown help
-                  </button>
-                  <button
-                    type="button"
-                    className="linkbtn stackedit-link"
-                    onClick={() => openStackeditEditor(note, null)}
-                  >
-                    ✎ Edit in StackEdit
-                  </button>
-                </div>
-              </div>
-              {showHelp && <MarkdownHelp />}
-              <textarea
-                rows={3}
-                placeholder="a thought, a code snippet, a task list (- [ ] item)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
-            </div>
+      <div className="composer">
+        <div className="composer-head">
+          <label>Capture a note</label>
+          <div className="notebar">
+            <button
+              type="button"
+              className={`linkbtn${showHelp ? " on" : ""}`}
+              aria-pressed={showHelp}
+              onClick={() => setShowHelp((v) => !v)}
+            >
+              ? Markdown
+            </button>
+            <button
+              type="button"
+              className="linkbtn stackedit-link"
+              onClick={() => openStackeditEditor(note, null)}
+            >
+              ✎ StackEdit
+            </button>
+          </div>
+        </div>
+        {showHelp && <MarkdownHelp />}
+        <textarea
+          className="composer-note"
+          rows={2}
+          placeholder="What just happened? A blocker, a fix, a snippet, a link… (⌘↵ to capture)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              add();
+            }
+          }}
+        />
+        <div className="composer-actions">
+          <input
+            className="composer-title"
+            value={title}
+            placeholder="optional title"
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          {err && <span className="composer-err">{err}</span>}
+          <button className="btn amber" onClick={add} disabled={save.isPending || !ok}>
+            ⊞ Capture
+          </button>
+        </div>
+      </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-              <button className="btn amber" onClick={add} disabled={save.isPending}>
-                + Add snapshot
-              </button>
-            </div>
+      <div className="logdiv">
+        <span>This session</span>
+        <i />
+        <span>
+          {snapshots.length} note{snapshots.length === 1 ? "" : "s"}
+        </span>
+      </div>
 
-            <div className="snaplist">
-              {isLoading && <div className="snapempty">Loading…</div>}
-              {!isLoading && snapshots.length === 0 && (
-                <div className="snapempty">No snapshots yet.</div>
-              )}
-              {snapshots.map((s) => {
-                const isEditing = editingId === s.id;
-                if (isEditing) {
-                  return (
-                    <div className="snapcard editing" key={s.id} style={{ flexDirection: "column", gap: 10 }}>
-                      <div className="snapmain" style={{ width: "100%" }}>
-                        <div className="field" style={{ marginBottom: 8 }}>
-                          <label>Title</label>
-                          <input
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            placeholder="optional label"
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                        <div className="field" style={{ marginBottom: 8 }}>
-                          <label>Note</label>
-                          <textarea
-                            rows={3}
-                            value={editNote}
-                            onChange={(e) => setEditNote(e.target.value)}
-                            placeholder="note content"
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                          <button
-                            className="btn amber btn-sm"
-                            onClick={() => handleSaveEdit(s.id)}
-                            disabled={update.isPending}
-                          >
-                            Save
-                          </button>
-                          <button className="btn btn-sm" onClick={() => setEditingId(null)}>
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="snapcard" key={s.id}>
-                    <div className="snapmain">
-                      {s.title && <div className="snaptitle">{s.title}</div>}
-                      <div
-                        className="snapnote"
-                        dangerouslySetInnerHTML={renderMarkdown(s.note || "")}
-                        onClick={(e) => handleCheckboxClick(e, s)}
+      <div className="logstream">
+        {isLoading && <div className="logempty">Loading…</div>}
+        {!isLoading && snapshots.length === 0 && (
+          <div className="logempty">No notes yet — capture the first thing worth remembering.</div>
+        )}
+        {snapshots.map((s) => {
+          const isEditing = editingId === s.id;
+          if (isEditing) {
+            return (
+              <div className="logentry" key={s.id}>
+                <div className="logwhen">{relTime(s.created_at)}</div>
+                <div className="snapcard editing" style={{ flexDirection: "column", gap: 10 }}>
+                  <div className="snapmain" style={{ width: "100%" }}>
+                    <div className="field" style={{ marginBottom: 8 }}>
+                      <label>Title</label>
+                      <input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="optional label"
+                        style={{ width: "100%" }}
                       />
                     </div>
-                    <div className="snapactions">
+                    <div className="field" style={{ marginBottom: 8 }}>
+                      <label>Note</label>
+                      <textarea
+                        rows={3}
+                        value={editNote}
+                        onChange={(e) => setEditNote(e.target.value)}
+                        placeholder="note content"
+                        style={{ width: "100%" }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                       <button
-                        className="snapedit-stack"
-                        title="Edit in StackEdit"
-                        onClick={() => openStackeditEditor(s.note || "", s.id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--cyan)",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          marginRight: "6px",
-                          fontFamily: "'JetBrains Mono', monospace",
-                          padding: "2px 4px"
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--cyan)")}
+                        className="btn amber btn-sm"
+                        onClick={() => handleSaveEdit(s.id)}
+                        disabled={update.isPending}
                       >
-                        StackEdit
+                        Save
                       </button>
-                      <button
-                        className="snapedit"
-                        title="Edit snapshot"
-                        onClick={() => {
-                          setEditingId(s.id);
-                          setEditTitle(s.title || "");
-                          setEditNote(s.note || "");
-                        }}
-                        disabled={update.isPending || del.isPending}
-                      >
-                        ✎
-                      </button>
-                      <button
-                        className="snapdel"
-                        title="Delete snapshot"
-                        onClick={() => setConfirmDeleteId(s.id)}
-                        disabled={del.isPending || update.isPending}
-                      >
-                        ⨯
+                      <button className="btn btn-sm" onClick={() => setEditingId(null)}>
+                        Cancel
                       </button>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="logentry" key={s.id}>
+              <div className="logwhen">{relTime(s.created_at)}</div>
+              <div className="snapcard">
+                <div className="snapmain">
+                  {s.title && <div className="snaptitle">{s.title}</div>}
+                  <div
+                    className="snapnote"
+                    dangerouslySetInnerHTML={renderMarkdown(s.note || "")}
+                    onClick={(e) => handleCheckboxClick(e, s)}
+                  />
+                </div>
+                <div className="snapactions">
+                  <button
+                    className="snapedit-stack"
+                    title="Edit in StackEdit"
+                    onClick={() => openStackeditEditor(s.note || "", s.id)}
+                  >
+                    StackEdit
+                  </button>
+                  <button
+                    className="snapedit"
+                    title="Edit note"
+                    onClick={() => {
+                      setEditingId(s.id);
+                      setEditTitle(s.title || "");
+                      setEditNote(s.note || "");
+                    }}
+                    disabled={update.isPending || del.isPending}
+                  >
+                    ✎
+                  </button>
+                  <button
+                    className="snapdel"
+                    title="Delete note"
+                    onClick={() => setConfirmDeleteId(s.id)}
+                    disabled={del.isPending || update.isPending}
+                  >
+                    ⨯
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          <footer>
-            <span className="gate" style={{ color: err ? "var(--red)" : undefined, display: "flex", gap: 12, alignItems: "center" }}>
-              <span>{err || `${snapshots.length} snapshot${snapshots.length === 1 ? "" : "s"} attached`}</span>
-              {!err && (
-                <span style={{ fontSize: "11px", color: "var(--faint)", fontFamily: "'JetBrains Mono', monospace" }}>
-                  • editor by <span style={{ color: "var(--cyan)" }}>StackEdit</span>
-                </span>
-              )}
-            </span>
-            <button className="btn" onClick={onClose}>
-              Done
-            </button>
-          </footer>
-        </div>
+          );
+        })}
       </div>
+
       {confirmDeleteId && (
         <ConfirmDialog
-          title="Delete snapshot"
-          message="Delete this snapshot? This can't be undone."
+          title="Delete note"
+          message="Delete this note? This can't be undone."
           confirmLabel="Delete"
           busy={del.isPending}
           onCancel={() => setConfirmDeleteId(null)}

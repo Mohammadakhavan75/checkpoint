@@ -300,7 +300,13 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .session .top{display:flex;align-items:center;gap:14px;padding:14px 24px;border-bottom:1px solid var(--line)}
 .session .top .lab{font-family:'JetBrains Mono';color:var(--faint);font-size:12px;letter-spacing:1px}
 .session .top h2{margin:0;font-size:18px;font-family:'JetBrains Mono'}
-.session .top .close{margin-left:auto;color:var(--faint);font-family:'JetBrains Mono';font-size:12px;border:1px solid var(--line2);padding:6px 12px;border-radius:6px}
+.session .top .top-acts{margin-left:auto;display:flex;align-items:center;gap:10px}
+/* checkpoint is the calm exit, not the loud thing — amber now belongs to capture */
+.session .top .ckpt{color:var(--dim);font-family:'JetBrains Mono';font-size:12px;border:1px solid var(--line2);
+  padding:6px 13px;border-radius:6px;background:var(--panel2)}
+.session .top .ckpt:hover{color:var(--text);border-color:var(--text)}
+.session .top .close{color:var(--faint);font-family:'JetBrains Mono';font-size:12px;border:1px solid var(--line2);padding:6px 12px;border-radius:6px}
+.session .top .close:hover{color:var(--dim)}
 .session .stage{flex:1;display:grid;grid-template-columns:300px 1fr;min-height:0}
 .session .clockwrap{border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
 .ring{position:relative;width:200px;height:200px}
@@ -317,6 +323,20 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .pomostep input{width:46px;height:32px;text-align:center;border:none;border-left:1px solid var(--line);border-right:1px solid var(--line);
   background:none;color:var(--text);font-family:'JetBrains Mono';font-size:15px;font-weight:600;-moz-appearance:textfield}
 .pomostep input::-webkit-outer-spin-button,.pomostep input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* pomodoro pulse — completed focus blocks this session */
+.pulse{display:flex;align-items:center;gap:7px}
+.pulse .dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--line2);background:none;flex:none}
+.pulse .dot.on{background:var(--amber);border-color:var(--amber);box-shadow:0 0 6px -1px var(--amber)}
+.pulse .pulselab{font-family:'JetBrains Mono';font-size:10px;color:var(--faint);margin-left:4px;letter-spacing:.5px}
+
+/* session vitals — what the heartbeat has produced so far */
+.vitals{width:100%;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:9px}
+.vital{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.vital .vk{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.vital .vv{font-family:'JetBrains Mono';font-size:13px;color:var(--text)}
+.vital .vv.amber{color:var(--amber)}
+.vital .vv.dim{color:var(--dim)}
 
 .snaplist{margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
 .snapempty{font-family:'JetBrains Mono';font-size:12px;color:var(--faint);padding:6px 2px}
@@ -388,6 +408,58 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .session .work{padding:30px 36px;overflow:auto}
 .session .work .focus{font-family:'JetBrains Mono';font-size:11px;letter-spacing:2px;color:var(--faint);text-transform:uppercase}
 .session .work .fa{font-size:22px;margin:8px 0 22px;line-height:1.35}
+
+/* ===== session workspace: context strip + composer + running log ===== */
+/* the task context is demoted to one quiet line you can expand on demand */
+.session .work .ctxstrip{display:flex;align-items:center;gap:12px;padding-bottom:14px;
+  border-bottom:1px solid var(--line);margin-bottom:18px}
+.ctxstrip .ctxlab{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--faint);white-space:nowrap}
+.ctxstrip .ctxfa{font-size:14px;color:var(--text);min-width:0;flex:1}
+.ctxstrip .ctxmore{margin-left:auto;font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);white-space:nowrap}
+.ctxstrip .ctxmore:hover{color:var(--text)}
+.ctxdesc{margin:-4px 0 18px;display:flex;flex-direction:column;gap:8px}
+.ctxdesc-row{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 13px}
+.ctxdesc-row .k{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--faint);white-space:nowrap;padding-top:2px;width:80px;flex:none}
+.ctxdesc-row .k.risk{color:var(--orange)}
+.ctxdesc-row .v{font-size:13px;color:var(--text);min-width:0}
+
+/* composer — the always-open capture surface. Amber-accented because this is
+   the action the page wants from you (the loud color used to sit on "close"). */
+.composer{border:1px solid var(--amber2);border-radius:11px;background:var(--panel);
+  padding:13px 14px;box-shadow:0 0 0 1px rgba(255,180,84,.06)}
+.composer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.composer-head label{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--faint)}
+.composer-note{width:100%;background:none;border:none;outline:none;resize:vertical;color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif;font-size:14px;line-height:1.5;min-height:46px}
+.composer-note::placeholder{color:var(--faint)}
+.composer-actions{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}
+.composer-title{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line2);border-radius:7px;
+  padding:7px 10px;font-size:12.5px;outline:none}
+.composer-title:focus{border-color:var(--amber)}
+.composer-err{font-family:'JetBrains Mono';font-size:11px;color:var(--red);white-space:nowrap}
+
+.logdiv{display:flex;align-items:center;gap:10px;margin:22px 0 12px}
+.logdiv span{font-family:'JetBrains Mono';font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--faint);white-space:nowrap}
+.logdiv i{flex:1;height:1px;background:var(--line)}
+.logstream{display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.logempty{font-family:'JetBrains Mono';font-size:12px;color:var(--faint);border:1px dashed var(--line2);
+  border-radius:9px;padding:18px;text-align:center}
+.logentry{display:flex;gap:12px}
+.logwhen{font-family:'JetBrains Mono';font-size:9.5px;color:var(--faint);padding-top:11px;
+  width:64px;flex:none;text-align:right;white-space:nowrap}
+.logentry .snapcard{flex:1;min-width:0}
+.snapedit-stack{background:none;border:none;color:var(--cyan);cursor:pointer;font-size:11px;
+  margin-right:6px;font-family:'JetBrains Mono',monospace;padding:2px 4px}
+.snapedit-stack:hover{color:var(--text)}
+/* note actions stay out of the way until you hover an entry (pointer devices only) */
+@media (hover:hover){
+  .logentry .snapactions{opacity:0;transition:opacity .12s}
+  .logentry:hover .snapactions{opacity:1}
+}
 .swrow{display:flex;gap:14px;margin-bottom:14px}
 .scard{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
 .scard .k{font-family:'JetBrains Mono';font-size:10px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase}
@@ -501,8 +573,22 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   /* session overlay */
   .session .top{padding:12px 16px;flex-wrap:wrap}
   .session .work{padding:18px 16px}
-  .session .clockwrap{padding:18px}
   .swrow{flex-direction:column}
+
+  /* phones: compact the heartbeat into a strip so the composer + log aren't
+     buried under a full-height timer. Small ring, vitals in a single row. */
+  .session .clockwrap{padding:16px;gap:13px}
+  .ring,.ring svg{width:132px;height:132px}
+  .ring .time .t{font-size:26px}
+  .ring .time .bt{font-size:9px}
+  .vitals{flex-direction:row;justify-content:space-between;gap:10px;padding-top:13px}
+  .vital{flex-direction:column;align-items:flex-start;gap:3px;flex:1;min-width:0}
+  .vital .vk{font-size:9px}
+
+  /* composer action row wraps: title gets its own line above Capture */
+  .composer-actions{flex-wrap:wrap}
+  .composer-title{flex:1 0 100%}
+  .logwhen{width:54px}
 
   /* one-question inputs stack on phones */
   .bridge{flex-direction:column}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useSaveCheckpoint } from "../api/hooks";
+import { useSaveCheckpoint, useSetDaily } from "../api/hooks";
 import type { CheckpointSaved, Outcome } from "../types";
 
 export function CheckpointModal({
@@ -17,6 +17,10 @@ export function CheckpointModal({
   trimmed?: boolean;
 }) {
   const save = useSaveCheckpoint();
+  const daily = useSetDaily();
+  // After a non-done checkpoint we ask where the (still-resumable) task should
+  // live; this holds the saved receipt while that choice is on screen.
+  const [saved, setSaved] = useState<CheckpointSaved | null>(null);
   const [outcome, setOutcome] = useState<Outcome>("active");
   const [lastState, setLastState] = useState("");
   const [whatChanged, setWhatChanged] = useState("");
@@ -48,7 +52,49 @@ export function CheckpointModal({
         do_not_redo: isDone ? undefined : doNotRedo || undefined,
       },
     });
-    onSaved(cp);
+    // Done is finished — nothing to resume, so don't ask where it goes. The
+    // first-run (trimmed) session keeps its onboarding flow uninterrupted.
+    if (isDone || trimmed) {
+      onSaved(cp);
+      return;
+    }
+    setSaved(cp);
+  }
+
+  // Place the just-closed task: onto Today to pick up soon, or back into
+  // Ready to GO! to clear it off Today until it's pulled in again.
+  async function place(toDaily: boolean) {
+    if (!saved) return;
+    await daily.mutateAsync({ id, daily: toDaily });
+    onSaved(saved);
+  }
+
+  if (saved) {
+    return (
+      <div className="scrim">
+        <div className="modal">
+          <header>
+            <span className="ic">⊟</span>
+            <h3>Checkpoint saved / where to next?</h3>
+          </header>
+          <div className="pad">
+            <div className="note">
+              Session closed and the receipt is written. Move this task into{" "}
+              <b>Ready to GO!</b> to clear it off Today, or keep it on Today to pick up again
+              soon.
+            </div>
+            <div className="placement">
+              <button className="btn amber" disabled={daily.isPending} onClick={() => place(false)}>
+                → Move to Ready to GO!
+              </button>
+              <button className="btn" disabled={daily.isPending} onClick={() => place(true)}>
+                ⊙ Keep on Today
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

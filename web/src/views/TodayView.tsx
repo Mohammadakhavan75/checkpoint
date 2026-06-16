@@ -23,16 +23,11 @@ export function TodayView({
   if (isLoading) return <Loading />;
   const all = data ?? [];
 
-  // Resume card: the newest checkpoint across today's still-open items.
-  const resumable = all.filter((i) => i.latest_checkpoint && i.state !== "done");
-  const card = resumable.length
-    ? resumable.reduce((a, b) =>
-        a.latest_checkpoint!.created_at >= b.latest_checkpoint!.created_at ? a : b,
-      )
-    : null;
-  // The resume card already represents one item (the tutorial, or whatever was
-  // worked most recently) — don't repeat it as a row underneath.
-  const list = all.filter((i) => !i.is_tutorial && i.id !== card?.id);
+  // The big receipt card is reserved for onboarding now: only the seeded
+  // tutorial keeps it. Every real resumable task renders inline as a glowing
+  // row with a standard Resume button, so the affordance is consistent.
+  const card = all.find((i) => i.is_tutorial && i.latest_checkpoint && i.state !== "done") ?? null;
+  const list = all.filter((i) => !i.is_tutorial);
 
   async function submitCapture(e: FormEvent) {
     e.preventDefault();
@@ -62,7 +57,7 @@ export function TodayView({
           title={card.title}
           checkpoint={card.latest_checkpoint!}
           onResume={() => onStart(card.id)}
-          onDismiss={card.is_tutorial ? () => del.mutate(card.id) : undefined}
+          onDismiss={() => del.mutate(card.id)}
         />
       )}
       <div className="rows">

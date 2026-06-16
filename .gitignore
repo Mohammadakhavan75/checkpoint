@@ -4,6 +4,11 @@
 .env.*.local
 *.local
 checkpoint.db
+# Operator backup config (holds rclone remote / optional DB password); template is committed.
+ops/backup.env
+# Local database dumps from ops/backup-checkpoint.sh
+backups/
+*.dump
 *.db
 .agents/
 __pycache__/

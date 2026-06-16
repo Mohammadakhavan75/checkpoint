@@ -61,9 +61,9 @@ async def save_checkpoint(
     """Append a checkpoint, set the item's state to the outcome, roll up parent.
 
     A work session is only "closed" when a valid checkpoint exists. The schema
-    requires last_state always, and next_action/resume_from unless the outcome
-    is "done" — finished work has no next step (columns are non-null, so the
-    absent fields are stored as "").
+    requires last_state always, and resume_from unless the outcome is "done"
+    — finished work has no next step (columns are non-null, so the absent
+    fields are stored as "").
     """
     checkpoint = Checkpoint(
         item_id=item.id,

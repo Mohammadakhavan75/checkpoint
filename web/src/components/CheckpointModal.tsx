@@ -21,7 +21,6 @@ export function CheckpointModal({
   const [lastState, setLastState] = useState("");
   const [whatChanged, setWhatChanged] = useState("");
   const [problems, setProblems] = useState("");
-  const [nextAction, setNextAction] = useState("");
   const [resumeFrom, setResumeFrom] = useState("");
   const [doNotRedo, setDoNotRedo] = useState("");
   const [err, setErr] = useState("");
@@ -29,13 +28,13 @@ export function CheckpointModal({
   const full = !trimmed || more;
 
   // Done means finished — there is no next step, so the resume fields
-  // (next action / resume from / do-not-redo) don't apply.
+  // (resume from / do-not-redo) don't apply.
   const isDone = outcome === "done";
-  const ok = !!(lastState.trim() && (isDone || (nextAction.trim() && resumeFrom.trim())));
+  const ok = !!(lastState.trim() && (isDone || resumeFrom.trim()));
 
   async function submit() {
     if (!ok) {
-      setErr(isDone ? "⚠ fill last state" : "⚠ fill last state · next action · resume from");
+      setErr(isDone ? "⚠ fill last state" : "⚠ fill last state · resume from");
       return;
     }
     const cp = await save.mutateAsync({
@@ -45,7 +44,6 @@ export function CheckpointModal({
         last_state: lastState,
         what_changed: whatChanged || undefined,
         problems: problems || undefined,
-        next_action: isDone ? undefined : nextAction,
         resume_from: isDone ? undefined : resumeFrom,
         do_not_redo: isDone ? undefined : doNotRedo || undefined,
       },
@@ -111,17 +109,9 @@ export function CheckpointModal({
               </>
             ) : (
               <>
-                <div className="grid2">
-                  <div className="field">
-                    <label>Problems found</label>
-                    <input value={problems} onChange={(e) => setProblems(e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <label>
-                      Next action <span className="req">*</span>
-                    </label>
-                    <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
-                  </div>
+                <div className="field">
+                  <label>Problems found</label>
+                  <input value={problems} onChange={(e) => setProblems(e.target.value)} />
                 </div>
                 <div className="grid2">
                   <div className="field">
@@ -139,19 +129,11 @@ export function CheckpointModal({
             )
           ) : (
             <>
-              <div className="grid2">
-                <div className="field">
-                  <label>
-                    Next action <span className="req">*</span>
-                  </label>
-                  <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
-                </div>
-                <div className="field">
-                  <label>
-                    Resume from <span className="req">*</span>
-                  </label>
-                  <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
-                </div>
+              <div className="field">
+                <label>
+                  Resume from <span className="req">*</span>
+                </label>
+                <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
               </div>
               <button className="morebtn" type="button" onClick={() => setMore(true)}>
                 + more — outcome · what changed · problems · do-not-redo
@@ -164,7 +146,7 @@ export function CheckpointModal({
             {err ||
               (isDone
                 ? "⚠ last state is required"
-                : "⚠ last state · next action · resume from are required")}
+                : "⚠ last state · resume from are required")}
           </span>
           <button className="btn" onClick={onBack}>
             Back

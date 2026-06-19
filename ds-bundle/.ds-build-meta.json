@@ -1,0 +1,12 @@
+{
+  "namespace": "CheckpointDS",
+  "source": "@checkpoint/ds@1.0.0",
+  "shape": "package",
+  "provider": null,
+  "componentCount": 15,
+  "skippedStoryIds": [],
+  "runtimeFontPrefixes": [
+    "JetBrains Mono",
+    "IBM Plex Sans"
+  ]
+}

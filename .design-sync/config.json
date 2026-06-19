@@ -1,0 +1,15 @@
+{
+  "projectId": "b223bfa9-b31f-443c-a645-f0b983c5e7f1",
+  "pkg": "@checkpoint/ds",
+  "globalName": "CheckpointDS",
+  "shape": "package",
+  "buildCmd": "cd web/ds && npm run build",
+  "cssEntry": "app.css",
+  "runtimeFontPrefixes": ["JetBrains Mono", "IBM Plex Sans"],
+  "overrides": {
+    "ConfirmDialog": { "cardMode": "single", "primaryStory": "Default" },
+    "Modal": { "cardMode": "single", "primaryStory": "NewTask" },
+    "Marker": { "cardMode": "column" },
+    "TabBar": { "cardMode": "column" }
+  }
+}

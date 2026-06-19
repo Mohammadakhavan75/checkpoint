@@ -1,0 +1,148 @@
+{
+  "global": "CheckpointDS",
+  "pkg": "@checkpoint/ds",
+  "pkgDir": "/Users/mohammad/Documents/projects/Checkpoint/web/ds",
+  "extraEntries": [],
+  "exported": [
+    "Button",
+    "Chip",
+    "ConfirmDialog",
+    "EmptyState",
+    "Field",
+    "Loading",
+    "Marker",
+    "Modal",
+    "ModeChip",
+    "NavButton",
+    "ProgressBar",
+    "ResumeCard",
+    "Row",
+    "SnapCard",
+    "TabBar"
+  ],
+  "storybookStatic": null,
+  "keyRecipe": 7,
+  "cfgSliceGlobal": "a139d95ad8ab0a8ba08b44a258c54602e36090304087f48fe923c61aa5a8ae08",
+  "components": [
+    {
+      "name": "Button",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "549061938dc73aca",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Chip",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "48ef66b2180ffc30",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ConfirmDialog",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "33987f488922f33a",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "EmptyState",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "9849f450a16fb800",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Field",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "423d9279b6f665e0",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Loading",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "fc991540f4ba1ec6",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Marker",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "3df98f98c22cc00e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Modal",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "340453aecba2b257",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ModeChip",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "83f217ea6016cbfb",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "NavButton",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "10135f5b35676ef1",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ProgressBar",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "6f88c0e36d389822",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ResumeCard",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "afd55db591fd778f",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Row",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "7bd1b92761e7bd20",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "SnapCard",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "5467e55f074c08dc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "TabBar",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "ffdaec64f07790b1",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    }
+  ]
+}

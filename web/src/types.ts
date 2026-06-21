@@ -75,9 +75,18 @@ export interface Item {
   fields: ItemFields;
   is_tutorial: boolean;
   deleted_at?: string | null;
+  // ISO timestamps. start/end carry an event's span or a task's planned start;
+  // deadline is a task's due date/time. all_day marks a date-only span.
+  start_at?: string | null;
+  end_at?: string | null;
+  deadline?: string | null;
+  all_day: boolean;
+  // 'local' = user-authored; 'gcal' = mirrored Google Calendar event (is_event).
+  source: string;
   created_at: string;
   updated_at: string;
   is_parent: boolean;
+  is_event: boolean;
   children: Item[];
   latest_checkpoint?: Checkpoint | null;
 }
@@ -113,6 +122,10 @@ export interface CompilePayload {
   procedure?: Procedure | null;
   scope?: Scope | null;
   phases?: PhaseInput[];
+  start_at?: string | null;
+  end_at?: string | null;
+  deadline?: string | null;
+  all_day?: boolean;
 }
 
 export interface ItemUpdatePayload {
@@ -120,6 +133,10 @@ export interface ItemUpdatePayload {
   domain?: string;
   state?: ItemState;
   daily?: boolean;
+  start_at?: string | null;
+  end_at?: string | null;
+  deadline?: string | null;
+  all_day?: boolean;
 }
 
 export interface CheckpointPayload {

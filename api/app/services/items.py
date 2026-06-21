@@ -274,6 +274,18 @@ async def compile_item(
     if payload.scope is not None:
         item.scope = payload.scope
 
+    # Schedule fields: a compiled task can carry a planned start/end and a
+    # deadline, which feed the Today/Ready date windows. Only overwrite when the
+    # payload mentions a field, so re-compiling without them keeps the schedule.
+    if payload.start_at is not None:
+        item.start_at = payload.start_at
+    if payload.end_at is not None:
+        item.end_at = payload.end_at
+    if payload.deadline is not None:
+        item.deadline = payload.deadline
+    if payload.all_day is not None:
+        item.all_day = payload.all_day
+
     # Classification sets the mode; an explicit mode in the payload wins.
     derived = _derive_mode(item.procedure, item.scope)
     if derived is not None:

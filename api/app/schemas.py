@@ -150,6 +150,10 @@ class ItemCreate(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     fields: dict = Field(default_factory=dict)
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
 
 
 class ItemUpdate(BaseModel):
@@ -162,6 +166,10 @@ class ItemUpdate(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     fields: Optional[dict] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
 
 
 class PhaseInput(BaseModel):
@@ -179,6 +187,10 @@ class CompileRequest(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     phases: Optional[list[PhaseInput]] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
 
 
 class DomainCreate(BaseModel):
@@ -226,10 +238,17 @@ class ItemOut(BaseModel):
     fields: dict
     is_tutorial: bool = False
     deleted_at: Optional[datetime] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: bool = False
+    source: str = "local"
     created_at: datetime
     updated_at: datetime
     # computed / assembled fields
     is_parent: bool = False
+    # convenience flag for the client: a mirrored Google Calendar event
+    is_event: bool = False
     children: list["ItemOut"] = Field(default_factory=list)
     latest_checkpoint: Optional[CheckpointOut] = None
 

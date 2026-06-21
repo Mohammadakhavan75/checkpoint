@@ -19,6 +19,13 @@ OUTCOMES: tuple[str, ...] = ("active", "deferred", "blocked", "done")
 
 DOMAINS: tuple[str, ...] = ("DDWS", "HPC", "Farokhi", "Research", "Teaching", "Personal")
 RESERVOIR = "reservoir"
+# Where mirrored Google Calendar events are filed (Phase 2). Like the reservoir,
+# a reserved pseudo-domain rather than one of the user's own.
+CALENDAR = "calendar"
+
+# How many days ahead a scheduled item is "on deck" — it surfaces in Ready to GO
+# once it falls inside this horizon (but only reaches Today on its actual day).
+READY_HORIZON_DAYS = 7
 
 MODES: tuple[str, ...] = ("Do", "Scout", "Plan", "Deep")
 

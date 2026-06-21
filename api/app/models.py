@@ -19,6 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -86,6 +87,19 @@ class Item(Base):
         Index("ix_items_parent", "parent_id"),
         Index("ix_items_owner_daily", "owner_id", "daily"),
         Index("ix_items_owner_domain", "owner_id", "domain"),
+        Index("ix_items_owner_start", "owner_id", "start_at"),
+        Index("ix_items_owner_deadline", "owner_id", "deadline"),
+        # One mirrored row per external event (per owner). Partial so the many
+        # local items (external_id NULL) are exempt from the uniqueness check.
+        Index(
+            "uq_items_owner_external",
+            "owner_id",
+            "source",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+            sqlite_where=text("external_id IS NOT NULL"),
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -110,6 +124,34 @@ class Item(Base):
     )
     procedure: Mapped[str | None] = mapped_column(Text, nullable=True)  # known|unknown
     scope: Mapped[str | None] = mapped_column(Text, nullable=True)  # bounded|unbounded
+    # Time fields. ``start_at``/``end_at`` carry an event's span or a task's
+    # planned start; ``deadline`` is a task's due date/time (events leave it
+    # NULL). ``all_day`` marks a date-only span. These drive the Today/Ready
+    # date windows (services/items.py surfacing) — see GOOGLE_CALENDAR_INTEGRATION.md.
+    start_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    end_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deadline: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    all_day: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    # Provenance. 'local' = user-authored (fully user-owned). 'gcal' = mirrored
+    # from Google Calendar (read-only sync): Google owns title/time, the user
+    # owns the work (checkpoints, daily, compile, domain). The reconciler keeps
+    # that split — see calendar_sync.py (Phase 2). external_* are NULL for local.
+    source: Mapped[str] = mapped_column(
+        Text, nullable=False, default="local", server_default="local"
+    )
+    external_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    external_etag: Mapped[str | None] = mapped_column(Text, nullable=True)
+    external_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # When the item was moved to trash (state set to "killed"). NULL = not trashed.
     # Trash is auto-purged 30 days after this timestamp; the pre-trash state is
     # stashed in fields["prevState"] so a restore returns it where it came from.

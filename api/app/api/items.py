@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import and_, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth import get_current_user
-from ..constants import RESERVOIR
+from ..constants import READY_HORIZON_DAYS, RESERVOIR
 from ..db import get_session
 from ..models import Item, User
 from ..schemas import (
@@ -54,6 +56,58 @@ _DOMAIN_ORDER = [
 ]
 
 
+def _day_window(tz_name: str | None) -> tuple[datetime, datetime, datetime]:
+    """Return ``(today_start, today_end, ready_horizon_end)`` as UTC instants.
+
+    Day boundaries are computed in the user's local zone (``tz_name``, falling
+    back to UTC) so "today" matches the user's calendar day rather than the
+    server's. ``ready_horizon_end`` is the far edge of the Ready "on deck"
+    window: the ``READY_HORIZON_DAYS`` days *after* today.
+    """
+    try:
+        tz: timezone | ZoneInfo = ZoneInfo(tz_name) if tz_name else timezone.utc
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = timezone.utc
+    midnight = datetime.now(tz).replace(hour=0, minute=0, second=0, microsecond=0)
+    day0 = midnight
+    day1 = midnight + timedelta(days=1)
+    horizon = day1 + timedelta(days=READY_HORIZON_DAYS)
+    return (
+        day0.astimezone(timezone.utc),
+        day1.astimezone(timezone.utc),
+        horizon.astimezone(timezone.utc),
+    )
+
+
+def _today_clause(day0: datetime, day1: datetime):
+    """Items that belong in Today: manually pulled, starting today, or due
+    today / overdue. Each branch guards its time column against NULL so the OR
+    stays a clean boolean (no three-valued surprises)."""
+    return or_(
+        Item.daily.is_(True),
+        and_(Item.start_at.is_not(None), Item.start_at >= day0, Item.start_at < day1),
+        and_(Item.deadline.is_not(None), Item.deadline < day1, Item.state != "done"),
+    )
+
+
+def _ready_clause(day1: datetime, horizon: datetime):
+    """Items "on deck" for Ready: already-compiled units, or anything scheduled
+    to start / fall due within the upcoming horizon (but not yet today)."""
+    return or_(
+        Item.compiled.is_(True),
+        and_(Item.start_at.is_not(None), Item.start_at >= day1, Item.start_at < horizon),
+        and_(Item.deadline.is_not(None), Item.deadline >= day1, Item.deadline < horizon),
+    )
+
+
+def _sched_key(item: Item) -> tuple[int, datetime]:
+    """Sort key: scheduled rows first by soonest start/deadline, then the rest
+    by creation time. The leading flag keeps the two groups from comparing
+    across each other."""
+    when = item.start_at or item.deadline
+    return (0, when) if when is not None else (1, item.created_at)
+
+
 async def _serialize_top_level(
     session: AsyncSession,
     rows: list[Item],
@@ -86,6 +140,11 @@ async def _serialize_top_level(
 async def list_items(
     tab: str = Query("today"),
     domain: str | None = Query(None),
+    tz: str | None = Query(
+        None,
+        description="IANA timezone (e.g. 'Europe/Berlin') for computing the "
+        "Today/Ready date windows. Defaults to UTC.",
+    ),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[ItemOut]:
@@ -107,31 +166,40 @@ async def list_items(
             for i in result.scalars().all()
         ]
 
+    day0, day1, horizon = _day_window(tz)
+
     if tab == "today":
         # Top-level only: a container rides into Today as one unit (its phases
-        # nested), rather than each phase showing as a separate row.
+        # nested), rather than each phase showing as a separate row. Beyond the
+        # manually-pulled `daily` rows, items starting today or due today/overdue
+        # auto-surface here (date-based surfacing).
         result = await session.execute(
             select(Item).where(
                 Item.owner_id == uid,
-                Item.daily.is_(True),
                 Item.state != "killed",
                 Item.parent_id.is_(None),
+                _today_clause(day0, day1),
             )
         )
-        return await _serialize_top_level(session, list(result.scalars().all()), parents)
+        rows = sorted(result.scalars().all(), key=_sched_key)
+        return await _serialize_top_level(session, rows, parents)
 
     if tab == "ready":
-        # Same as Today: containers appear as whole units, phases stay nested.
+        # Compiled-and-waiting units plus anything scheduled within the horizon,
+        # minus whatever already qualifies for Today (so a compiled task due
+        # today shows only there, not in both).
         result = await session.execute(
             select(Item).where(
                 Item.owner_id == uid,
-                Item.compiled.is_(True),
                 Item.daily.is_(False),
                 Item.state.not_in(["killed", "done"]),
                 Item.parent_id.is_(None),
+                _ready_clause(day1, horizon),
+                not_(_today_clause(day0, day1)),
             )
         )
-        return await _serialize_top_level(session, list(result.scalars().all()), parents)
+        rows = sorted(result.scalars().all(), key=_sched_key)
+        return await _serialize_top_level(session, rows, parents)
 
     if tab == "reservoir":
         result = await session.execute(

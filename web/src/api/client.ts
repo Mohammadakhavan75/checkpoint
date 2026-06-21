@@ -114,9 +114,21 @@ export const createDomain = (name: string) =>
   request<Domain>("/domains", { method: "POST", ...body({ name }) });
 
 // ----- items -----
+// The IANA zone of this browser, so the server computes the Today/Ready date
+// windows against the user's local day rather than UTC.
+function localTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function listItems(tab: Tab, domain?: string) {
   const params = new URLSearchParams({ tab });
   if (domain) params.set("domain", domain);
+  const tz = localTimeZone();
+  if (tz) params.set("tz", tz);
   return request<Item[]>(`/items?${params.toString()}`);
 }
 

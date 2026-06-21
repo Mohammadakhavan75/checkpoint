@@ -1,6 +1,33 @@
 import type { Item } from "../types";
 import { Chip, Marker, ModeChip } from "./atoms";
 
+function fmtWhen(iso: string, allDay = false): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(allDay ? {} : { hour: "numeric", minute: "2-digit" }),
+  }).format(d);
+}
+
+// A small schedule chip for a Today/Ready row: overdue deadlines glow red,
+// upcoming deadlines/start times stay slate. Deadline wins over start time.
+function ScheduleChip({ item }: { item: Item }) {
+  if (item.deadline) {
+    const overdue = item.state !== "done" && new Date(item.deadline).getTime() < Date.now();
+    return (
+      <span className={`chip due ${overdue ? "overdue" : ""}`}>
+        {overdue ? "overdue" : "due"} {fmtWhen(item.deadline)}
+      </span>
+    );
+  }
+  if (item.start_at) {
+    return <span className="chip due">{fmtWhen(item.start_at, item.all_day)}</span>;
+  }
+  return null;
+}
+
 export function UnitRow({
   item,
   idx,
@@ -33,6 +60,7 @@ export function UnitRow({
               {item.parent_id && <span style={{ color: "var(--violet)" }}>↳ phase</span>}
               <ModeChip mode={item.mode} />
               <Chip state={item.state} />
+              <ScheduleChip item={item} />
             </div>
           </div>
           <div className="acts">

@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.10.0",
+    date: "2026-06-21",
+    title: "Tasks have a clock now",
+    notes: [
+      "A task can now carry a deadline and a start / end time — set them in the Schedule section when you compile.",
+      "Anything due today (or overdue) and anything starting today surfaces in Today on its own, right next to the tasks you pull in by hand.",
+      "Tasks coming due in the next 7 days line up in Ready to GO, soonest first, so nothing sneaks up on you.",
+    ],
+  },
+  {
     version: "0.9.1",
     date: "2026-06-16",
     title: "Resume, everywhere",

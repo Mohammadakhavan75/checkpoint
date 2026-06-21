@@ -291,6 +291,14 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--amber)}
 .field .hint{font-size:11px;color:var(--faint);margin-top:4px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.schedule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sched-cell{margin:0}
+.sched-cell>span{display:block;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+@media (max-width:520px){.schedule-grid{grid-template-columns:1fr}}
+/* schedule chip on a Today/Ready row: slate = upcoming, red = overdue */
+.chip.due{color:var(--slate)}
+.chip.due.overdue{color:var(--red)}
 .modal footer{border-top:1px solid var(--line);padding:14px 22px;display:flex;gap:10px;justify-content:flex-end;align-items:center}
 .gate{margin-right:auto;font-family:'JetBrains Mono';font-size:11.5px;color:var(--orange)}
 .gate.ok{color:var(--green)}

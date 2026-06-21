@@ -60,12 +60,35 @@ const legacyDevUrlSelfHeal = {
   },
 };
 
+// Serve the prerendered static pages (scripts/prerender.mjs writes
+// privacy.html / terms.html into the build) at their clean URLs, so a no-JS
+// client — including Google's OAuth homepage verification crawler — gets real,
+// content-rich HTML instead of the SPA fallback's empty root. "/" already
+// resolves to the prerendered index.html. Preview-only: the dev server has no
+// build artifacts and renders these routes via the SPA + client router.
+const prerenderedPublicPages = {
+  name: "prerendered-public-pages",
+  configurePreviewServer(server: { middlewares: { use: (fn: any) => void } }) {
+    const map: Record<string, string> = {
+      "/privacy": "/privacy.html",
+      "/terms": "/terms.html",
+    };
+    server.middlewares.use((req: any, _res: any, next: any) => {
+      if (req.url) {
+        const urlPath = req.url.split("?")[0].split("#")[0].replace(/\/+$/, "");
+        if (map[urlPath]) req.url = map[urlPath] + req.url.slice(urlPath.length);
+      }
+      next();
+    });
+  },
+};
+
 // Default 5173; PORT lets a launcher assign a free port (the Docker image
 // pins the port explicitly via --port, so production is unaffected).
 const port = Number(process.env.PORT) || 5173;
 
 export default defineConfig({
-  plugins: [react(), stackeditFallback, legacyDevUrlSelfHeal],
+  plugins: [react(), stackeditFallback, legacyDevUrlSelfHeal, prerenderedPublicPages],
   // /api proxy pairs with VITE_API_BASE=/api in .env.development — same-origin
   // API calls from whatever port the dev server lands on.
   server: { host: "0.0.0.0", port, proxy: { "/api": "http://localhost:8000" } },

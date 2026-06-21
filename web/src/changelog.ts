@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.14.0",
+    date: "2026-06-21",
+    title: "A faster front door",
+    notes: [
+      "The home page, Privacy Policy, and Terms now load their content instantly — even for search engines and link previews — instead of waiting for the app to spin up.",
+      "The boot animation is now reserved for signing in and returning to your workspace; a first-time visitor lands straight on the home page.",
+    ],
+  },
+  {
     version: "0.13.0",
     date: "2026-06-21",
     title: "A front door for Checkpoint",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { getToken } from "./api/client";
 import { useCapture, useCompile, useItem, useSetDaily, useUpdateItem } from "./api/hooks";
 import { useAuth } from "./auth";
 import { CalendarReauthBanner } from "./components/CalendarReauthBanner";
@@ -54,16 +55,24 @@ export function App() {
     }
   }, [user]);
 
-  // Boot loader plays the full reveal once (booting) and also covers the auth
-  // check (loading); whichever finishes last hands off to the app.
-  if (loading || booting) {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+
+  // The boot reveal is for entering the app, not the marketing site. Play it
+  // only when there's a session to restore (a returning, signed-in user) or
+  // when stepping into the auth flow (/login — i.e. they clicked sign in /
+  // create account). A fresh visitor on the public homepage skips it and lands
+  // on the landing page immediately.
+  const wantsLoader = getToken() != null || path === "/login";
+
+  // The loader covers the boot reveal (booting) and the auth check (loading);
+  // whichever finishes last hands off.
+  if (wantsLoader && (loading || booting)) {
     return <CheckpointLoader onDone={() => setBooting(false)} />;
   }
   if (!user) {
     // Public surface: the landing page explains the app at "/", and "/login"
     // is the auth screen. Anything else (a stale deep link) falls back to the
     // landing page rather than a bare login form.
-    const path = window.location.pathname.replace(/\/+$/, "") || "/";
     if (path === "/login")
       return (
         <>

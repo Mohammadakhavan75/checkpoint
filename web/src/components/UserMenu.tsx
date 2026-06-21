@@ -119,6 +119,11 @@ export function UserMenu() {
             </div>
             {!user.has_password && <SetPasswordForm />}
             <CalendarConnect />
+            <div className="userpanel-legal">
+              <a href="/privacy">Privacy</a>
+              <span className="sep">·</span>
+              <a href="/terms">Terms</a>
+            </div>
           </div>
 
           <button className="btn-danger" onClick={logout}>

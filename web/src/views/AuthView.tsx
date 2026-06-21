@@ -96,6 +96,11 @@ export function AuthView() {
           </button>
         </div>
       </div>
+      <div className="auth-legal">
+        <a href="/privacy">Privacy</a>
+        <span className="sep">·</span>
+        <a href="/terms">Terms</a>
+      </div>
     </div>
   );
 }

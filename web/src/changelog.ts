@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.12.0",
+    date: "2026-06-21",
+    title: "Privacy & Terms, in the open",
+    notes: [
+      "Checkpoint now has a Privacy Policy and Terms of Service, written to match how the app actually works — what's stored, how Google sign-in and the calendar mirror are handled, and how to delete your data.",
+      "Both pages are public: read them straight from the sign-in screen or your account menu, no login needed.",
+    ],
+  },
+  {
     version: "0.11.1",
     date: "2026-06-21",
     title: "Calendar, kept fresh",

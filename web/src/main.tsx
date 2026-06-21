@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "./App";
 import { setupCrossTabSync } from "./api/sync";
 import { AuthProvider } from "./auth";
+import { LegalView, type LegalPage } from "./views/LegalView";
 import "./styles/app.css";
 
 // How often open sessions poll the API to pick up changes made elsewhere
@@ -26,15 +27,35 @@ const queryClient = new QueryClient({
   },
 });
 
-// Keep all tabs of this browser in sync the instant data changes.
-setupCrossTabSync(queryClient);
+// Public, auth-free legal pages. Matched from the path before any auth or data
+// providers mount, so /privacy and /terms render standalone for anyone with the
+// link (the Vite preview/dev server falls back to index.html for these paths).
+const LEGAL_ROUTES: Record<string, LegalPage> = {
+  "/privacy": "privacy",
+  "/terms": "terms",
+};
+const path = window.location.pathname.replace(/\/+$/, "") || "/";
+const legalPage = LEGAL_ROUTES[path];
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>,
-);
+const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+
+if (legalPage) {
+  root.render(
+    <React.StrictMode>
+      <LegalView page={legalPage} />
+    </React.StrictMode>,
+  );
+} else {
+  // Keep all tabs of this browser in sync the instant data changes.
+  setupCrossTabSync(queryClient);
+
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
+    </React.StrictMode>,
+  );
+}

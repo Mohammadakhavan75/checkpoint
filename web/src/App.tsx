@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useCapture, useCompile, useItem, useSetDaily, useUpdateItem } from "./api/hooks";
 import { useAuth } from "./auth";
@@ -14,6 +14,7 @@ import { Sidebar } from "./components/Sidebar";
 import { VersionBadge } from "./components/VersionBadge";
 import { WhatsNew } from "./components/WhatsNewModal";
 import { AuthView } from "./views/AuthView";
+import { LandingView } from "./views/LandingView";
 import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
 import { ReservoirView } from "./views/ReservoirView";
@@ -44,18 +45,34 @@ export function App() {
 
   const { data: sessionItem } = useItem(sessionId);
 
+  // A signed-in user has no business sitting on a public path (e.g. /login after
+  // authenticating). Normalize the address bar back to the app root, without a
+  // reload, so a refresh or shared bookmark lands on the dashboard.
+  useEffect(() => {
+    if (user && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
+  }, [user]);
+
   // Boot loader plays the full reveal once (booting) and also covers the auth
   // check (loading); whichever finishes last hands off to the app.
   if (loading || booting) {
     return <CheckpointLoader onDone={() => setBooting(false)} />;
   }
-  if (!user)
-    return (
-      <>
-        <AuthView />
-        <VersionBadge />
-      </>
-    );
+  if (!user) {
+    // Public surface: the landing page explains the app at "/", and "/login"
+    // is the auth screen. Anything else (a stale deep link) falls back to the
+    // landing page rather than a bare login form.
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (path === "/login")
+      return (
+        <>
+          <AuthView />
+          <VersionBadge />
+        </>
+      );
+    return <LandingView />;
+  }
 
   function nav(t: Tab, d?: string) {
     setTab(t);

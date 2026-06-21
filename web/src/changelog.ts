@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.13.0",
+    date: "2026-06-21",
+    title: "A front door for Checkpoint",
+    notes: [
+      "Checkpoint now has a real home page that explains what it's for — the capture → compile → session → checkpoint → resume loop — before you ever sign in.",
+      "Signing in moved to its own page; the home page and account menu link to it, and you land back on your dashboard once you're in.",
+    ],
+  },
+  {
     version: "0.12.0",
     date: "2026-06-21",
     title: "Privacy & Terms, in the open",

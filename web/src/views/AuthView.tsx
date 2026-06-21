@@ -44,9 +44,9 @@ export function AuthView() {
   return (
     <div className="authwrap">
       <div className="authcard">
-        <span className="brand">
+        <a className="brand" href="/">
           CHECK<b>//</b>POINT
-        </span>
+        </a>
         <div className="sub">// {mode === "login" ? "sign in to resume" : "create an account"}</div>
         <form onSubmit={submit}>
           <div className="field">
@@ -97,6 +97,8 @@ export function AuthView() {
         </div>
       </div>
       <div className="auth-legal">
+        <a href="/">Home</a>
+        <span className="sep">·</span>
         <a href="/privacy">Privacy</a>
         <span className="sep">·</span>
         <a href="/terms">Terms</a>

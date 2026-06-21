@@ -21,6 +21,9 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-https://infiniteai.space,https://www.infiniteai.space}
       SEED_ON_START: ${SEED_ON_START:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
+
     depends_on:
       postgres:
         condition: service_healthy

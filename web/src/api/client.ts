@@ -1,4 +1,6 @@
 import type {
+  CalendarStatus,
+  CalendarSyncResult,
   Checkpoint,
   CheckpointPayload,
   CheckpointSaved,
@@ -7,6 +9,7 @@ import type {
   Item,
   ItemState,
   ItemUpdatePayload,
+  Providers,
   Snapshot,
   SnapshotPayload,
   Tab,
@@ -92,8 +95,7 @@ export const googleLogin = (credential: string) =>
     ...body({ credential }),
   });
 
-export const getProviders = () =>
-  request<{ password: boolean; google: boolean }>("/auth/providers");
+export const getProviders = () => request<Providers>("/auth/providers");
 
 export const me = () => request<User>("/auth/me");
 
@@ -114,9 +116,21 @@ export const createDomain = (name: string) =>
   request<Domain>("/domains", { method: "POST", ...body({ name }) });
 
 // ----- items -----
+// The IANA zone of this browser, so the server computes the Today/Ready date
+// windows against the user's local day rather than UTC.
+function localTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function listItems(tab: Tab, domain?: string) {
   const params = new URLSearchParams({ tab });
   if (domain) params.set("domain", domain);
+  const tz = localTimeZone();
+  if (tz) params.set("tz", tz);
   return request<Item[]>(`/items?${params.toString()}`);
 }
 
@@ -152,6 +166,24 @@ export const permanentlyDeleteItem = (id: string) =>
 
 export const emptyTrash = () =>
   request<void>("/items/trash/empty", { method: "DELETE" });
+
+// ----- integrations: google calendar -----
+export const getCalendarStatus = () =>
+  request<CalendarStatus>("/integrations/google-calendar");
+
+export const connectCalendar = (code: string, redirectUri = "postmessage") =>
+  request<CalendarStatus>("/integrations/google-calendar/connect", {
+    method: "POST",
+    ...body({ code, redirect_uri: redirectUri }),
+  });
+
+export const syncCalendar = () =>
+  request<CalendarSyncResult>("/integrations/google-calendar/sync", { method: "POST" });
+
+export const disconnectCalendar = (keepEvents = true) =>
+  request<void>(`/integrations/google-calendar?keep_events=${keepEvents}`, {
+    method: "DELETE",
+  });
 
 // ----- checkpoints -----
 export const listCheckpoints = (id: string) =>

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import ai, auth, checkpoints, domains, items, snapshots
+from .api import ai, auth, checkpoints, domains, integrations, items, snapshots
 from .config import settings
 
 
@@ -35,6 +35,7 @@ app.include_router(items.router, prefix="/api/items", tags=["items"])
 app.include_router(checkpoints.router, prefix="/api/items", tags=["checkpoints"])
 app.include_router(snapshots.router, prefix="/api/items", tags=["snapshots"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
+app.include_router(integrations.router, prefix="/api/integrations", tags=["integrations"])
 
 
 @app.get("/api/health", tags=["health"])

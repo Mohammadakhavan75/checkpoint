@@ -150,6 +150,10 @@ class ItemCreate(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     fields: dict = Field(default_factory=dict)
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
 
 
 class ItemUpdate(BaseModel):
@@ -162,6 +166,10 @@ class ItemUpdate(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     fields: Optional[dict] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
 
 
 class PhaseInput(BaseModel):
@@ -179,6 +187,33 @@ class CompileRequest(BaseModel):
     procedure: Optional[ProcedureLiteral] = None
     scope: Optional[ScopeLiteral] = None
     phases: Optional[list[PhaseInput]] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: Optional[bool] = None
+
+
+# ----- integrations: google calendar -----
+class CalendarConnectRequest(BaseModel):
+    code: str = Field(min_length=1)  # OAuth authorization code from the popup
+    # The popup code flow exchanges against the special "postmessage" redirect.
+    redirect_uri: str = "postmessage"
+
+
+class CalendarStatusOut(BaseModel):
+    connected: bool = False
+    email: Optional[str] = None
+    calendar_id: Optional[str] = None
+    time_zone: Optional[str] = None
+    status: Optional[str] = None  # 'active' | 'reauth_required'
+    last_synced_at: Optional[datetime] = None
+
+
+class CalendarSyncResult(BaseModel):
+    added: int = 0
+    updated: int = 0
+    removed: int = 0
+    last_synced_at: Optional[datetime] = None
 
 
 class DomainCreate(BaseModel):
@@ -226,10 +261,17 @@ class ItemOut(BaseModel):
     fields: dict
     is_tutorial: bool = False
     deleted_at: Optional[datetime] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    all_day: bool = False
+    source: str = "local"
     created_at: datetime
     updated_at: datetime
     # computed / assembled fields
     is_parent: bool = False
+    # convenience flag for the client: a mirrored Google Calendar event
+    is_event: bool = False
     children: list["ItemOut"] = Field(default_factory=list)
     latest_checkpoint: Optional[CheckpointOut] = None
 

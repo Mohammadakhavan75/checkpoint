@@ -5,6 +5,25 @@ import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
 
+// <input type="datetime-local"> speaks local wall-clock "YYYY-MM-DDTHH:mm";
+// the API speaks ISO-8601 with offset. Convert at the boundary.
+function isoToLocalInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+function localInputToIso(v: string): string | undefined {
+  if (!v) return undefined;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
 export function CompileModal({ id, onClose }: { id: string; onClose: () => void }) {
   const { data: item, isLoading } = useItem(id);
   const compile = useCompile();
@@ -18,6 +37,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const [risk, setRisk] = useState("");
   const [phases, setPhases] = useState<PhaseInput[]>([]);
   const [subtasks, setSubtasks] = useState(false);
+  const [deadline, setDeadline] = useState("");
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
   const [ready, setReady] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -39,6 +61,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     const wantSubs = !isChild && (existing.length > 0 || isTrap);
     setSubtasks(wantSubs);
     setPhases(existing.length ? existing : wantSubs ? [{ title: "", firstAction: "" }] : []);
+    setDeadline(isoToLocalInput(item.deadline));
+    setStartAt(isoToLocalInput(item.start_at));
+    setEndAt(isoToLocalInput(item.end_at));
     setReady(true);
   }, [item, ready]);
 
@@ -113,6 +138,9 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
       procedure: procedure || undefined,
       scope: scope || undefined,
       mode: mode || undefined,
+      deadline: localInputToIso(deadline),
+      start_at: localInputToIso(startAt),
+      end_at: localInputToIso(endAt),
     };
     if (cont) payload.phases = phases.filter((p) => p.title.trim());
     else payload.firstAction = firstAction;
@@ -301,6 +329,40 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               placeholder="known unknowns — optional"
               onChange={(e) => setRisk(e.target.value)}
             />
+          </div>
+
+          <div className="field">
+            <label>Schedule (optional) — surfaces this task in Today / Ready by date</label>
+            <div className="schedule-grid">
+              <label className="sched-cell">
+                <span>Deadline</span>
+                <input
+                  type="datetime-local"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                />
+              </label>
+              <label className="sched-cell">
+                <span>Start</span>
+                <input
+                  type="datetime-local"
+                  value={startAt}
+                  onChange={(e) => setStartAt(e.target.value)}
+                />
+              </label>
+              <label className="sched-cell">
+                <span>End</span>
+                <input
+                  type="datetime-local"
+                  value={endAt}
+                  onChange={(e) => setEndAt(e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="hint">
+              Due today (or overdue) and starting today pull into <b>Today</b>; the next{" "}
+              {7} days show in <b>Ready to GO</b>.
+            </div>
           </div>
         </div>
         <footer>

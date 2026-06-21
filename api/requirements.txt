@@ -13,3 +13,8 @@ email-validator>=2.1
 google-auth[requests]>=2.30
 # cert-fetch HTTP caching for Google sign-in (services/google_auth.py)
 cachecontrol>=0.14
+# Fernet encryption for OAuth tokens at rest (services/crypto.py, calendar connect)
+cryptography>=43
+# Calendar connect makes plain REST calls to Google with requests (pulled in by
+# google-auth[requests]); pinned explicitly since services/calendar_sync uses it.
+requests>=2.31

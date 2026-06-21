@@ -99,6 +99,18 @@ header{
 .setpw p{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45}
 .setpw .addinput{margin-bottom:0}
 .setpw .err{color:var(--red);font-family:'JetBrains Mono';font-size:11px}
+/* google calendar connect block in the user panel */
+.cal-connect{text-align:left;letter-spacing:normal;color:var(--text);display:flex;flex-direction:column;gap:8px}
+.cal-connect .cal-head{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:11px;
+  letter-spacing:.5px;color:var(--faint);text-transform:uppercase}
+.cal-connect .cal-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.cal-connect .cal-note{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45}
+.cal-connect .cal-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11.5px}
+.cal-connect .cal-email{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-connect .cal-synced{color:var(--faint);font-family:'JetBrains Mono';font-size:10.5px;flex:none}
+.cal-connect .cal-actions{display:flex;gap:6px}
+.cal-connect .cal-reauth{font-size:11px;color:var(--orange);line-height:1.45;display:flex;flex-direction:column;gap:6px}
+.cal-connect .err{color:var(--red);font-family:'JetBrains Mono';font-size:11px}
 
 .body{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}
@@ -291,6 +303,24 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--amber)}
 .field .hint{font-size:11px;color:var(--faint);margin-top:4px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.schedule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sched-cell{margin:0}
+.sched-cell>span{display:block;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+@media (max-width:520px){.schedule-grid{grid-template-columns:1fr}}
+/* schedule chip on a Today/Ready row: slate = upcoming, red = overdue */
+.chip.due{color:var(--slate)}
+.chip.due.overdue{color:var(--red)}
+/* mirrored Google Calendar event row */
+.row.event{border-left:2px solid var(--violet)}
+.row.event .name .event-glyph{margin-right:7px;font-size:12px;opacity:.85}
+.cal-link{color:var(--cyan);text-decoration:none}
+.cal-link:hover{text-decoration:underline}
+/* reauth banner across the top of the app */
+.cal-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 16px;background:rgba(255,157,77,.10);border-bottom:1px solid var(--amber2);
+  color:var(--orange);font-family:'JetBrains Mono';font-size:12px}
+.cal-banner-err{color:var(--red)}
 .modal footer{border-top:1px solid var(--line);padding:14px 22px;display:flex;gap:10px;justify-content:flex-end;align-items:center}
 .gate{margin-right:auto;font-family:'JetBrains Mono';font-size:11.5px;color:var(--orange)}
 .gate.ok{color:var(--green)}

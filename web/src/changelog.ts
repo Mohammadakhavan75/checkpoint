@@ -15,6 +15,36 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.11.1",
+    date: "2026-06-21",
+    title: "Calendar, kept fresh",
+    notes: [
+      "Your calendar refreshes itself now — opening Today or Ready to GO quietly pulls in new and changed events in the background.",
+      "Calendar events show as their own kind of row, with the time, the place, and a link straight to Google Calendar.",
+      "If Google ever drops the connection, a banner up top lets you reconnect in one click.",
+    ],
+  },
+  {
+    version: "0.11.0",
+    date: "2026-06-21",
+    title: "Your calendar, in the loop",
+    notes: [
+      "Connect your Google Calendar from the account menu and your events show up in Today and Ready to GO, right next to your tasks.",
+      "It's read-only — Checkpoint never changes anything on your calendar — and you can disconnect any time.",
+      "An event you decide to work on is a first-class task: compile it, checkpoint it, and resume it like anything else.",
+    ],
+  },
+  {
+    version: "0.10.0",
+    date: "2026-06-21",
+    title: "Tasks have a clock now",
+    notes: [
+      "A task can now carry a deadline and a start / end time — set them in the Schedule section when you compile.",
+      "Anything due today (or overdue) and anything starting today surfaces in Today on its own, right next to the tasks you pull in by hand.",
+      "Tasks coming due in the next 7 days line up in Ready to GO, soonest first, so nothing sneaks up on you.",
+    ],
+  },
+  {
     version: "0.9.1",
     date: "2026-06-16",
     title: "Resume, everywhere",

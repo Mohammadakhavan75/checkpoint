@@ -12,6 +12,7 @@ only Google's half.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from datetime import date, datetime, timedelta, timezone
@@ -151,6 +152,14 @@ def _safe_json(resp) -> dict:
 # --------------------------------------------------------------------------- #
 # Time parsing
 # --------------------------------------------------------------------------- #
+def _as_utc(dt: datetime | None) -> datetime | None:
+    """Treat a naive timestamp as UTC. SQLite (dev/tests) drops tzinfo on round
+    trip; Postgres timestamptz keeps it. This makes comparisons work on both."""
+    if dt is None:
+        return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
 def _safe_zone(tz_name: str | None):
     try:
         return ZoneInfo(tz_name) if tz_name else timezone.utc
@@ -208,10 +217,11 @@ async def _has_user_work(session: AsyncSession, item: Item) -> bool:
 async def ensure_access_token(session: AsyncSession, conn: CalendarConnection) -> str:
     """Return a valid access token, refreshing (and re-caching) if expired."""
     now = datetime.now(timezone.utc)
+    expires_at = _as_utc(conn.access_expires_at)
     if (
         conn.access_token_enc
-        and conn.access_expires_at
-        and conn.access_expires_at > now + timedelta(seconds=30)
+        and expires_at
+        and expires_at > now + timedelta(seconds=30)
     ):
         return decrypt(conn.access_token_enc)
     try:
@@ -384,6 +394,71 @@ async def connect(
     await session.flush()
     await sync_connection(session, conn)
     return conn
+
+
+# --------------------------------------------------------------------------- #
+# Stale-while-revalidate: a list request can kick a background refresh instead
+# of blocking. No external queue — just an in-process asyncio task with a
+# per-user lock. Safe under a single uvicorn worker (the compose setup); scale
+# to many workers ⇒ replace the lock with a Postgres advisory lock.
+# --------------------------------------------------------------------------- #
+_sync_locks: dict[uuid.UUID, asyncio.Lock] = {}
+_bg_tasks: set[asyncio.Task] = set()
+
+
+def is_stale(conn: CalendarConnection) -> bool:
+    """Whether an active connection is due for a refresh."""
+    if conn.status != "active":
+        return False  # reauth_required/disabled: don't auto-hammer Google
+    last = _as_utc(conn.last_synced_at)
+    if last is None:
+        return True
+    age = (datetime.now(timezone.utc) - last).total_seconds()
+    return age > settings.calendar_sync_ttl_seconds
+
+
+def _lock_for(owner_id: uuid.UUID) -> asyncio.Lock:
+    lock = _sync_locks.get(owner_id)
+    if lock is None:
+        lock = _sync_locks[owner_id] = asyncio.Lock()
+    return lock
+
+
+async def background_sync(owner_id: uuid.UUID) -> None:
+    """Refresh one user's calendar on its own DB session. Swallows errors —
+    a background refresh must never surface as a failed request."""
+    lock = _lock_for(owner_id)
+    if lock.locked():
+        return  # a sync for this user is already in flight
+    async with lock:
+        from ..db import SessionLocal
+
+        async with SessionLocal() as session:
+            conn = await get_connection(session, owner_id)
+            if conn is None or conn.status != "active":
+                return
+            try:
+                await sync_connection(session, conn)
+                await session.commit()
+            except CalendarReauthRequired:
+                await session.commit()  # persist the status flip
+            except CalendarError as exc:
+                conn.last_error = str(exc)[:500]
+                await session.commit()
+            except Exception:  # noqa: BLE001 - last-resort guard for a detached task
+                logger.exception("background calendar sync failed")
+                await session.rollback()
+
+
+def schedule_background_sync(owner_id: uuid.UUID) -> None:
+    """Fire-and-forget a refresh, keeping a strong task ref so it isn't GC'd."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:  # no loop (shouldn't happen in request context)
+        return
+    task = loop.create_task(background_sync(owner_id))
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
 
 
 async def disconnect(

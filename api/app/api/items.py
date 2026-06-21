@@ -23,6 +23,7 @@ from ..schemas import (
     PromoteRequest,
     StateRequest,
 )
+from ..services import calendar_sync
 from ..services.checkpoints import latest_checkpoints_for
 from ..services.domains import ensure_domain
 from ..services.items import (
@@ -167,6 +168,14 @@ async def list_items(
         ]
 
     day0, day1, horizon = _day_window(tz)
+
+    # Stale-while-revalidate: opening Today/Ready serves the cached rows now and
+    # kicks a non-blocking calendar refresh, so the next load reflects Google
+    # without ever blocking this request.
+    if tab in ("today", "ready"):
+        conn = await calendar_sync.get_connection(session, uid)
+        if conn is not None and calendar_sync.is_stale(conn):
+            calendar_sync.schedule_background_sync(uid)
 
     if tab == "today":
         # Top-level only: a container rides into Today as one unit (its phases

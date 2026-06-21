@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useCapture, useCompile, useItem, useSetDaily, useUpdateItem } from "./api/hooks";
 import { useAuth } from "./auth";
+import { CalendarReauthBanner } from "./components/CalendarReauthBanner";
 import { CheckpointLoader } from "./components/CheckpointLoader";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { CompileModal } from "./components/CompileModal";
@@ -115,6 +116,7 @@ export function App() {
   return (
     <>
       <div className="app">
+        <CalendarReauthBanner />
         <Header
           onMenuToggle={() => setNavOpen((v) => !v)}
           onCapture={(text, captureDomain) => {

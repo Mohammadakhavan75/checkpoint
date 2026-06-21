@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.11.1",
+    date: "2026-06-21",
+    title: "Calendar, kept fresh",
+    notes: [
+      "Your calendar refreshes itself now — opening Today or Ready to GO quietly pulls in new and changed events in the background.",
+      "Calendar events show as their own kind of row, with the time, the place, and a link straight to Google Calendar.",
+      "If Google ever drops the connection, a banner up top lets you reconnect in one click.",
+    ],
+  },
+  {
     version: "0.11.0",
     date: "2026-06-21",
     title: "Your calendar, in the loop",

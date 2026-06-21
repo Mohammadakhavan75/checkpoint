@@ -5,14 +5,15 @@ the same way test_google_auth stubs credential verification.
 """
 from __future__ import annotations
 
+import uuid
+
 import pytest
 import pytest_asyncio
 from cryptography.fernet import Fernet
 
 from app.config import settings
 from app.constants import CALENDAR
-from app.models import CalendarConnection, Checkpoint, Item
-from app.schemas import CheckpointCreate
+from app.models import CalendarConnection, Checkpoint
 from app.services import calendar_sync, crypto
 
 
@@ -249,3 +250,54 @@ async def test_connect_disabled_when_unconfigured(client):
         "/api/integrations/google-calendar/connect", json={"code": "x"}
     )
     assert r.status_code == 503
+
+
+# --------------------------- stale-while-revalidate -------------------------- #
+async def test_stale_connection_triggers_background_sync(client, session, user, monkeypatch):
+    import datetime as _dt
+
+    calls: list = []
+    monkeypatch.setattr(calendar_sync, "schedule_background_sync", calls.append)
+    old = _dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(hours=2)
+    session.add(
+        CalendarConnection(
+            owner_id=user.id, refresh_token_enc="x", status="active", last_synced_at=old
+        )
+    )
+    await session.commit()
+
+    r = await client.get("/api/items", params={"tab": "today"})
+    assert r.status_code == 200
+    assert calls == [user.id]
+
+
+async def test_fresh_connection_skips_background_sync(client, session, user, monkeypatch):
+    import datetime as _dt
+
+    calls: list = []
+    monkeypatch.setattr(calendar_sync, "schedule_background_sync", calls.append)
+    session.add(
+        CalendarConnection(
+            owner_id=user.id,
+            refresh_token_enc="x",
+            status="active",
+            last_synced_at=_dt.datetime.now(_dt.timezone.utc),
+        )
+    )
+    await session.commit()
+
+    await client.get("/api/items", params={"tab": "ready"})
+    assert calls == []
+
+
+async def test_reauth_required_connection_is_not_stale():
+    import datetime as _dt
+
+    conn = CalendarConnection(
+        owner_id=uuid.uuid4(),
+        refresh_token_enc="x",
+        status="reauth_required",
+        last_synced_at=_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(days=1),
+    )
+    # a connection needing reauth must not be auto-synced (we'd just hammer 401s)
+    assert calendar_sync.is_stale(conn) is False

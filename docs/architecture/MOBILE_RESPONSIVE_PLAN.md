@@ -84,7 +84,8 @@ Below 880px the only navigation (the sidebar) is removed with nothing in its pla
 
 ### Phase 5 — Session overlay
 - Reduce `.work` padding; stack `.swrow`; allow top bar to wrap with long titles.
-- StackEdit: hide the "Edit in StackEdit" trigger under `pointer:coarse`; if kept, offset its
+- Note editing: use the built-in responsive textarea; the legacy StackEdit trigger was removed
+  in v0.15.0. If a full-screen editor is reintroduced, offset its
   fixed Save&Close button by `env(safe-area-inset-top)`.
 
 ### Phase 6 — Touch affordances & a11y polish

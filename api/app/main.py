@@ -19,7 +19,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Checkpoint API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Checkpoint API", version="0.15.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

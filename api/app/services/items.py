@@ -29,17 +29,25 @@ async def get_item(
     return result.scalar_one_or_none()
 
 
-async def get_children(session: AsyncSession, parent_id: uuid.UUID) -> list[Item]:
-    """Children of an item (prototype: ``kids(id)``)."""
+async def get_children(
+    session: AsyncSession, parent_id: uuid.UUID, owner_id: uuid.UUID
+) -> list[Item]:
+    """Owner-scoped children of an item (prototype: ``kids(id)``)."""
     result = await session.execute(
-        select(Item).where(Item.parent_id == parent_id).order_by(Item.created_at)
+        select(Item)
+        .where(Item.parent_id == parent_id, Item.owner_id == owner_id)
+        .order_by(Item.created_at)
     )
     return list(result.scalars().all())
 
 
-async def is_parent(session: AsyncSession, item_id: uuid.UUID) -> bool:
+async def is_parent(
+    session: AsyncSession, item_id: uuid.UUID, owner_id: uuid.UUID
+) -> bool:
     result = await session.execute(
-        select(Item.id).where(Item.parent_id == item_id).limit(1)
+        select(Item.id)
+        .where(Item.parent_id == item_id, Item.owner_id == owner_id)
+        .limit(1)
     )
     return result.first() is not None
 
@@ -61,7 +69,7 @@ async def rollup(session: AsyncSession, parent_id: uuid.UUID, owner_id: uuid.UUI
     parent = await get_item(session, parent_id, owner_id)
     if parent is None:
         return
-    children = await get_children(session, parent_id)
+    children = await get_children(session, parent_id, owner_id)
     if not children:
         return
     done = sum(1 for c in children if c.state == "done")
@@ -107,7 +115,7 @@ def _apply_state(item: Item, state: str) -> None:
 async def set_state(session: AsyncSession, item: Item, state: str) -> Item:
     """Set state; containers cascade kill/done/defer to phases; roll up parent."""
     _apply_state(item, state)
-    children = await get_children(session, item.id)
+    children = await get_children(session, item.id, item.owner_id)
     if children and state in ("killed", "done", "deferred"):
         for child in children:
             _apply_state(child, state)
@@ -130,7 +138,7 @@ def _restore_one(item: Item) -> None:
 async def restore(session: AsyncSession, item: Item) -> Item:
     """Bring a trashed item (and any phases trashed with it) back to life."""
     _restore_one(item)
-    for child in await get_children(session, item.id):
+    for child in await get_children(session, item.id, item.owner_id):
         if child.state == "killed":
             _restore_one(child)
     if item.parent_id:
@@ -247,7 +255,7 @@ async def _reconcile_phases(
             await session.flush()
             keep.add(new_child.id)
 
-    for child in await get_children(session, parent.id):
+    for child in await get_children(session, parent.id, owner_id):
         if child.id not in keep:
             await session.delete(child)
 
@@ -293,7 +301,7 @@ async def compile_item(
     if payload.mode is not None:
         item.mode = payload.mode
 
-    existing_children = await get_children(session, item.id)
+    existing_children = await get_children(session, item.id, owner_id)
     titled_phases = [p for p in (payload.phases or []) if (p.title or "").strip()]
     is_time_trap = item.procedure == "known" and item.scope == "unbounded"
     is_container = item.parent_id is None and (

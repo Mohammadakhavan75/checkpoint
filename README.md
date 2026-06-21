@@ -21,7 +21,7 @@ full build specification.
 | Database | PostgreSQL 15 (asyncpg) |
 | Frontend | React + TypeScript + Vite |
 | Server state | TanStack Query |
-| Markdown editor | StackEdit (vendored static build, served offline) |
+| Markdown editor | Built-in Markdown editor with DOMPurify sanitization |
 | Auth | OAuth2 password flow + JWT (bcrypt password hashing) |
 | Packaging | Docker Compose (`postgres`, `api`, `web`) |
 
@@ -76,33 +76,38 @@ Build + dev-server runtime: **Node 22** (`node:22-alpine`).
 | react-dom | 18.3.1 | React DOM renderer |
 | @tanstack/react-query | 5.101.0 | Server-state management |
 | marked | 18.0.5 | Markdown rendering (snapshot notes) |
-| stackedit-js | 1.0.7 | StackEdit iframe bridge |
-| vite | 5.4.21 | Build tool + dev server |
+| dompurify | 3.4.11 | HTML sanitization for rendered Markdown |
+| vite | 8.0.16 | Build tool + dev server |
 | typescript | 5.9.3 | Type system |
-| @vitejs/plugin-react | 4.7.0 | Vite React plugin |
+| @vitejs/plugin-react | 6.0.2 | Vite React plugin |
+| esbuild | 0.28.1 | Explicit prerender build dependency |
+| vitest | 4.1.9 | Frontend security regression tests |
+| jsdom | 29.1.1 | DOM test environment |
 | @types/node | 22.19.20 | Type definitions |
 | @types/react | 18.3.31 | Type definitions |
 | @types/react-dom | 18.3.7 | Type definitions |
 
-### Vendored Markdown editor
+### Markdown security boundary
 
-The snapshot-notes feature embeds a **StackEdit** static build, vendored under
-`web/public/stackedit/` and served offline by Vite at `/stackedit/app` (no calls to
-`stackedit.io`). It is themed to the app's dark/amber palette, and its PWA service worker is
-disabled in favour of Vite serving the assets directly.
+Snapshot notes are edited directly in the React application. Markdown is converted with
+`marked` and sanitized with `DOMPurify` before it reaches the DOM. The previous vendored
+StackEdit application was removed in v0.15.0 because its opaque bundle contained a
+known-vulnerable Handlebars runtime.
 
 ## Run the whole stack
 
 ```bash
-cp .env.example .env          # adjust JWT_SECRET / DB_PASSWORD for anything real
+cp .env.example .env
+openssl rand -hex 24          # paste into DB_PASSWORD
+openssl rand -hex 32          # paste into JWT_SECRET
 docker compose up --build
 ```
 
 - Web app: <http://localhost:5173>
 - API + OpenAPI docs: <http://localhost:8000/docs>
 
-The API container runs `alembic upgrade head` on start and (when `SEED_ON_START=true`) seeds the
-example data from the prototype. Demo login: **`demo@checkpoint.app`** / **`checkpoint`**.
+The API container runs `alembic upgrade head` on start. Production startup refuses demo
+seeding and rejects missing or weak JWT/database settings.
 
 ## Local development (without Docker)
 
@@ -123,7 +128,7 @@ pytest                                  # run the test suite (uses in-memory SQL
 
 ```bash
 cd web
-npm install
+npm ci
 VITE_API_BASE=http://localhost:8000/api npm run dev
 ```
 

@@ -1,6 +1,36 @@
 """Integration tests exercising the REST API through the ASGI app."""
 from __future__ import annotations
 
+from app.models import Item, User
+
+
+async def test_create_item_rejects_cross_owner_parent(client, session):
+    other = User(email="other@example.com", hashed_password="not-used")
+    session.add(other)
+    await session.flush()
+    parent = Item(
+        owner_id=other.id,
+        title="private parent",
+        domain="HPC",
+        state="active",
+        fields={},
+    )
+    session.add(parent)
+    await session.commit()
+
+    response = await client.post(
+        "/api/items",
+        json={
+            "title": "foreign child",
+            "domain": "HPC",
+            "state": "active",
+            "parent_id": str(parent.id),
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Parent item not found"
+
 
 async def test_capture_direct_into_domain_registers_it(client):
     # Fast Task Domain: capture straight into a (new) domain, skipping the reservoir.

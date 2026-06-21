@@ -170,6 +170,57 @@ class Item(Base):
     )
 
 
+class CalendarConnection(Base):
+    """A user's connected Google Calendar (read-only mirror). One per user (v1).
+
+    Holds the OAuth tokens (encrypted at rest), the incremental ``sync_token``,
+    and the calendar's ``time_zone`` (used to compute the user's "today"). The
+    refresh token is the durable secret; the access token is a short-lived
+    cache. ``status`` flips to ``reauth_required`` when Google rejects the
+    refresh token (the user revoked access) so the client can prompt a reconnect.
+    """
+
+    __tablename__ = "calendar_connections"
+    __table_args__ = (
+        UniqueConstraint("owner_id", name="uq_calendar_connections_owner"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    # which Google account the calendar belongs to (may differ from sign-in)
+    google_sub: Mapped[str | None] = mapped_column(Text, nullable=True)
+    google_email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    refresh_token_enc: Mapped[str] = mapped_column(Text, nullable=False)
+    access_token_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    access_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    scope: Mapped[str | None] = mapped_column(Text, nullable=True)
+    calendar_id: Mapped[str] = mapped_column(
+        Text, nullable=False, default="primary", server_default="primary"
+    )
+    time_zone: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sync_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(
+        Text, nullable=False, default="active", server_default="active"
+    )
+    last_synced_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+
 class Checkpoint(Base):
     """Append-only history. Never UPDATE or DELETE a checkpoint row."""
 

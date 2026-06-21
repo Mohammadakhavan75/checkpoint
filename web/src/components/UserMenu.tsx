@@ -4,6 +4,7 @@ import * as api from "../api/client";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth";
 import type { User } from "../types";
+import { CalendarConnect } from "./CalendarConnect";
 
 function Avatar({ user, className }: { user: User; className: string }) {
   const initial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
@@ -116,11 +117,8 @@ export function UserMenu() {
               <span>Member since</span>
               <span>{new Date(user.created_at).toLocaleDateString()}</span>
             </div>
-            {user.has_password ? (
-              <div className="userpanel-section">Settings · coming soon</div>
-            ) : (
-              <SetPasswordForm />
-            )}
+            {!user.has_password && <SetPasswordForm />}
+            <CalendarConnect />
           </div>
 
           <button className="btn-danger" onClick={logout}>

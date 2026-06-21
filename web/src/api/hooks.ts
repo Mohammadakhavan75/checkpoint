@@ -46,6 +46,47 @@ export function useDomains() {
   return useQuery({ queryKey: ["domains"], queryFn: api.listDomains });
 }
 
+export function useProviders() {
+  return useQuery({ queryKey: ["providers"], queryFn: api.getProviders, staleTime: Infinity });
+}
+
+export function useCalendarStatus(enabled = true) {
+  return useQuery({ queryKey: ["calendar"], queryFn: api.getCalendarStatus, enabled });
+}
+
+export function useConnectCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => api.connectCalendar(code),
+    onSuccess: (data) => {
+      qc.setQueryData(["calendar"], data);
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+}
+
+export function useSyncCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.syncCalendar(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+}
+
+export function useDisconnectCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (keepEvents: boolean) => api.disconnectCalendar(keepEvents),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+}
+
 function useInvalidateAll() {
   const qc = useQueryClient();
   return () => {

@@ -41,8 +41,13 @@ async def _user_by_email(session: AsyncSession, email: str) -> User | None:
 
 @router.get("/providers")
 async def providers() -> dict[str, bool]:
-    """Which sign-in methods are available (lets the client show the Google button)."""
-    return {"password": True, "google": bool(settings.google_client_id)}
+    """Which sign-in methods / integrations are available (lets the client show
+    the Google button and the Connect Calendar control)."""
+    return {
+        "password": True,
+        "google": bool(settings.google_client_id),
+        "calendar": settings.calendar_connect_enabled,
+    }
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)

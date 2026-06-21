@@ -107,6 +107,28 @@ export interface Domain {
   count: number;
 }
 
+export interface CalendarStatus {
+  connected: boolean;
+  email?: string | null;
+  calendar_id?: string | null;
+  time_zone?: string | null;
+  status?: string | null; // 'active' | 'reauth_required'
+  last_synced_at?: string | null;
+}
+
+export interface CalendarSyncResult {
+  added: number;
+  updated: number;
+  removed: number;
+  last_synced_at?: string | null;
+}
+
+export interface Providers {
+  password: boolean;
+  google: boolean;
+  calendar: boolean;
+}
+
 export interface PhaseInput {
   id?: string;
   title: string;

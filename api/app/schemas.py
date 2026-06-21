@@ -193,6 +193,29 @@ class CompileRequest(BaseModel):
     all_day: Optional[bool] = None
 
 
+# ----- integrations: google calendar -----
+class CalendarConnectRequest(BaseModel):
+    code: str = Field(min_length=1)  # OAuth authorization code from the popup
+    # The popup code flow exchanges against the special "postmessage" redirect.
+    redirect_uri: str = "postmessage"
+
+
+class CalendarStatusOut(BaseModel):
+    connected: bool = False
+    email: Optional[str] = None
+    calendar_id: Optional[str] = None
+    time_zone: Optional[str] = None
+    status: Optional[str] = None  # 'active' | 'reauth_required'
+    last_synced_at: Optional[datetime] = None
+
+
+class CalendarSyncResult(BaseModel):
+    added: int = 0
+    updated: int = 0
+    removed: int = 0
+    last_synced_at: Optional[datetime] = None
+
+
 class DomainCreate(BaseModel):
     name: str = Field(min_length=1, max_length=40)
 

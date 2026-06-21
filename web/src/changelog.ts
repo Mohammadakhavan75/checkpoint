@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.11.0",
+    date: "2026-06-21",
+    title: "Your calendar, in the loop",
+    notes: [
+      "Connect your Google Calendar from the account menu and your events show up in Today and Ready to GO, right next to your tasks.",
+      "It's read-only — Checkpoint never changes anything on your calendar — and you can disconnect any time.",
+      "An event you decide to work on is a first-class task: compile it, checkpoint it, and resume it like anything else.",
+    ],
+  },
+  {
     version: "0.10.0",
     date: "2026-06-21",
     title: "Tasks have a clock now",

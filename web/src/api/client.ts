@@ -9,10 +9,13 @@ import type {
   Item,
   ItemState,
   ItemUpdatePayload,
+  LoginResult,
   Providers,
   Snapshot,
   SnapshotPayload,
   Tab,
+  TwoFactorSetup,
+  TwoFactorStatus,
   User,
 } from "../types";
 
@@ -84,15 +87,61 @@ export const register = (email: string, password: string) =>
   request<User>("/auth/register", { method: "POST", ...body({ email, password }) });
 
 export const login = (email: string, password: string) =>
-  request<{ access_token: string; token_type: string }>("/auth/login", {
+  request<LoginResult>("/auth/login", {
     method: "POST",
     ...body({ email, password }),
   });
 
 export const googleLogin = (credential: string) =>
-  request<{ access_token: string; token_type: string }>("/auth/google", {
+  request<LoginResult>("/auth/google", {
     method: "POST",
     ...body({ credential }),
+  });
+
+// Second leg of a 2FA login: exchange the mfa_token + a TOTP/recovery code for
+// a real session token.
+export const completeLoginMfa = (mfaToken: string, code: string) =>
+  request<LoginResult>("/auth/login/2fa", {
+    method: "POST",
+    ...body({ mfa_token: mfaToken, code }),
+  });
+
+// ----- two-factor (TOTP) -----
+export const getTwoFactorStatus = () => request<TwoFactorStatus>("/auth/2fa");
+
+export const setupTwoFactor = () =>
+  request<TwoFactorSetup>("/auth/2fa/setup", { method: "POST" });
+
+export const enableTwoFactor = (
+  code: string,
+  requireForLogin: boolean,
+  requireForDelete: boolean,
+) =>
+  request<{ recovery_codes: string[] }>("/auth/2fa/enable", {
+    method: "POST",
+    ...body({
+      code,
+      require_for_login: requireForLogin,
+      require_for_delete: requireForDelete,
+    }),
+  });
+
+export const updateTwoFactorScopes = (
+  requireForLogin: boolean,
+  requireForDelete: boolean,
+) =>
+  request<TwoFactorStatus>("/auth/2fa", {
+    method: "PATCH",
+    ...body({ require_for_login: requireForLogin, require_for_delete: requireForDelete }),
+  });
+
+export const disableTwoFactor = (code: string) =>
+  request<void>("/auth/2fa/disable", { method: "POST", ...body({ code }) });
+
+export const regenerateRecoveryCodes = (code: string) =>
+  request<{ recovery_codes: string[] }>("/auth/2fa/recovery-codes", {
+    method: "POST",
+    ...body({ code }),
   });
 
 export const getProviders = () => request<Providers>("/auth/providers");
@@ -110,9 +159,10 @@ export const markSeenVersion = (version: string) =>
   request<void>("/auth/seen", { method: "POST", ...body({ version }) });
 
 // Permanently delete the signed-in account and all of its data. `password` is
-// required for accounts that have one (re-auth guard); Google-only accounts omit it.
-export const deleteAccount = (password?: string) =>
-  request<void>("/auth/me", { method: "DELETE", ...body({ password }) });
+// required for accounts that have one (re-auth guard); Google-only accounts omit
+// it. `code` is a TOTP / recovery code, required when 2FA gates deletion.
+export const deleteAccount = (password?: string, code?: string) =>
+  request<void>("/auth/me", { method: "DELETE", ...body({ password, code }) });
 
 // ----- domains -----
 export const listDomains = () => request<Domain[]>("/domains");

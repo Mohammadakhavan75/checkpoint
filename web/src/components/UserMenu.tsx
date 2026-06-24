@@ -5,6 +5,7 @@ import { ApiError } from "../api/client";
 import { useAuth } from "../auth";
 import type { User } from "../types";
 import { CalendarConnect } from "./CalendarConnect";
+import { TwoFactorSettings } from "./TwoFactorSettings";
 
 function Avatar({ user, className }: { user: User; className: string }) {
   const initial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
@@ -67,11 +68,15 @@ function SetPasswordForm() {
 function DeleteAccountModal({ user, onClose }: { user: User; onClose: () => void }) {
   const { deleteAccount } = useAuth();
   const [pw, setPw] = useState("");
+  const [code, setCode] = useState("");
   const [phrase, setPhrase] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
-  const ready = phrase.trim().toUpperCase() === "DELETE" && (!user.has_password || pw.length > 0);
+  const ready =
+    phrase.trim().toUpperCase() === "DELETE" &&
+    (!user.has_password || pw.length > 0) &&
+    (!user.two_factor_delete || code.trim().length >= 6);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -87,7 +92,10 @@ function DeleteAccountModal({ user, onClose }: { user: User; onClose: () => void
     setErr("");
     setBusy(true);
     try {
-      await deleteAccount(user.has_password ? pw : undefined);
+      await deleteAccount(
+        user.has_password ? pw : undefined,
+        user.two_factor_delete ? code.trim() : undefined,
+      );
       // Account is gone; reload to the public landing page from a clean slate.
       window.location.assign("/");
     } catch (ex) {
@@ -129,6 +137,16 @@ function DeleteAccountModal({ user, onClose }: { user: User; onClose: () => void
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 autoFocus
+              />
+            )}
+            {user.two_factor_delete && (
+              <input
+                className="addinput"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="two-factor code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
               />
             )}
             <input
@@ -214,6 +232,7 @@ export function UserMenu() {
               <span>{new Date(user.created_at).toLocaleDateString()}</span>
             </div>
             {!user.has_password && <SetPasswordForm />}
+            <TwoFactorSettings />
             <CalendarConnect />
             <div className="userpanel-legal">
               <a href="/privacy">Privacy</a>

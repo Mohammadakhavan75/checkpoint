@@ -99,6 +99,35 @@ export interface User {
   last_seen_version?: string | null;
   created_at: string;
   has_password: boolean;
+  // TOTP second factor. *_login / *_delete say where a code is required, so the
+  // client can show the right prompts (e.g. a code field on the delete dialog).
+  two_factor_enabled: boolean;
+  two_factor_login: boolean;
+  two_factor_delete: boolean;
+}
+
+// Login response: either a session token, or a short-lived mfa_token to be
+// exchanged for one via the 2FA challenge.
+export interface LoginResult {
+  access_token?: string | null;
+  token_type: string;
+  mfa_required: boolean;
+  mfa_token?: string | null;
+}
+
+export interface TwoFactorStatus {
+  available: boolean;
+  enabled: boolean;
+  pending: boolean;
+  require_for_login: boolean;
+  require_for_delete: boolean;
+  recovery_codes_remaining: number;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  otpauth_uri: string;
+  qr_svg: string; // data: URI
 }
 
 export interface Domain {
@@ -127,6 +156,7 @@ export interface Providers {
   password: boolean;
   google: boolean;
   calendar: boolean;
+  two_factor: boolean;
 }
 
 export interface PhaseInput {

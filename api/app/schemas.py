@@ -48,6 +48,11 @@ class UserOut(BaseModel):
     created_at: datetime
     # lets the client offer "set a password" to Google-only accounts
     has_password: bool = True
+    # TOTP second factor — flags let the client show the right prompts (e.g. a
+    # code field on the delete dialog). Populated by GET /auth/me.
+    two_factor_enabled: bool = False
+    two_factor_login: bool = False
+    two_factor_delete: bool = False
 
 
 class SetPasswordRequest(BaseModel):
@@ -60,11 +65,78 @@ class DeleteAccountRequest(BaseModel):
     # Required for accounts that have a local password (re-auth guard before an
     # irreversible delete). Google-only accounts have none, so it stays optional.
     password: Optional[str] = None
+    # Required when the account has TOTP enabled for account deletion — a TOTP
+    # digit-code or a one-time recovery code.
+    code: Optional[str] = None
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class LoginResult(BaseModel):
+    """Login response. Either the session token (no 2FA, or already cleared) or
+    a short-lived ``mfa_token`` the client exchanges for one via /auth/login/2fa."""
+
+    access_token: Optional[str] = None
+    token_type: str = "bearer"
+    mfa_required: bool = False
+    mfa_token: Optional[str] = None
+
+
+class LoginMfaRequest(BaseModel):
+    mfa_token: str
+    code: str
+
+
+# ----- two-factor (TOTP) -----
+class TwoFactorStatus(BaseModel):
+    available: bool = False  # server can offer 2FA (encryption key configured)
+    enabled: bool = False
+    pending: bool = False  # a secret exists but enrollment isn't confirmed yet
+    require_for_login: bool = False
+    require_for_delete: bool = False
+    recovery_codes_remaining: int = 0
+
+
+class TwoFactorSetupOut(BaseModel):
+    secret: str  # base32, for manual entry into the authenticator app
+    otpauth_uri: str
+    qr_svg: str  # data: URI of the QR encoding otpauth_uri
+
+
+class TwoFactorEnableRequest(BaseModel):
+    code: str
+    require_for_login: bool = True
+    require_for_delete: bool = True
+
+    @model_validator(mode="after")
+    def _require_a_scope(self) -> "TwoFactorEnableRequest":
+        if not (self.require_for_login or self.require_for_delete):
+            raise ValueError("Pick at least one place to require your code")
+        return self
+
+
+class TwoFactorScopesRequest(BaseModel):
+    require_for_login: bool
+    require_for_delete: bool
+
+    @model_validator(mode="after")
+    def _require_a_scope(self) -> "TwoFactorScopesRequest":
+        if not (self.require_for_login or self.require_for_delete):
+            raise ValueError("Pick at least one place to require your code")
+        return self
+
+
+class TwoFactorCodeRequest(BaseModel):
+    """Proof-of-possession for sensitive 2FA changes (disable, regenerate)."""
+
+    code: str
+
+
+class RecoveryCodesOut(BaseModel):
+    recovery_codes: list[str]
 
 
 class SeenVersionRequest(BaseModel):

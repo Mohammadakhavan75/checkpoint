@@ -6,21 +6,39 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from ..auth import create_access_token, get_current_user, hash_password, verify_password
+from ..auth import (
+    create_access_token,
+    create_mfa_token,
+    decode_mfa_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
 from ..config import settings
 from ..db import get_session
-from ..models import User
+from ..models import TwoFactorSettings, User
 from ..schemas import (
     DeleteAccountRequest,
     GoogleLoginRequest,
+    LoginMfaRequest,
     LoginRequest,
+    LoginResult,
+    RecoveryCodesOut,
     SeenVersionRequest,
     SetPasswordRequest,
     Token,
+    TwoFactorCodeRequest,
+    TwoFactorEnableRequest,
+    TwoFactorScopesRequest,
+    TwoFactorSetupOut,
+    TwoFactorStatus,
     UserCreate,
     UserOut,
 )
+from ..services import two_factor as tf
+from ..services import totp
 from ..services.account import delete_account
+from ..services.crypto import TokenEncryptionUnavailable
 from ..services.google_auth import (
     GoogleAuthError,
     GoogleAuthUnavailableError,
@@ -30,6 +48,26 @@ from ..services.google_auth import (
 from ..services.tutorial import seed_tutorial
 
 router = APIRouter()
+
+
+async def _user_out(session: AsyncSession, user: User) -> UserOut:
+    """UserOut enriched with the user's 2FA enforcement flags (for /me)."""
+    out = UserOut.model_validate(user)
+    row = await tf.get_enabled(session, user.id)
+    if row is not None:
+        out.two_factor_enabled = True
+        out.two_factor_login = row.require_for_login
+        out.two_factor_delete = row.require_for_delete
+    return out
+
+
+async def _login_result(session: AsyncSession, user: User) -> LoginResult:
+    """Issue a session token, unless the user gates login behind TOTP — then a
+    short-lived mfa challenge the client completes via /auth/login/2fa."""
+    row = await tf.get_enabled(session, user.id)
+    if row is not None and row.require_for_login:
+        return LoginResult(mfa_required=True, mfa_token=create_mfa_token(str(user.id)))
+    return LoginResult(access_token=create_access_token(str(user.id)))
 
 
 async def _user_by_email(session: AsyncSession, email: str) -> User | None:
@@ -49,6 +87,7 @@ async def providers() -> dict[str, bool]:
         "password": True,
         "google": bool(settings.google_client_id),
         "calendar": settings.calendar_connect_enabled,
+        "two_factor": settings.two_factor_available,
     }
 
 
@@ -78,10 +117,10 @@ async def register(
     return UserOut.model_validate(user)
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResult)
 async def login(
     payload: LoginRequest, session: AsyncSession = Depends(get_session)
-) -> Token:
+) -> LoginResult:
     user = await _user_by_email(session, payload.email)
     if user is not None and user.hashed_password is None and user.google_sub:
         raise HTTPException(
@@ -91,13 +130,41 @@ async def login(
         )
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    return Token(access_token=create_access_token(str(user.id)))
+    return await _login_result(session, user)
 
 
-@router.post("/google", response_model=Token)
+@router.post("/login/2fa", response_model=LoginResult)
+async def login_2fa(
+    payload: LoginMfaRequest, session: AsyncSession = Depends(get_session)
+) -> LoginResult:
+    """Second leg of a 2FA login: exchange the mfa_token + a TOTP/recovery code
+    for a real session token."""
+    user_id = decode_mfa_token(payload.mfa_token)
+    if user_id is None:
+        raise HTTPException(
+            status_code=401, detail="This sign-in attempt expired — start over"
+        )
+    row = await tf.get_enabled(session, user_id)
+    if row is None or not row.require_for_login:
+        # 2FA was turned off mid-flow; nothing left to verify.
+        raise HTTPException(status_code=401, detail="Two-factor is no longer required")
+    try:
+        ok = tf.verify_code(row, payload.code)
+    except tf.TwoFactorLocked:
+        await session.commit()
+        raise HTTPException(
+            status_code=429, detail="Too many attempts — wait a moment and try again"
+        )
+    await session.commit()
+    if not ok:
+        raise HTTPException(status_code=401, detail="Invalid code")
+    return LoginResult(access_token=create_access_token(str(user_id)))
+
+
+@router.post("/google", response_model=LoginResult)
 async def google_login(
     payload: GoogleLoginRequest, session: AsyncSession = Depends(get_session)
-) -> Token:
+) -> LoginResult:
     if not settings.google_client_id:
         raise HTTPException(status_code=503, detail="Google sign-in is not configured")
     try:
@@ -125,12 +192,16 @@ async def google_login(
         picture=claims.get("picture"),
     )
     await session.commit()
-    return Token(access_token=create_access_token(str(user.id)))
+    # A Google sign-in is still a login: honour require_for_login.
+    return await _login_result(session, user)
 
 
 @router.get("/me", response_model=UserOut)
-async def me(user: User = Depends(get_current_user)) -> UserOut:
-    return UserOut.model_validate(user)
+async def me(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> UserOut:
+    return await _user_out(session, user)
 
 
 @router.post("/password", status_code=status.HTTP_204_NO_CONTENT)
@@ -168,8 +239,171 @@ async def delete_me(
         payload.password or "", user.hashed_password
     ):
         raise HTTPException(status_code=400, detail="Password is incorrect")
+    # Second gate when the user requires TOTP for deletion: a valid code (or a
+    # one-time recovery code) on top of the password / bearer token.
+    row = await tf.get_enabled(session, user.id)
+    if row is not None and row.require_for_delete:
+        try:
+            ok = tf.verify_code(row, payload.code or "")
+        except tf.TwoFactorLocked:
+            await session.commit()
+            raise HTTPException(
+                status_code=429,
+                detail="Too many attempts — wait a moment and try again",
+            )
+        if not ok:
+            await session.commit()  # persist the failed-attempt counter
+            raise HTTPException(
+                status_code=400, detail="Invalid two-factor code"
+            )
     await delete_account(session, user)
     await session.commit()
+
+
+# ----- two-factor (TOTP) -----
+def _require_2fa_available() -> None:
+    if not settings.two_factor_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Two-factor authentication is not available on this server",
+        )
+
+
+async def _two_factor_status(session: AsyncSession, user: User) -> TwoFactorStatus:
+    row = await tf.get_settings(session, user.id)
+    return TwoFactorStatus(
+        available=settings.two_factor_available,
+        enabled=bool(row and row.enabled),
+        pending=bool(row and not row.enabled),
+        require_for_login=bool(row and row.enabled and row.require_for_login),
+        require_for_delete=bool(row and row.enabled and row.require_for_delete),
+        recovery_codes_remaining=len(row.recovery_codes) if row else 0,
+    )
+
+
+@router.get("/2fa", response_model=TwoFactorStatus)
+async def two_factor_status(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> TwoFactorStatus:
+    return await _two_factor_status(session, user)
+
+
+@router.post("/2fa/setup", response_model=TwoFactorSetupOut)
+async def two_factor_setup(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> TwoFactorSetupOut:
+    """Start (or restart) enrollment: mint a pending secret and its QR. Does not
+    enable anything until the user confirms a code via /2fa/enable."""
+    _require_2fa_available()
+    existing = await tf.get_enabled(session, user.id)
+    if existing is not None:
+        raise HTTPException(
+            status_code=409, detail="Two-factor is already enabled — disable it first"
+        )
+    try:
+        _, secret, uri = await tf.begin_enrollment(session, user.id, user.email)
+    except TokenEncryptionUnavailable:
+        raise HTTPException(
+            status_code=503,
+            detail="Two-factor authentication is not available on this server",
+        )
+    await session.commit()
+    return TwoFactorSetupOut(secret=secret, otpauth_uri=uri, qr_svg=totp.qr_data_uri(uri))
+
+
+@router.post("/2fa/enable", response_model=RecoveryCodesOut)
+async def two_factor_enable(
+    payload: TwoFactorEnableRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> RecoveryCodesOut:
+    """Confirm a pending enrollment with a code, choose where it's required, and
+    receive one-time recovery codes (shown once)."""
+    _require_2fa_available()
+    row = await tf.get_settings(session, user.id)
+    if row is None:
+        raise HTTPException(status_code=400, detail="Start setup first")
+    if row.enabled:
+        raise HTTPException(status_code=409, detail="Two-factor is already enabled")
+    if not totp.verify(tf.current_secret(row), payload.code):
+        raise HTTPException(
+            status_code=400, detail="That code didn't match — try the current one"
+        )
+    codes = tf.confirm_enrollment(
+        row,
+        require_for_login=payload.require_for_login,
+        require_for_delete=payload.require_for_delete,
+    )
+    await session.commit()
+    return RecoveryCodesOut(recovery_codes=codes)
+
+
+@router.patch("/2fa", response_model=TwoFactorStatus)
+async def two_factor_update_scopes(
+    payload: TwoFactorScopesRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> TwoFactorStatus:
+    """Change where the second factor is required (login / delete account)."""
+    row = await tf.get_enabled(session, user.id)
+    if row is None:
+        raise HTTPException(status_code=400, detail="Two-factor is not enabled")
+    row.require_for_login = payload.require_for_login
+    row.require_for_delete = payload.require_for_delete
+    await session.commit()
+    return await _two_factor_status(session, user)
+
+
+@router.post("/2fa/disable", status_code=status.HTTP_204_NO_CONTENT)
+async def two_factor_disable(
+    payload: TwoFactorCodeRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Turn off 2FA. Requires a current code (or recovery code) as proof of
+    possession, so a hijacked-but-second-factorless session can't remove it."""
+    row = await tf.get_enabled(session, user.id)
+    if row is None:
+        raise HTTPException(status_code=400, detail="Two-factor is not enabled")
+    try:
+        ok = tf.verify_code(row, payload.code)
+    except tf.TwoFactorLocked:
+        await session.commit()
+        raise HTTPException(
+            status_code=429, detail="Too many attempts — wait a moment and try again"
+        )
+    if not ok:
+        await session.commit()
+        raise HTTPException(status_code=400, detail="Invalid code")
+    await session.delete(row)
+    await session.commit()
+
+
+@router.post("/2fa/recovery-codes", response_model=RecoveryCodesOut)
+async def two_factor_regenerate_recovery_codes(
+    payload: TwoFactorCodeRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> RecoveryCodesOut:
+    """Replace the recovery codes with a fresh set (invalidates the old ones)."""
+    row = await tf.get_enabled(session, user.id)
+    if row is None:
+        raise HTTPException(status_code=400, detail="Two-factor is not enabled")
+    try:
+        ok = tf.verify_code(row, payload.code)
+    except tf.TwoFactorLocked:
+        await session.commit()
+        raise HTTPException(
+            status_code=429, detail="Too many attempts — wait a moment and try again"
+        )
+    if not ok:
+        await session.commit()
+        raise HTTPException(status_code=400, detail="Invalid code")
+    codes = tf.regenerate_recovery_codes(row)
+    await session.commit()
+    return RecoveryCodesOut(recovery_codes=codes)
 
 
 @router.post("/seen", status_code=status.HTTP_204_NO_CONTENT)

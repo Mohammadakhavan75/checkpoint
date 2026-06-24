@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     Text,
     UniqueConstraint,
     Uuid,
@@ -57,6 +58,63 @@ class User(Base):
     def has_password(self) -> bool:
         """Exposed via UserOut so the client can offer "set a password"."""
         return self.hashed_password is not None
+
+
+class TwoFactorSettings(Base):
+    """A user's opt-in TOTP (Google Authenticator) second factor. One per user.
+
+    Kept in its own table — like ``CalendarConnection`` — so the security secret
+    and its state don't bloat ``users`` with nullable columns. ``secret_enc`` is
+    the base32 TOTP secret encrypted at rest (Fernet, ``services/crypto.py``);
+    we refuse to store it in the clear, so 2FA needs ``TOKEN_ENCRYPTION_KEY``.
+
+    A row exists in two states: *pending* (``enabled`` false) once a secret has
+    been generated but the user hasn't yet proven possession with a code, and
+    *active* (``enabled`` true) after confirmation. ``require_for_login`` /
+    ``require_for_delete`` are the user's chosen enforcement points.
+    """
+
+    __tablename__ = "two_factor"
+    __table_args__ = (UniqueConstraint("owner_id", name="uq_two_factor_owner"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    secret_enc: Mapped[str] = mapped_column(Text, nullable=False)
+    enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    require_for_login: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    require_for_delete: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    # bcrypt hashes of unused one-time recovery codes (shown once at enrollment);
+    # consuming a code removes its hash from the list.
+    recovery_codes: Mapped[list] = mapped_column(
+        JSONVariant, nullable=False, default=list
+    )
+    # Lightweight brute-force throttle on code verification.
+    failed_attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    locked_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
 
 class Domain(Base):

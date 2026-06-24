@@ -74,5 +74,12 @@ class Settings(BaseSettings):
             and self.token_encryption_key
         )
 
+    @property
+    def two_factor_available(self) -> bool:
+        """TOTP enrollment stores the shared secret encrypted at rest, so the
+        feature is offered only when an encryption key is configured (same key
+        as the calendar tokens). Without it we refuse to store the secret."""
+        return bool(self.token_encryption_key)
+
 
 settings = Settings()

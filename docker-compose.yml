@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: checkpoint
       POSTGRES_USER: checkpoint
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-checkpoint}
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,10 +16,11 @@ services:
   api:
     build: ./api
     environment:
-      DATABASE_URL: postgresql+asyncpg://checkpoint:${DB_PASSWORD:-checkpoint}@postgres:5432/checkpoint
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      APP_ENV: production
+      DATABASE_URL: "postgresql+asyncpg://checkpoint:${DB_PASSWORD:?DB_PASSWORD must be set}@postgres:5432/checkpoint"
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set}"
       CORS_ORIGINS: ${CORS_ORIGINS:-https://infiniteai.space,https://www.infiniteai.space}
-      SEED_ON_START: ${SEED_ON_START:-true}
+      SEED_ON_START: ${SEED_ON_START:-false}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}

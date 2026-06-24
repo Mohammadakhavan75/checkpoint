@@ -125,7 +125,7 @@ async def _serialize_top_level(
     out: list[ItemOut] = []
     for i in rows:
         if i.id in parents:
-            kids = await get_children(session, i.id)
+            kids = await get_children(session, i.id, i.owner_id)
             child_latest = await latest_checkpoints_for(session, [k.id for k in kids])
             children = [
                 serialize_item(k, is_parent=k.id in parents, latest=child_latest.get(k.id))
@@ -244,7 +244,9 @@ async def list_items(
             children: list[ItemOut] = []
             if top.id in parents:
                 kids = [
-                    k for k in await get_children(session, top.id) if k.state != "killed"
+                    k
+                    for k in await get_children(session, top.id, user.id)
+                    if k.state != "killed"
                 ]
                 child_latest = await latest_checkpoints_for(session, [k.id for k in kids])
                 children = [
@@ -270,6 +272,10 @@ async def create_item(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ItemOut:
+    if payload.parent_id is not None:
+        parent = await get_item(session, payload.parent_id, user.id)
+        if parent is None:
+            raise HTTPException(status_code=404, detail="Parent item not found")
     item = Item(
         owner_id=user.id,
         title=payload.title,
@@ -322,7 +328,7 @@ async def get_one(
 ) -> ItemOut:
     item = await _require_item(item_id, user, session)
     parents = await parent_id_set(session, user.id)
-    kids = await get_children(session, item.id)
+    kids = await get_children(session, item.id, user.id)
     child_latest = await latest_checkpoints_for(session, [k.id for k in kids])
     children = [
         serialize_item(k, is_parent=k.id in parents, latest=child_latest.get(k.id))
@@ -351,7 +357,7 @@ async def update_item(
         couple_scout_axes(item)
     await session.commit()
     await session.refresh(item)
-    return serialize_item(item, is_parent=await is_parent(session, item.id))
+    return serialize_item(item, is_parent=await is_parent(session, item.id, user.id))
 
 
 @router.delete("/trash/empty", status_code=status.HTTP_204_NO_CONTENT)
@@ -380,7 +386,7 @@ async def delete_item(
     await set_state(session, item, "killed")
     await session.commit()
     await session.refresh(item)
-    return serialize_item(item, is_parent=await is_parent(session, item.id))
+    return serialize_item(item, is_parent=await is_parent(session, item.id, user.id))
 
 
 @router.delete("/{item_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
@@ -406,7 +412,7 @@ async def restore_item(
     await restore(session, item)
     await session.commit()
     await session.refresh(item)
-    return serialize_item(item, is_parent=await is_parent(session, item.id))
+    return serialize_item(item, is_parent=await is_parent(session, item.id, user.id))
 
 
 @router.post("/{item_id}/promote", response_model=ItemOut)
@@ -436,7 +442,7 @@ async def compile_endpoint(
     await session.commit()
     await session.refresh(item)
     parents = await parent_id_set(session, user.id)
-    kids = await get_children(session, item.id)
+    kids = await get_children(session, item.id, user.id)
     children = [serialize_item(k, is_parent=k.id in parents) for k in kids]
     return serialize_item(item, is_parent=bool(kids), children=children)
 
@@ -452,7 +458,7 @@ async def set_state_endpoint(
     await set_state(session, item, payload.state)
     await session.commit()
     await session.refresh(item)
-    return serialize_item(item, is_parent=await is_parent(session, item.id))
+    return serialize_item(item, is_parent=await is_parent(session, item.id, user.id))
 
 
 @router.post("/{item_id}/daily", response_model=ItemOut)
@@ -466,4 +472,4 @@ async def set_daily_endpoint(
     item.daily = payload.daily
     await session.commit()
     await session.refresh(item)
-    return serialize_item(item, is_parent=await is_parent(session, item.id))
+    return serialize_item(item, is_parent=await is_parent(session, item.id, user.id))

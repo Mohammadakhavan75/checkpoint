@@ -1,17 +1,22 @@
 """Application configuration via pydantic-settings (env vars)."""
 from __future__ import annotations
 
+from typing import Literal
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    app_env: Literal["development", "test", "production"] = "development"
+
     # Default is SQLite so the app/tests can run with zero infra; docker-compose
     # overrides this with the async Postgres URL.
     database_url: str = "sqlite+aiosqlite:///./checkpoint.db"
 
-    jwt_secret: str = "dev-secret-change-me"
+    jwt_secret: str = "development-only-secret-change-me-now"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
@@ -39,6 +44,21 @@ class Settings(BaseSettings):
 
     # When true, the API seeds the demo data on startup (idempotent).
     seed_on_start: bool = False
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        if self.app_env != "production":
+            return self
+        if self.database_url.startswith("sqlite"):
+            raise ValueError("production requires an external database")
+        if (
+            self.jwt_secret == "development-only-secret-change-me-now"
+            or len(self.jwt_secret) < 32
+        ):
+            raise ValueError("production JWT_SECRET must be at least 32 characters")
+        if self.seed_on_start:
+            raise ValueError("SEED_ON_START must be false in production")
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

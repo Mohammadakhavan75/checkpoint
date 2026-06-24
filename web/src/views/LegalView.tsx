@@ -187,8 +187,8 @@ function PrivacyContent() {
         Checkpoint does not use advertising or tracking cookies. It uses your browser's{" "}
         <span className="mono">localStorage</span> only to hold your session token and small
         UI preferences (for example, which release notes you've seen). The built-in Markdown
-        editor (StackEdit) is bundled and served locally with the app, so editing notes does
-        not send your content to an external editor service.
+        editor runs locally in the app, so editing notes does not send your content to an
+        external editor service.
       </p>
 
       <h2>Data retention &amp; deletion</h2>

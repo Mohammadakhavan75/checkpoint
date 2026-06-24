@@ -1,7 +1,7 @@
 """Unit tests for the ported domain logic: rollup, set_state, compile, checkpoints."""
 from __future__ import annotations
 
-from app.models import Item
+from app.models import Item, User
 from app.schemas import CheckpointCreate, CompileRequest, PhaseInput
 from app.services.checkpoints import save_checkpoint
 from app.services.items import (
@@ -74,7 +74,7 @@ async def test_set_state_container_cascades(session, user):
     await _add(session, user, title="c1", domain="HPC", state="active", parent_id=parent.id)
     await _add(session, user, title="c2", domain="HPC", state="needsdef", parent_id=parent.id)
     await set_state(session, parent, "killed")
-    children = await get_children(session, parent.id)
+    children = await get_children(session, parent.id, user.id)
     assert all(c.state == "killed" for c in children)
 
 
@@ -129,7 +129,7 @@ async def test_compile_time_trap_becomes_container(session, user):
     assert item.daily is False
     assert item.fields.get("firstAction") == ""
 
-    children = await get_children(session, item.id)
+    children = await get_children(session, item.id, user.id)
     by_title = {c.title: c for c in children}
     assert len(children) == 2
     assert by_title["Phase 1"].state == "active"
@@ -150,7 +150,7 @@ async def test_compile_reconcile_keeps_and_drops(session, user):
         ),
         user.id,
     )
-    children = await get_children(session, item.id)
+    children = await get_children(session, item.id, user.id)
     phase_a = next(c for c in children if c.title == "A")
 
     # recompile: rename A, drop B
@@ -164,7 +164,7 @@ async def test_compile_reconcile_keeps_and_drops(session, user):
         ),
         user.id,
     )
-    children = await get_children(session, item.id)
+    children = await get_children(session, item.id, user.id)
     assert len(children) == 1
     assert children[0].id == phase_a.id
     assert children[0].title == "A2"
@@ -181,3 +181,37 @@ async def test_save_checkpoint_sets_state_and_clears_daily(session, user):
     assert item.state == "done"
     assert item.daily is False
     assert cp.outcome == "done"
+
+
+async def test_container_cascade_ignores_cross_owner_children(session, user):
+    other = User(email="other@example.com", hashed_password="not-used")
+    session.add(other)
+    await session.flush()
+    parent = Item(owner_id=other.id, title="victim", domain="HPC", state="active", fields={})
+    session.add(parent)
+    await session.flush()
+    legitimate = Item(
+        owner_id=other.id,
+        parent_id=parent.id,
+        title="legitimate",
+        domain="HPC",
+        state="active",
+        fields={},
+    )
+    foreign = Item(
+        owner_id=user.id,
+        parent_id=parent.id,
+        title="foreign",
+        domain="HPC",
+        state="active",
+        fields={},
+    )
+    session.add_all([legitimate, foreign])
+    await session.flush()
+
+    children = await get_children(session, parent.id, other.id)
+    assert [child.id for child in children] == [legitimate.id]
+
+    await set_state(session, parent, "killed")
+    assert legitimate.state == "killed"
+    assert foreign.state == "active"

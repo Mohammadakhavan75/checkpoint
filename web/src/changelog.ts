@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.15.0",
+    date: "2026-06-22",
+    title: "Safer notes and stronger boundaries",
+    notes: [
+      "Snapshot notes now sanitize rendered Markdown, keeping embedded HTML and scriptable links from becoming browser code.",
+      "The obsolete StackEdit bundle has been removed; the fast built-in note editor and Markdown help remain available.",
+      "Item containers and phases now enforce account ownership at creation, lookup, and cascade boundaries.",
+      "Production startup now requires explicit database and JWT secrets, and the web build toolchain has been upgraded past current public advisories.",
+    ],
+  },
+  {
     version: "0.14.0",
     date: "2026-06-21",
     title: "A faster front door",

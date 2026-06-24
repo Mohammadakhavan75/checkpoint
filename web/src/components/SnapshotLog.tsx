@@ -1,7 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { marked } from "marked";
-import Stackedit from "stackedit-js";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 
 import {
   useDeleteSnapshot,
@@ -10,6 +7,7 @@ import {
   useUpdateSnapshot,
 } from "../api/hooks";
 import { Snapshot } from "../types";
+import { renderMarkdown } from "../security/markdown";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 // Quick Markdown reference shown as an in-app help/lookup while editing notes.
@@ -84,35 +82,6 @@ export function SnapshotLog({ id }: { id: string }) {
   // Markdown cheat sheet help
   const [showHelp, setShowHelp] = useState(false);
 
-  // StackEdit state & refs
-  const [isStackeditOpen, setIsStackeditOpen] = useState(false);
-  const stackeditInstanceRef = useRef<any>(null);
-  const autoSaveTimerRef = useRef<any>(null);
-  const currentEditNoteRef = useRef("");
-  const currentEditIdRef = useRef<string | null>(null);
-  const hasChangesRef = useRef(false);
-
-  // Sync refs to state changes
-  useEffect(() => {
-    currentEditNoteRef.current = note;
-  }, [note]);
-
-  useEffect(() => {
-    currentEditNoteRef.current = editNote;
-  }, [editNote]);
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (stackeditInstanceRef.current) {
-        stackeditInstanceRef.current.close();
-      }
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-      }
-    };
-  }, []);
-
   const ok = !!note.trim();
 
   async function add() {
@@ -155,108 +124,6 @@ export function SnapshotLog({ id }: { id: string }) {
     setConfirmDeleteId(null);
   }
 
-  const saveExistingSnapshot = async (snapshotId: string, text: string) => {
-    try {
-      await update.mutateAsync({
-        id,
-        snapshotId,
-        payload: {
-          note: text.trim(),
-        },
-      });
-    } catch (e) {
-      console.error("Auto-save failed", e);
-    }
-  };
-
-  const openStackeditEditor = (initialText: string, snapshotId: string | null) => {
-    if (stackeditInstanceRef.current) {
-      stackeditInstanceRef.current.close();
-    }
-    if (autoSaveTimerRef.current) {
-      clearInterval(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = null;
-    }
-
-    const stackedit = new Stackedit({ url: "/stackedit/app" });
-    stackeditInstanceRef.current = stackedit;
-    currentEditNoteRef.current = initialText;
-    currentEditIdRef.current = snapshotId;
-    hasChangesRef.current = false;
-    setIsStackeditOpen(true);
-
-    stackedit.openFile({
-      name: snapshotId ? "Edit Snapshot Note" : "New Snapshot Note",
-      content: {
-        text: initialText,
-      },
-    });
-
-    // Fix pointer-events: the stackedit-container covers the full screen (z-index 9999),
-    // but our Save & Close button needs to be clickable on top of it.
-    // Setting pointer-events:none on the outer container lets click events reach our button,
-    // while the inner iframe-container retains pointer-events:auto for normal iframe use.
-    const fixPointerEvents = () => {
-      const container = document.querySelector(".stackedit-container") as HTMLElement | null;
-      if (container) {
-        container.style.pointerEvents = "none";
-        const iframeContainer = container.querySelector(
-          ".stackedit-iframe-container"
-        ) as HTMLElement | null;
-        if (iframeContainer) {
-          iframeContainer.style.pointerEvents = "auto";
-        }
-      } else {
-        // Retry until container is mounted by stackedit-js
-        setTimeout(fixPointerEvents, 50);
-      }
-    };
-    setTimeout(fixPointerEvents, 50);
-
-    stackedit.on("fileChange", (file: any) => {
-      const newText = file.content.text;
-      if (newText !== currentEditNoteRef.current) {
-        currentEditNoteRef.current = newText;
-        hasChangesRef.current = true;
-        if (!snapshotId) {
-          setNote(newText);
-        } else {
-          setEditNote(newText);
-        }
-      }
-    });
-
-    // Auto-save existing snapshots every 10 seconds if modified
-    if (snapshotId) {
-      autoSaveTimerRef.current = setInterval(() => {
-        if (hasChangesRef.current) {
-          saveExistingSnapshot(snapshotId, currentEditNoteRef.current);
-          hasChangesRef.current = false;
-        }
-      }, 10000);
-    }
-
-    stackedit.on("close", () => {
-      setIsStackeditOpen(false);
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-      // Save final edits if dirty
-      if (snapshotId && hasChangesRef.current) {
-        saveExistingSnapshot(snapshotId, currentEditNoteRef.current);
-        hasChangesRef.current = false;
-      }
-      stackeditInstanceRef.current = null;
-    });
-  };
-
-  const handleCloseStackedit = () => {
-    if (stackeditInstanceRef.current) {
-      stackeditInstanceRef.current.close();
-    }
-  };
-
   const handleCheckboxClick = (e: React.MouseEvent<HTMLDivElement>, s: Snapshot) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
@@ -293,27 +160,8 @@ export function SnapshotLog({ id }: { id: string }) {
     }
   };
 
-  const renderMarkdown = (text: string) => {
-    try {
-      const rawHtml = marked.parse(text, { gfm: true, breaks: true }) as string;
-      const enabledHtml = rawHtml.replace(/<input([^>]*?)disabled([^>]*?)>/g, "<input$1$2>");
-      return { __html: enabledHtml };
-    } catch (e) {
-      console.error("Markdown parse error", e);
-      return { __html: text };
-    }
-  };
-
   return (
     <>
-      {isStackeditOpen &&
-        createPortal(
-          <button className="stackedit-close-btn" onClick={handleCloseStackedit}>
-            Save & Close ✕
-          </button>,
-          document.body
-        )}
-
       <div className="composer">
         <div className="composer-head">
           <label>Capture a note</label>
@@ -325,13 +173,6 @@ export function SnapshotLog({ id }: { id: string }) {
               onClick={() => setShowHelp((v) => !v)}
             >
               ? Markdown
-            </button>
-            <button
-              type="button"
-              className="linkbtn stackedit-link"
-              onClick={() => openStackeditEditor(note, null)}
-            >
-              ✎ StackEdit
             </button>
           </div>
         </div>
@@ -434,13 +275,6 @@ export function SnapshotLog({ id }: { id: string }) {
                   />
                 </div>
                 <div className="snapactions">
-                  <button
-                    className="snapedit-stack"
-                    title="Edit in StackEdit"
-                    onClick={() => openStackeditEditor(s.note || "", s.id)}
-                  >
-                    StackEdit
-                  </button>
                   <button
                     className="snapedit"
                     title="Edit note"

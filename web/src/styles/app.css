@@ -422,7 +422,7 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .snapdel:hover{color:var(--red);transform:scale(1.15)}
 .snapedit:disabled, .snapdel:disabled{opacity:.4;cursor:not-allowed}
 
-/* Note toolbar (markdown help + StackEdit) */
+/* Note toolbar */
 .notebar{display:flex;gap:14px;align-items:center}
 .linkbtn{background:none;border:none;padding:0;cursor:pointer;font-size:11.5px;
   display:inline-flex;align-items:center;gap:4px;color:var(--cyan);transition:color .12s}
@@ -631,33 +631,6 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   .bridge{flex-direction:column}
   .empty-cap{flex-direction:column}
 
-  /* StackEdit is a desktop-grade editor — hide its triggers on phones, keep the textarea */
-  .stackedit-link,.snapedit-stack{display:none}
-}
-
-/* ===== StackEdit styles ===== */
-.stackedit-close-btn {
-  position: fixed;
-  top: max(16px, env(safe-area-inset-top));
-  right: 16px;
-  z-index: 1000000;
-  padding: 10px 20px;
-  background: rgba(19, 22, 27, 0.72);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--amber);
-  border-radius: 8px;
-  color: var(--amber);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s ease;
-}
-.stackedit-close-btn:hover {
-  background: var(--amber);
-  color: #1a1206;
-  transform: translateY(-1px);
 }
 
 /* ===== boot loader (comment-reveal -> wordmark) ===== */

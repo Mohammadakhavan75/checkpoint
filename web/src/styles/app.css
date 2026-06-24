@@ -118,6 +118,26 @@ header{
 .cal-connect .cal-actions{display:flex;gap:6px}
 .cal-connect .cal-reauth{font-size:11px;color:var(--orange);line-height:1.45;display:flex;flex-direction:column;gap:6px}
 .cal-connect .err{color:var(--red);font-family:'JetBrains Mono';font-size:11px}
+/* two-step verification (TOTP) block in the user panel */
+.tfa{text-align:left;letter-spacing:normal;color:var(--text);display:flex;flex-direction:column;gap:8px}
+.tfa .tfa-head{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:11px;
+  letter-spacing:.5px;color:var(--faint);text-transform:uppercase}
+.tfa .tfa-note{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45}
+.tfa .tfa-actions{display:flex;gap:6px;flex-wrap:wrap}
+.tfa .tfa-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11.5px}
+.tfa .tfa-row span:first-child{color:var(--faint)}
+.tfa-setup,.tfa-manage,.tfa-codes{display:flex;flex-direction:column;gap:8px}
+.tfa-qr{align-self:center;width:172px;height:172px;background:#fff;border-radius:8px;padding:8px}
+.tfa-secret{display:flex;flex-direction:column;gap:2px}
+.tfa-secret-label{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.tfa-secret code{font-size:13px;color:var(--amber);word-break:break-all;letter-spacing:1px}
+.tfa-check{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);cursor:pointer;line-height:1.35}
+.tfa-check input{accent-color:var(--amber);flex:none}
+.tfa-codelist{list-style:none;margin:0;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;
+  background:var(--ink);border:1px solid var(--line2);border-radius:7px}
+.tfa-codelist li{font-size:12.5px;color:var(--text);letter-spacing:.5px}
+.tfa .addinput{margin-bottom:0}
+.tfa .err{color:var(--red);font-family:'JetBrains Mono';font-size:11px}
 
 .body{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:0}
 aside{border-right:1px solid var(--line);overflow:auto;padding:14px 0;background:linear-gradient(180deg,var(--ink),#0c0f13)}

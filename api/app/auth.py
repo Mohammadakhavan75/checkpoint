@@ -37,12 +37,38 @@ def verify_password(password: str, hashed: str | None) -> bool:
         return False
 
 
+# Short window in which a half-authenticated login may present a TOTP code to
+# upgrade its mfa_token into a full session token.
+MFA_TOKEN_EXPIRE_MINUTES = 5
+
+
 def create_access_token(subject: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
     payload = {"sub": subject, "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def create_mfa_token(subject: str) -> str:
+    """A short-lived token that proves the *first* factor only. Marked ``typ:mfa``
+    so it can never be used as a bearer session token (see get_current_user)."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=MFA_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": subject, "typ": "mfa", "exp": expire}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_mfa_token(token: str) -> uuid.UUID | None:
+    """Return the subject of a valid mfa token, or None (expired/wrong type)."""
+    try:
+        payload = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+        if payload.get("typ") != "mfa":
+            return None
+        return uuid.UUID(payload.get("sub", ""))
+    except (jwt.PyJWTError, ValueError):
+        return None
 
 
 async def get_current_user(
@@ -58,6 +84,10 @@ async def get_current_user(
         payload = jwt.decode(
             token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
         )
+        # An mfa_token clears only the first factor; it must never authenticate a
+        # request, or 2FA-for-login would be a no-op for anyone with the password.
+        if payload.get("typ") == "mfa":
+            raise credentials_exc
         subject = payload.get("sub")
         if not subject:
             raise credentials_exc

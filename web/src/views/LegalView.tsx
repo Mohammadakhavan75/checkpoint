@@ -89,6 +89,12 @@ function PrivacyContent() {
           your Google account identifier, email, display name and profile picture URL, as
           provided by Google's sign-in token.
         </li>
+        <li>
+          <b>Two-step verification</b> — if you turn on two-step (2FA) verification, we store
+          the authenticator secret needed to check your one-time codes. It is{" "}
+          <b>encrypted at rest</b>, and your recovery codes are stored only as hashes (we
+          can't read them back). This is optional and off by default.
+        </li>
       </ul>
 
       <h3>Content you create</h3>
@@ -215,6 +221,11 @@ function PrivacyContent() {
       <ul>
         <li>Passwords are hashed with bcrypt and never stored in plain text.</li>
         <li>Google OAuth tokens are encrypted at rest.</li>
+        <li>
+          Optional two-step verification (TOTP / authenticator app) adds a second factor at
+          sign-in and/or before account deletion. The authenticator secret is encrypted at
+          rest and recovery codes are stored only as hashes.
+        </li>
         <li>Traffic is served over HTTPS/TLS, and the API requires a signed session token.</li>
       </ul>
       <p>
@@ -295,6 +306,11 @@ function TermsContent() {
         <li>
           You are responsible for activity under your account and for keeping your password
           and devices secure. Tell us promptly if you suspect unauthorized access.
+        </li>
+        <li>
+          You may enable optional two-step verification for an extra layer of security. If
+          you do, keep your authenticator device and recovery codes safe — losing both can
+          lock you out of signing in or deleting your account.
         </li>
         <li>Provide accurate account information and one account per person.</li>
       </ul>

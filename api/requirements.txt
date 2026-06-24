@@ -18,3 +18,6 @@ cryptography>=43
 # Calendar connect makes plain REST calls to Google with requests (pulled in by
 # google-auth[requests]); pinned explicitly since services/calendar_sync uses it.
 requests>=2.31
+# Pure-Python, zero-dependency QR codes for TOTP enrollment (services/totp.py) —
+# the otpauth:// QR is rendered server-side so no QR library ships in the web bundle.
+segno>=1.6

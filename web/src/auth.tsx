@@ -5,14 +5,21 @@ import * as api from "./api/client";
 import { TOKEN_KEY } from "./api/client";
 import type { User } from "./types";
 
+// When 2FA gates login, the first leg returns a challenge instead of a session;
+// the caller collects a code and calls completeMfaLogin. null = signed in.
+export interface MfaChallenge {
+  mfaToken: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<MfaChallenge | null>;
+  register: (email: string, password: string) => Promise<MfaChallenge | null>;
+  loginWithGoogle: (credential: string) => Promise<MfaChallenge | null>;
+  completeMfaLogin: (mfaToken: string, code: string) => Promise<void>;
   logout: () => void;
-  deleteAccount: (password?: string) => Promise<void>;
+  deleteAccount: (password?: string, code?: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -62,21 +69,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, [qc]);
 
+  // Adopt a session token from a login response, or surface a 2FA challenge.
+  async function adopt(result: {
+    access_token?: string | null;
+    mfa_required: boolean;
+    mfa_token?: string | null;
+  }): Promise<MfaChallenge | null> {
+    if (result.mfa_required && result.mfa_token) {
+      return { mfaToken: result.mfa_token };
+    }
+    if (result.access_token) {
+      api.setToken(result.access_token);
+      setUser(await api.me());
+    }
+    return null;
+  }
+
   async function login(email: string, password: string) {
-    const { access_token } = await api.login(email, password);
-    api.setToken(access_token);
-    setUser(await api.me());
+    return adopt(await api.login(email, password));
   }
 
   async function register(email: string, password: string) {
+    // A brand-new account has no 2FA yet, so this never returns a challenge.
     await api.register(email, password);
-    await login(email, password);
+    return login(email, password);
   }
 
   async function loginWithGoogle(credential: string) {
-    const { access_token } = await api.googleLogin(credential);
-    api.setToken(access_token);
-    setUser(await api.me());
+    return adopt(await api.googleLogin(credential));
+  }
+
+  // Second leg of a 2FA login: trade the mfa_token + code for a session.
+  async function completeMfaLogin(mfaToken: string, code: string) {
+    const { access_token } = await api.completeLoginMfa(mfaToken, code);
+    if (access_token) {
+      api.setToken(access_token);
+      setUser(await api.me());
+    }
   }
 
   function logout() {
@@ -87,8 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Irreversibly delete the account server-side, then tear down the local
   // session exactly like a logout (drop the token, clear cached data). The
   // bearer token is dead the moment the user row is gone.
-  async function deleteAccount(password?: string) {
-    await api.deleteAccount(password);
+  async function deleteAccount(password?: string, code?: string) {
+    await api.deleteAccount(password, code);
     api.setToken(null);
     qc.clear();
     setUser(null);
@@ -107,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         loginWithGoogle,
+        completeMfaLogin,
         logout,
         deleteAccount,
         refresh,

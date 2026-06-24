@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.17.0",
+    date: "2026-06-24",
+    title: "Two-step verification",
+    notes: [
+      "You can now turn on two-step verification from the account menu — pair Google Authenticator (or any TOTP app) by scanning a QR code, and you're protected by a one-time code on top of your password.",
+      "You choose where it's required: signing in, deleting your account, or both.",
+      "Set-up hands you ten one-time recovery codes so a lost phone never locks you out, and you can regenerate them or turn two-step off whenever you like.",
+    ],
+  },
+  {
     version: "0.16.0",
     date: "2026-06-24",
     title: "Delete your account, yourself",

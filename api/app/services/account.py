@@ -15,7 +15,15 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from ..models import CalendarConnection, Checkpoint, Domain, Item, Snapshot, User
+from ..models import (
+    CalendarConnection,
+    Checkpoint,
+    Domain,
+    Item,
+    Snapshot,
+    TwoFactorSettings,
+    User,
+)
 from .calendar_sync import revoke_token
 from .crypto import decrypt
 
@@ -61,5 +69,8 @@ async def delete_account(session: AsyncSession, user: User) -> None:
     await session.execute(delete(Domain).where(Domain.owner_id == owner_id))
     await session.execute(
         delete(CalendarConnection).where(CalendarConnection.owner_id == owner_id)
+    )
+    await session.execute(
+        delete(TwoFactorSettings).where(TwoFactorSettings.owner_id == owner_id)
     )
     await session.execute(delete(User).where(User.id == owner_id))

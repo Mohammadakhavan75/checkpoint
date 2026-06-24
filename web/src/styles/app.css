@@ -99,6 +99,13 @@ header{
 .setpw p{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45}
 .setpw .addinput{margin-bottom:0}
 .setpw .err{color:var(--red);font-family:'JetBrains Mono';font-size:11px}
+/* delete-account control in the user panel */
+.acct-delete-link{align-self:center;background:none;border:none;color:var(--faint);cursor:pointer;
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.5px;padding:2px 4px;margin-top:2px}
+.acct-delete-link:hover{color:var(--red)}
+.acct-delete{border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
+.acct-delete-actions{display:flex;gap:6px}
+.acct-delete-actions .btn{flex:1}
 /* google calendar connect block in the user panel */
 .cal-connect{text-align:left;letter-spacing:normal;color:var(--text);display:flex;flex-direction:column;gap:8px}
 .cal-connect .cal-head{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:11px;

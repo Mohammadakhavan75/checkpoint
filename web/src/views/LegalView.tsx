@@ -7,7 +7,7 @@ import { CURRENT_VERSION } from "../changelog";
 
 export type LegalPage = "privacy" | "terms";
 
-const UPDATED = "June 21, 2026";
+const UPDATED = "June 24, 2026";
 const CONTACT = "mohammad.akhavan75@gmail.com";
 
 function TopBar({ page }: { page: LegalPage }) {
@@ -202,10 +202,12 @@ function PrivacyContent() {
           OAuth tokens and mirrored events for that connection are removed.
         </li>
         <li>
-          <b>Deleting your account.</b> Email{" "}
-          <a href={`mailto:${CONTACT}`}>{CONTACT}</a> to delete your account. Removing your
-          account deletes your items, checkpoints, snapshots, domains and any calendar
-          connection.
+          <b>Deleting your account.</b> You can delete your account yourself at any time from
+          the account menu (“Delete account”). Deletion is immediate and permanent: it removes
+          your profile along with all your items, checkpoints, snapshots, domains and any
+          calendar connection, and revokes Checkpoint's access to your Google Calendar. This
+          cannot be undone. If you'd rather we do it for you, email{" "}
+          <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
         </li>
       </ul>
 
@@ -223,8 +225,9 @@ function PrivacyContent() {
 
       <h2>Your rights</h2>
       <p>
-        You can access and edit your content at any time inside the app, and you can ask to
-        export, correct or delete your data by contacting{" "}
+        You can access and edit your content at any time inside the app, and you can delete
+        your entire account and its data yourself from the account menu. You can also ask to
+        export or correct your data by contacting{" "}
         <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. Depending on where you live, you may have
         additional rights under laws such as the GDPR or CCPA; we will honour valid requests.
       </p>
@@ -344,10 +347,11 @@ function TermsContent() {
 
       <h2>Suspension &amp; termination</h2>
       <p>
-        You may stop using Checkpoint and request account deletion at any time. We may suspend
-        or terminate access if these Terms are violated or if needed to protect the Service or
-        its users. On termination, your right to use the Service ends; data deletion is handled
-        as described in the <a href="/privacy">Privacy Policy</a>.
+        You may stop using Checkpoint at any time, and you can permanently delete your account
+        and its data yourself from the account menu. We may suspend or terminate access if these
+        Terms are violated or if needed to protect the Service or its users. On termination, your
+        right to use the Service ends; data deletion is handled as described in the{" "}
+        <a href="/privacy">Privacy Policy</a>.
       </p>
 
       <h2>Changes to the Service or these Terms</h2>

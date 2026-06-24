@@ -5,6 +5,7 @@ import { ApiError } from "../api/client";
 import { useAuth } from "../auth";
 import type { User } from "../types";
 import { CalendarConnect } from "./CalendarConnect";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 function Avatar({ user, className }: { user: User; className: string }) {
   const initial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
@@ -58,6 +59,104 @@ function SetPasswordForm() {
       <button className="btn" type="submit" disabled={busy || pw.length < 6}>
         {busy ? "…" : "Set password"}
       </button>
+    </form>
+  );
+}
+
+/** Irreversible account deletion. Two gates: the user types DELETE (and supplies
+ *  their password if the account has one), then confirms in a final dialog. */
+function DeleteAccountForm({ user }: { user: User }) {
+  const { deleteAccount } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [phrase, setPhrase] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  const ready = phrase.trim().toUpperCase() === "DELETE" && (!user.has_password || pw.length > 0);
+
+  async function runDelete() {
+    setErr("");
+    setBusy(true);
+    try {
+      await deleteAccount(user.has_password ? pw : undefined);
+      // Account is gone; reload to the public landing page from a clean slate.
+      window.location.assign("/");
+    } catch (ex) {
+      setErr(ex instanceof ApiError ? ex.message : "Something went wrong");
+      setBusy(false);
+      setConfirming(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button className="acct-delete-link" onClick={() => setOpen(true)}>
+        Delete account
+      </button>
+    );
+  }
+
+  return (
+    <form
+      className="setpw acct-delete"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        if (ready) setConfirming(true);
+      }}
+    >
+      <p>
+        This permanently deletes your account and <b>all</b> your data — items,
+        checkpoints, snapshots, domains and any calendar connection. This cannot be undone.
+      </p>
+      {user.has_password && (
+        <input
+          className="addinput"
+          type="password"
+          placeholder="your password"
+          autoComplete="current-password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+        />
+      )}
+      <input
+        className="addinput"
+        type="text"
+        placeholder="type DELETE to confirm"
+        autoCapitalize="characters"
+        autoComplete="off"
+        value={phrase}
+        onChange={(e) => setPhrase(e.target.value)}
+      />
+      {err && <div className="err">{err}</div>}
+      <div className="acct-delete-actions">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            setOpen(false);
+            setPw("");
+            setPhrase("");
+            setErr("");
+          }}
+        >
+          Cancel
+        </button>
+        <button className="btn danger" type="submit" disabled={!ready || busy}>
+          Delete account
+        </button>
+      </div>
+      {confirming && (
+        <ConfirmDialog
+          title="Delete account?"
+          message="This permanently erases your account and everything in it. This action cannot be undone."
+          confirmLabel="Delete forever"
+          busy={busy}
+          onConfirm={runDelete}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
     </form>
   );
 }
@@ -124,6 +223,7 @@ export function UserMenu() {
               <span className="sep">·</span>
               <a href="/terms">Terms</a>
             </div>
+            <DeleteAccountForm user={user} />
           </div>
 
           <button className="btn-danger" onClick={logout}>

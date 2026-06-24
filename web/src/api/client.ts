@@ -109,6 +109,11 @@ export const setPassword = (password: string, currentPassword?: string) =>
 export const markSeenVersion = (version: string) =>
   request<void>("/auth/seen", { method: "POST", ...body({ version }) });
 
+// Permanently delete the signed-in account and all of its data. `password` is
+// required for accounts that have one (re-auth guard); Google-only accounts omit it.
+export const deleteAccount = (password?: string) =>
+  request<void>("/auth/me", { method: "DELETE", ...body({ password }) });
+
 // ----- domains -----
 export const listDomains = () => request<Domain[]>("/domains");
 

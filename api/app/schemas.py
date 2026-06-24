@@ -56,6 +56,12 @@ class SetPasswordRequest(BaseModel):
     current_password: Optional[str] = None
 
 
+class DeleteAccountRequest(BaseModel):
+    # Required for accounts that have a local password (re-auth guard before an
+    # irreversible delete). Google-only accounts have none, so it stays optional.
+    password: Optional[str] = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

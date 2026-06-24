@@ -62,9 +62,105 @@ function SetPasswordForm() {
   );
 }
 
+/** Irreversible account deletion, in a confirmation popup. Two gates: the user
+ *  types DELETE and (if the account has one) supplies their password. */
+function DeleteAccountModal({ user, onClose }: { user: User; onClose: () => void }) {
+  const { deleteAccount } = useAuth();
+  const [pw, setPw] = useState("");
+  const [phrase, setPhrase] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  const ready = phrase.trim().toUpperCase() === "DELETE" && (!user.has_password || pw.length > 0);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, busy]);
+
+  async function runDelete(e: FormEvent) {
+    e.preventDefault();
+    if (!ready || busy) return;
+    setErr("");
+    setBusy(true);
+    try {
+      await deleteAccount(user.has_password ? pw : undefined);
+      // Account is gone; reload to the public landing page from a clean slate.
+      window.location.assign("/");
+    } catch (ex) {
+      setErr(ex instanceof ApiError ? ex.message : "Something went wrong");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="scrim confirm-scrim"
+      onClick={(e) => e.target === e.currentTarget && !busy && onClose()}
+    >
+      <form
+        className="modal confirm-modal acct-delete-modal"
+        role="alertdialog"
+        aria-modal="true"
+        onSubmit={runDelete}
+      >
+        <header>
+          <span className="ic" style={{ color: "var(--red)" }}>
+            ⚠
+          </span>
+          <h3>Delete account?</h3>
+        </header>
+        <div className="pad">
+          <p className="confirm-msg">
+            This permanently deletes your account and <b>all</b> your data — items,
+            checkpoints, snapshots, domains and any calendar connection. This cannot be
+            undone.
+          </p>
+          <div className="acct-delete-fields">
+            {user.has_password && (
+              <input
+                className="addinput"
+                type="password"
+                placeholder="your password"
+                autoComplete="current-password"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                autoFocus
+              />
+            )}
+            <input
+              className="addinput"
+              type="text"
+              placeholder="type DELETE to confirm"
+              autoCapitalize="characters"
+              autoComplete="off"
+              value={phrase}
+              onChange={(e) => setPhrase(e.target.value)}
+              autoFocus={!user.has_password}
+            />
+          </div>
+          {err && <div className="err">{err}</div>}
+        </div>
+        <footer>
+          <button type="button" className="btn" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button className="btn danger" type="submit" disabled={!ready || busy}>
+            {busy ? "Deleting…" : "Delete forever"}
+          </button>
+        </footer>
+      </form>
+    </div>
+  );
+}
+
 export function UserMenu() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -124,12 +220,25 @@ export function UserMenu() {
               <span className="sep">·</span>
               <a href="/terms">Terms</a>
             </div>
+            <button
+              className="acct-delete-link"
+              onClick={() => {
+                setOpen(false);
+                setDeleteOpen(true);
+              }}
+            >
+              Delete account
+            </button>
           </div>
 
           <button className="btn-danger" onClick={logout}>
             Log out
           </button>
         </div>
+      )}
+
+      {deleteOpen && (
+        <DeleteAccountModal user={user} onClose={() => setDeleteOpen(false)} />
       )}
     </div>
   );

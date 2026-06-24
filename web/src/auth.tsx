@@ -12,6 +12,7 @@ interface AuthContextValue {
   register: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
+  deleteAccount: (password?: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -83,6 +84,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  // Irreversibly delete the account server-side, then tear down the local
+  // session exactly like a logout (drop the token, clear cached data). The
+  // bearer token is dead the moment the user row is gone.
+  async function deleteAccount(password?: string) {
+    await api.deleteAccount(password);
+    api.setToken(null);
+    qc.clear();
+    setUser(null);
+  }
+
   // Re-pull the profile after server-side account changes (e.g. set password).
   async function refresh() {
     setUser(await api.me());
@@ -90,7 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, loginWithGoogle, logout, refresh }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        loginWithGoogle,
+        logout,
+        deleteAccount,
+        refresh,
+      }}
     >
       {children}
     </AuthContext.Provider>

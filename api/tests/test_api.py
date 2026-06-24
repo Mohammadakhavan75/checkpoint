@@ -384,3 +384,45 @@ async def test_register_and_login(client):
     )
     assert r.status_code == 200
     assert "access_token" in r.json()
+
+
+async def test_delete_account_endpoint_wrong_password_is_rejected(auth_client):
+    await auth_client.post(
+        "/api/auth/register", json={"email": "del@example.com", "password": "secret1"}
+    )
+    r = await auth_client.post(
+        "/api/auth/login", json={"email": "del@example.com", "password": "secret1"}
+    )
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = await auth_client.request(
+        "DELETE", "/api/auth/me", json={"password": "wrong"}, headers=headers
+    )
+    assert r.status_code == 400
+    # still able to authenticate — nothing was deleted
+    r = await auth_client.get("/api/auth/me", headers=headers)
+    assert r.status_code == 200
+
+
+async def test_delete_account_endpoint_removes_account(auth_client):
+    await auth_client.post(
+        "/api/auth/register", json={"email": "gone@example.com", "password": "secret1"}
+    )
+    r = await auth_client.post(
+        "/api/auth/login", json={"email": "gone@example.com", "password": "secret1"}
+    )
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = await auth_client.request(
+        "DELETE", "/api/auth/me", json={"password": "secret1"}, headers=headers
+    )
+    assert r.status_code == 204
+
+    # the bearer token no longer resolves to a user
+    r = await auth_client.get("/api/auth/me", headers=headers)
+    assert r.status_code == 401
+    # and the email is free to register again
+    r = await auth_client.post(
+        "/api/auth/register", json={"email": "gone@example.com", "password": "secret1"}
+    )
+    assert r.status_code == 201

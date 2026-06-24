@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.16.0",
+    date: "2026-06-24",
+    title: "Delete your account, yourself",
+    notes: [
+      "You can now permanently delete your account and all of its data — items, checkpoints, snapshots, domains and any calendar connection — right from the account menu, no email required.",
+      "Deletion takes two deliberate steps and, for password accounts, your password — so it can't happen by accident.",
+      "If you'd connected Google Calendar, deleting your account also revokes Checkpoint's access to it.",
+    ],
+  },
+  {
     version: "0.15.0",
     date: "2026-06-22",
     title: "Safer notes and stronger boundaries",

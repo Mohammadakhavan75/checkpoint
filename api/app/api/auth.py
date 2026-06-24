@@ -11,6 +11,7 @@ from ..config import settings
 from ..db import get_session
 from ..models import User
 from ..schemas import (
+    DeleteAccountRequest,
     GoogleLoginRequest,
     LoginRequest,
     SeenVersionRequest,
@@ -19,6 +20,7 @@ from ..schemas import (
     UserCreate,
     UserOut,
 )
+from ..services.account import delete_account
 from ..services.google_auth import (
     GoogleAuthError,
     GoogleAuthUnavailableError,
@@ -147,6 +149,26 @@ async def set_password(
     ):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     user.hashed_password = hash_password(payload.password)
+    await session.commit()
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    payload: DeleteAccountRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Permanently delete the signed-in account and all of its data.
+
+    Irreversible. Accounts with a local password must re-supply it as a guard
+    against a left-open session deleting the account; Google-only accounts have
+    none, so the authenticated bearer token is the proof of identity.
+    """
+    if user.hashed_password is not None and not verify_password(
+        payload.password or "", user.hashed_password
+    ):
+        raise HTTPException(status_code=400, detail="Password is incorrect")
+    await delete_account(session, user)
     await session.commit()
 
 

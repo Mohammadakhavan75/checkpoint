@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.19.0",
+    date: "2026-06-28",
+    title: "What's ready, at a glance",
+    notes: [
+      "A domain backlog now splits into two: everything that's compiled and ready to go sits up top under a clear barrier, with the items that still need a thinking pass collected below — so the first thing you see is work you can start, not a wall of undefined tasks.",
+      "Each group carries a live count, so \"3 ready\" reads as progress already made; an empty group keeps its header with an encouraging line instead of vanishing.",
+      "New (optional, self-hosted): a once-a-day off-app nudge that carries your freshest resume line straight to chat or your phone — value even if you never tap it, silent when there's nothing open, and it backs off rather than nagging.",
+    ],
+  },
+  {
     version: "0.18.0",
     date: "2026-06-28",
     title: "A letter from past-you",

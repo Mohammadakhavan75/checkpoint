@@ -6,13 +6,13 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, not_, or_, select
+from sqlalchemy import and_, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth import get_current_user
 from ..constants import READY_HORIZON_DAYS, RESERVOIR
 from ..db import get_session
-from ..models import Item, User
+from ..models import Checkpoint, Item, User
 from ..schemas import (
     CaptureRequest,
     CompileRequest,
@@ -99,6 +99,30 @@ def _ready_clause(day1: datetime, horizon: datetime):
         and_(Item.start_at.is_not(None), Item.start_at >= day1, Item.start_at < horizon),
         and_(Item.deadline.is_not(None), Item.deadline >= day1, Item.deadline < horizon),
     )
+
+
+def _latest_outcome_subq():
+    """Scalar subquery: the outcome of an item's most recent checkpoint (NULL
+    if it has never been checkpointed)."""
+    return (
+        select(Checkpoint.outcome)
+        .where(Checkpoint.item_id == Item.id)
+        .order_by(Checkpoint.created_at.desc())
+        .limit(1)
+        .scalar_subquery()
+    )
+
+
+def _resumable_clause():
+    """Started-and-paused: the latest checkpoint said "continue" (outcome
+    ``active``). This is the signal a task was actually worked on and left mid-
+    flight — distinct from a freshly compiled unit that is also ``state=active``
+    but has never been opened (that one belongs in Ready, not Resumable).
+
+    Coalesce the (possibly NULL) subquery to a sentinel so the comparison is
+    well-defined two-valued logic — otherwise ``not_(...)`` would silently drop
+    never-checkpointed rows (NULL = 'active' is NULL, and NOT NULL is NULL)."""
+    return func.coalesce(_latest_outcome_subq(), "") == "active"
 
 
 def _sched_key(item: Item) -> tuple[int, datetime]:
@@ -196,7 +220,8 @@ async def list_items(
     if tab == "ready":
         # Compiled-and-waiting units plus anything scheduled within the horizon,
         # minus whatever already qualifies for Today (so a compiled task due
-        # today shows only there, not in both).
+        # today shows only there, not in both) and minus anything already
+        # started (a "continue" checkpoint moves it to Resumable, not Ready).
         result = await session.execute(
             select(Item).where(
                 Item.owner_id == uid,
@@ -205,10 +230,33 @@ async def list_items(
                 Item.parent_id.is_(None),
                 _ready_clause(day1, horizon),
                 not_(_today_clause(day0, day1)),
+                not_(_resumable_clause()),
             )
         )
         rows = sorted(result.scalars().all(), key=_sched_key)
         return await _serialize_top_level(session, rows, parents)
+
+    if tab == "resumable":
+        # Started-and-paused tasks: the last checkpoint said "continue", and the
+        # task isn't currently sitting on Today. The return screen for everything
+        # past-you left mid-flight — rendered as "Dear future you" letter cards.
+        result = await session.execute(
+            select(Item).where(
+                Item.owner_id == uid,
+                Item.state.not_in(["killed", "done"]),
+                Item.parent_id.is_(None),
+                _resumable_clause(),
+                not_(_today_clause(day0, day1)),
+            )
+        )
+        out = await _serialize_top_level(session, list(result.scalars().all()), parents)
+        # Freshest checkpoint first — the most recently paused work greets you at
+        # the top of the shelf.
+        out.sort(
+            key=lambda io: io.latest_checkpoint.created_at if io.latest_checkpoint else io.created_at,
+            reverse=True,
+        )
+        return out
 
     if tab == "reservoir":
         result = await session.execute(

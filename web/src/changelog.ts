@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.18.0",
+    date: "2026-06-28",
+    title: "A letter from past-you",
+    notes: [
+      "Coming back now opens with a warm note instead of a backlog: your latest checkpoint is reframed as a \"Dear future you\" letter — where you stopped, where to pick up, and the first move — to take only if you feel like it.",
+      "A new Resumable section, beside Today and Ready to GO!, collects every task you left mid-flight. Each one is its own letter card, so nothing you paused gets lost or guilt-trips you.",
+      "When you close a session with \"Continue later\", you can park the task on the Resumable shelf or keep it on Today — your call, every time.",
+    ],
+  },
+  {
     version: "0.17.0",
     date: "2026-06-24",
     title: "Two-step verification",

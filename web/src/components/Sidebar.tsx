@@ -41,6 +41,7 @@ export function Sidebar({
 }) {
   const today = useItems("today");
   const ready = useItems("ready");
+  const resumable = useItems("resumable");
   const reservoir = useItems("reservoir");
   const trash = useItems("trash");
   const domains = useDomains();
@@ -65,6 +66,12 @@ export function Sidebar({
           onClick={() => onNav("ready")}
         >
           ⚑ Ready to GO!<span className="cnt">{ready.data?.length ?? 0}</span>
+        </button>
+        <button
+          className={`navbtn ${tab === "resumable" ? "on" : ""}`}
+          onClick={() => onNav("resumable")}
+        >
+          ⟲ Resumable<span className="cnt">{resumable.data?.length ?? 0}</span>
         </button>
       </div>
 

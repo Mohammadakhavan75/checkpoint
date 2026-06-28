@@ -198,6 +198,38 @@ export function DomainView({
 
   const onState = (id: string, state: ItemState) => setState.mutate({ id, state });
 
+  // The compiled barrier: split the (already state-filtered) backlog into work
+  // that's ready to execute vs. work that still needs a thinking pass, so the
+  // eye lands on "here's what's ready" first. Containers sort by their own
+  // `compiled` flag; their phases stay nested under them.
+  const ready = visibleItems.filter(({ item }) => item.compiled);
+  const raw = visibleItems.filter(({ item }) => !item.compiled);
+
+  const renderEntries = (entries: typeof visibleItems) =>
+    entries.map(({ item, visibleChildren }, idx) =>
+      item.is_parent ? (
+        <ContainerGroup
+          key={item.id}
+          item={item}
+          visibleChildren={visibleChildren}
+          idx={idx}
+          open={!collapsed.has(item.id)}
+          onToggle={onToggle}
+          onState={onState}
+          onCompile={onCompile}
+        />
+      ) : (
+        <BacklogRow
+          key={item.id}
+          item={item}
+          idx={idx}
+          onState={onState}
+          onCompile={onCompile}
+          onFastExecute={onFastExecute}
+        />
+      ),
+    );
+
   return (
     <>
       <div className="viewhead">
@@ -224,35 +256,46 @@ export function DomainView({
         dangerous state is <b style={{ color: "var(--yellow)" }}>important-but-undefined</b>:
         compile it, defer it, or kill it.
       </p>
-      <div className="rows">
-        {visibleItems.length ? (
-          visibleItems.map(({ item, visibleChildren }, idx) =>
-            item.is_parent ? (
-              <ContainerGroup
-                key={item.id}
-                item={item}
-                visibleChildren={visibleChildren}
-                idx={idx}
-                open={!collapsed.has(item.id)}
-                onToggle={onToggle}
-                onState={onState}
-                onCompile={onCompile}
-              />
-            ) : (
-              <BacklogRow
-                key={item.id}
-                item={item}
-                idx={idx}
-                onState={onState}
-                onCompile={onCompile}
-                onFastExecute={onFastExecute}
-              />
-            ),
-          )
-        ) : (
+      {visibleItems.length ? (
+        <>
+          <div className="backlog-group">
+            <div className="group-head ready">
+              <span className="group-label">⚑ READY</span>
+              <span className="group-count">{ready.length}</span>
+              <span className="group-note">compiled — one click to start</span>
+            </div>
+            <div className="rows">
+              {ready.length ? (
+                renderEntries(ready)
+              ) : (
+                <div className="group-empty">
+                  Nothing compiled yet — pick one below and compile it.
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="backlog-group">
+            <div className="group-head raw">
+              <span className="group-label">~ NEEDS THINKING</span>
+              <span className="group-count">{raw.length}</span>
+              <span className="group-note">decide before starting — compile to promote up</span>
+            </div>
+            <div className="rows">
+              {raw.length ? (
+                renderEntries(raw)
+              ) : (
+                <div className="group-empty">
+                  Nothing waiting on a decision — everything here is ready.
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="rows">
           <div className="empty">No matching items in {domain}.</div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

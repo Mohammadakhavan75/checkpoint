@@ -12,7 +12,7 @@ export type ItemState =
 export type Outcome = "active" | "deferred" | "blocked" | "done";
 export type Procedure = "known" | "unknown";
 export type Scope = "bounded" | "unbounded";
-export type Tab = "today" | "ready" | "reservoir" | "domain" | "trash";
+export type Tab = "today" | "ready" | "resumable" | "reservoir" | "domain" | "trash";
 
 export interface Checkpoint {
   id: string;

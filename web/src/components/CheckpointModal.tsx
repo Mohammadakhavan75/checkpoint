@@ -70,6 +70,10 @@ export function CheckpointModal({
   }
 
   if (saved) {
+    // "Continue later" (active) parks the task on the Resumable shelf; every
+    // other still-open outcome (deferred / blocked) clears back to Ready to GO!.
+    const toResumable = saved.outcome === "active";
+    const dest = toResumable ? "Resumable" : "Ready to GO!";
     return (
       <div className="scrim">
         <div className="modal">
@@ -79,13 +83,12 @@ export function CheckpointModal({
           </header>
           <div className="pad">
             <div className="note">
-              Session closed and the receipt is written. Move this task into{" "}
-              <b>Ready to GO!</b> to clear it off Today, or keep it on Today to pick up again
-              soon.
+              Session closed and the receipt is written. Move this task into <b>{dest}</b> to
+              clear it off Today, or keep it on Today to pick up again soon.
             </div>
             <div className="placement">
               <button className="btn amber" disabled={daily.isPending} onClick={() => place(false)}>
-                → Move to Ready to GO!
+                {toResumable ? "⟲ Move to Resumable" : "→ Move to Ready to GO!"}
               </button>
               <button className="btn" disabled={daily.isPending} onClick={() => place(true)}>
                 ⊙ Keep on Today

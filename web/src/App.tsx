@@ -18,6 +18,7 @@ import { AuthView } from "./views/AuthView";
 import { LandingView } from "./views/LandingView";
 import { DomainView } from "./views/DomainView";
 import { ReadyView } from "./views/ReadyView";
+import { ResumableView } from "./views/ResumableView";
 import { ReservoirView } from "./views/ReservoirView";
 import { TodayView } from "./views/TodayView";
 import { TrashView } from "./views/TrashView";
@@ -164,6 +165,7 @@ export function App() {
               />
             )}
             {tab === "ready" && <ReadyView onEdit={setCompileId} />}
+            {tab === "resumable" && <ResumableView onStart={openSession} />}
             {tab === "reservoir" && <ReservoirView onNav={nav} />}
             {tab === "trash" && <TrashView />}
             {tab === "domain" && (

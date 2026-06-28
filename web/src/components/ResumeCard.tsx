@@ -18,22 +18,43 @@ function timeAgo(iso: string): string {
 
 // The receipt that opens every return visit: latest checkpoint + one-click
 // resume. Also reused (without buttons) by the first-checkpoint reveal.
+//
+// `letter` mode reframes the same data as a note from past-you to future-you —
+// a warm greeting, a no-pressure line, and softer labels — for the Today return
+// screen. The plain card (no greeting, terse labels) stays for the reveal.
 export function ResumeCard({
   title,
   checkpoint,
   onResume,
   onDismiss,
+  letter,
+  userName,
 }: {
   title: string;
   checkpoint: Checkpoint;
   onResume?: () => void;
   onDismiss?: () => void;
+  letter?: boolean;
+  // Only used in letter mode; null/blank (password-only accounts) falls back to
+  // "Dear future you,".
+  userName?: string | null;
 }) {
   const cp = checkpoint;
+  const greetName = userName?.trim() || "you";
   return (
     <div className="resumecard fade-in s1">
+      {letter && (
+        <div className="rc-letter">
+          <div className="rc-greet">Dear future {greetName},</div>
+          <div className="rc-note">
+            Here&apos;s what I left for you to pick up — only if you feel up to it.
+          </div>
+        </div>
+      )}
       <div className="rc-top">
-        <span className="rc-lab">⟲ RESUME FROM</span>
+        {/* In letter mode the greeting carries the framing; the cold label would
+            fight it, so drop it and keep only the neutral timestamp + chip. */}
+        {!letter && <span className="rc-lab">⟲ RESUME FROM</span>}
         <span className="rc-when">{timeAgo(cp.created_at)}</span>
         <Chip state={cp.outcome as ItemState} />
       </div>
@@ -43,13 +64,13 @@ export function ResumeCard({
         {/* "done" checkpoints carry no resume fields — finished work has no next step */}
         {cp.resume_from && (
           <div>
-            <div className="k">Resume from</div>
+            <div className="k">{letter ? "Pick up from" : "Resume from"}</div>
             <div className="v">{cp.resume_from}</div>
           </div>
         )}
         {cp.next_action && (
           <div>
-            <div className="k">Next action</div>
+            <div className="k">{letter ? "First move" : "Next action"}</div>
             <div className="v">{cp.next_action}</div>
           </div>
         )}
@@ -64,7 +85,7 @@ export function ResumeCard({
         <div className="rc-acts">
           {onResume && (
             <button className="btn amber rc-resume" onClick={onResume}>
-              ⟲ RESUME
+              {letter ? "⟲ Pick it up" : "⟲ RESUME"}
             </button>
           )}
           {onDismiss && (

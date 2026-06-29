@@ -5,6 +5,7 @@ import { ApiError } from "../api/client";
 import { useAuth } from "../auth";
 import type { User } from "../types";
 import { CalendarConnect } from "./CalendarConnect";
+import { PushPermissionPanel } from "./PushPermissionPanel";
 import { TwoFactorSettings } from "./TwoFactorSettings";
 
 function Avatar({ user, className }: { user: User; className: string }) {
@@ -233,6 +234,7 @@ export function UserMenu() {
             </div>
             {!user.has_password && <SetPasswordForm />}
             <TwoFactorSettings />
+            <PushPermissionPanel />
             <CalendarConnect />
             <div className="userpanel-legal">
               <a href="/privacy">Privacy</a>

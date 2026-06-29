@@ -157,6 +157,41 @@ export interface Providers {
   google: boolean;
   calendar: boolean;
   two_factor: boolean;
+  reminders: boolean;
+}
+
+// ----- reminders & web push (ADR-001) -----
+export interface Reminder {
+  id: string;
+  item_id: string;
+  fire_at: string; // ISO
+  kind: string; // "task"
+  status: "pending" | "sent" | "cancelled";
+  sent_at?: string | null;
+  created_at: string;
+}
+
+export interface PushDevice {
+  id: string;
+  user_agent?: string | null;
+  created_at: string;
+  last_used_at?: string | null;
+}
+
+export interface ReminderSettings {
+  reminders_enabled: boolean;
+  nudge_opt_in: boolean;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  time_zone?: string | null;
+}
+
+export interface ReminderSettingsUpdate {
+  reminders_enabled?: boolean;
+  nudge_opt_in?: boolean;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  time_zone?: string | null;
 }
 
 export interface PhaseInput {

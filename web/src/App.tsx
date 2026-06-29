@@ -44,6 +44,15 @@ export function App() {
   // its closing checkpoint form is trimmed to the three required fields.
   const [firstRunSession, setFirstRunSession] = useState(false);
   const [reveal, setReveal] = useState<{ title: string; checkpoint: Checkpoint } | null>(null);
+  // A reminder/nudge deep link (/?resume={id}) — captured on first render before
+  // we normalize the address bar, so a tap ejects straight into that item's work.
+  const [pendingResume] = useState<string | null>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get("resume");
+    } catch {
+      return null;
+    }
+  });
 
   const { data: sessionItem } = useItem(sessionId);
 
@@ -54,6 +63,17 @@ export function App() {
     if (user && window.location.pathname !== "/") {
       window.history.replaceState(null, "", "/");
     }
+  }, [user]);
+
+  // Honour a reminder deep link once signed in: land on Today and open the
+  // session for that item (cue → door → work, one continuous motion).
+  useEffect(() => {
+    if (user && pendingResume) {
+      setTab("today");
+      setFirstRunSession(false);
+      setSessionId(pendingResume);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const path = window.location.pathname.replace(/\/+$/, "") || "/";

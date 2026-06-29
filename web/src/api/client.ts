@@ -11,6 +11,10 @@ import type {
   ItemUpdatePayload,
   LoginResult,
   Providers,
+  PushDevice,
+  Reminder,
+  ReminderSettings,
+  ReminderSettingsUpdate,
   Snapshot,
   SnapshotPayload,
   Tab,
@@ -256,6 +260,37 @@ export const createSnapshot = (id: string, payload: SnapshotPayload) =>
 
 export const updateSnapshot = (id: string, snapshotId: string, payload: SnapshotPayload) =>
   request<Snapshot>(`/items/${id}/snapshots/${snapshotId}`, { method: "PATCH", ...body(payload) });
+
+// ----- reminders & web push (ADR-001) -----
+export const getVapidKey = () => request<{ key: string }>("/push/vapid-public-key");
+
+export const listPushDevices = () => request<PushDevice[]>("/push/subscriptions");
+
+export const createPushSubscription = (sub: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  user_agent?: string;
+}) => request<PushDevice>("/push/subscriptions", { method: "POST", ...body(sub) });
+
+export const deletePushDevice = (id: string) =>
+  request<void>(`/push/subscriptions/${id}`, { method: "DELETE" });
+
+export const listReminders = (itemId?: string) =>
+  request<Reminder[]>(`/reminders${itemId ? `?item_id=${itemId}` : ""}`);
+
+export const createReminder = (itemId: string, fireAt: string) =>
+  request<Reminder>("/reminders", {
+    method: "POST",
+    ...body({ item_id: itemId, fire_at: fireAt, kind: "task" }),
+  });
+
+export const deleteReminder = (id: string) =>
+  request<void>(`/reminders/${id}`, { method: "DELETE" });
+
+export const getSettings = () => request<ReminderSettings>("/settings");
+
+export const updateSettings = (patch: ReminderSettingsUpdate) =>
+  request<ReminderSettings>("/settings", { method: "PATCH", ...body(patch) });
 
 export const deleteSnapshot = (id: string, snapshotId: string) =>
   request<void>(`/items/${id}/snapshots/${snapshotId}`, { method: "DELETE" });

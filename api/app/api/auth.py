@@ -88,6 +88,7 @@ async def providers() -> dict[str, bool]:
         "google": bool(settings.google_client_id),
         "calendar": settings.calendar_connect_enabled,
         "two_factor": settings.two_factor_available,
+        "reminders": settings.reminders_available,
     }
 
 

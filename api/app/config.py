@@ -39,6 +39,24 @@ class Settings(BaseSettings):
     # background refresh (stale-while-revalidate, Phase 3).
     calendar_sync_ttl_seconds: int = 300
 
+    # --- Web Push reminders (ADR-001) ----------------------------------------
+    # VAPID keypair identifying this server to browser push services. The public
+    # key is the browser's applicationServerKey (base64url); the private key
+    # signs each push (PEM or base64url raw, both accepted by pywebpush). Empty
+    # disables reminders (we won't half-enable a push channel). Generate with
+    # ops/gen-vapid.py.
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    # The "sub" claim in the VAPID JWT — a mailto: or https: the push service can
+    # contact about this application server.
+    vapid_subject: str = "mailto:admin@checkpoint.local"
+    # How often the in-process scheduler wakes to fire due reminders / the nudge.
+    reminder_tick_seconds: int = 60
+    # On boot, fire reminders overdue by up to this many minutes (catch-up after a
+    # deploy/restart). Older-than-grace reminders are marked sent without firing —
+    # a stale "do this now" is noise, not a gift.
+    reminder_catchup_grace_minutes: int = 120
+
     # Comma-separated list of allowed CORS origins for the web client.
     cors_origins: str = "https://infiniteai.space,https://www.infiniteai.space,http://localhost:5173,http://127.0.0.1:5173"
 
@@ -71,6 +89,17 @@ class Settings(BaseSettings):
         return bool(
             self.google_client_id
             and self.google_client_secret
+            and self.token_encryption_key
+        )
+
+    @property
+    def reminders_available(self) -> bool:
+        """Web Push reminders need a VAPID keypair (to sign pushes) and an
+        encryption key (subscription endpoints are stored encrypted at rest, like
+        calendar tokens). Without all three the whole subsystem stays dark."""
+        return bool(
+            self.vapid_public_key
+            and self.vapid_private_key
             and self.token_encryption_key
         )
 

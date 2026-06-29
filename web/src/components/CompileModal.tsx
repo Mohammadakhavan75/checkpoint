@@ -4,6 +4,7 @@ import { useCompile, useDeleteItem, useItem } from "../api/hooks";
 import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ReminderControl } from "./ReminderControl";
 
 // <input type="datetime-local"> speaks local wall-clock "YYYY-MM-DDTHH:mm";
 // the API speaks ISO-8601 with offset. Convert at the boundary.
@@ -363,6 +364,11 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               Due today (or overdue) and starting today pull into <b>Today</b>; the next{" "}
               {7} days show in <b>Ready to GO</b>.
             </div>
+          </div>
+
+          <div className="field">
+            <label>Reminder (optional) — a gentle ping, only if you feel up to it</label>
+            <ReminderControl itemId={item.id} startAt={item.start_at} deadline={item.deadline} />
           </div>
         </div>
         <footer>

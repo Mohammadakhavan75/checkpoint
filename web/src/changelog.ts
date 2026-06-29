@@ -15,6 +15,17 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.20.0",
+    date: "2026-06-29",
+    title: "Reminders that reach you",
+    notes: [
+      "You can now set a reminder on any task — pick a quick “in 1h / this evening / tomorrow 9am”, or a custom time — and Checkpoint will ping you, even with the tab closed.",
+      "Turn on reminders from your account menu: each notification carries your actual resume line so it’s useful the moment it arrives, and tapping it drops you straight back into that task.",
+      "Opt into a gentle resume nudge when Today is empty — at most one a day, silent when there’s nothing waiting, and it eases off instead of nagging. No streaks, no guilt.",
+      "Everything’s under your control: choose quiet hours, see and remove each device, and switch it all off in one tap.",
+    ],
+  },
+  {
     version: "0.19.0",
     date: "2026-06-28",
     title: "What's ready, at a glance",

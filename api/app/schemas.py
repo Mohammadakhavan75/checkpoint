@@ -355,3 +355,67 @@ class ItemOut(BaseModel):
 
 
 ItemOut.model_rebuild()
+
+
+# ----- reminders & web push (ADR-001) -----
+class VapidKeyOut(BaseModel):
+    key: str  # the public applicationServerKey (base64url) for subscribe()
+
+
+class PushKeys(BaseModel):
+    p256dh: str = Field(min_length=1)
+    auth: str = Field(min_length=1)
+
+
+class PushSubscriptionCreate(BaseModel):
+    """The browser's PushSubscription JSON (from pushManager.subscribe())."""
+
+    endpoint: str = Field(min_length=1)
+    keys: PushKeys
+    # navigator.userAgent, so the user can recognise/revoke a device.
+    user_agent: Optional[str] = None
+
+
+class PushSubscriptionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    user_agent: Optional[str] = None
+    created_at: datetime
+    last_used_at: Optional[datetime] = None
+
+
+class ReminderCreate(BaseModel):
+    item_id: uuid.UUID
+    fire_at: datetime  # absolute, tz-aware send time
+    kind: Literal["task"] = "task"
+
+
+class ReminderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    item_id: uuid.UUID
+    fire_at: datetime
+    kind: str
+    status: str
+    sent_at: Optional[datetime] = None
+    created_at: datetime
+
+
+class SettingsOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    reminders_enabled: bool = False
+    nudge_opt_in: bool = False
+    quiet_hours_start: Optional[str] = None
+    quiet_hours_end: Optional[str] = None
+    time_zone: Optional[str] = None
+
+
+class SettingsUpdate(BaseModel):
+    """All fields optional — PATCH semantics, only provided keys change."""
+
+    reminders_enabled: Optional[bool] = None
+    nudge_opt_in: Optional[bool] = None
+    # "HH:MM" 24h, or null to clear. Empty string also clears.
+    quiet_hours_start: Optional[str] = None
+    quiet_hours_end: Optional[str] = None
+    time_zone: Optional[str] = None

@@ -4,6 +4,7 @@ import { useItems } from "../api/hooks";
 import { useAuth } from "../auth";
 import { Loading } from "../components/atoms";
 import { ContainerCard } from "../components/ContainerCard";
+import { NudgeOptInLine } from "../components/NudgeOptInLine";
 import { ResumeCard } from "../components/ResumeCard";
 import { UnitRow } from "../components/UnitRow";
 
@@ -119,6 +120,7 @@ export function TodayView({
               It becomes a session; closing the session writes the checkpoint your next visit
               starts from. Or pull a compiled task in from <b>Ready to GO!</b>
             </div>
+            <NudgeOptInLine />
           </div>
         ) : null}
       </div>

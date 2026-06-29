@@ -21,3 +21,6 @@ requests>=2.31
 # Pure-Python, zero-dependency QR codes for TOTP enrollment (services/totp.py) —
 # the otpauth:// QR is rendered server-side so no QR library ships in the web bundle.
 segno>=1.6
+# Web Push (VAPID signing + AES128GCM payload encryption) for active reminders
+# (services/push.py). Pulls in py-vapid + http-ece; reuses cryptography above.
+pywebpush>=2.0

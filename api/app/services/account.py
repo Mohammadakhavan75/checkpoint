@@ -20,9 +20,12 @@ from ..models import (
     Checkpoint,
     Domain,
     Item,
+    PushSubscription,
+    Reminder,
     Snapshot,
     TwoFactorSettings,
     User,
+    UserSettings,
 )
 from .calendar_sync import revoke_token
 from .crypto import decrypt
@@ -65,6 +68,8 @@ async def delete_account(session: AsyncSession, user: User) -> None:
     await session.execute(
         delete(Snapshot).where(Snapshot.item_id.in_(owned_item_ids))
     )
+    # Reminders reference items (and the user); remove before items.
+    await session.execute(delete(Reminder).where(Reminder.owner_id == owner_id))
     await session.execute(delete(Item).where(Item.owner_id == owner_id))
     await session.execute(delete(Domain).where(Domain.owner_id == owner_id))
     await session.execute(
@@ -72,5 +77,11 @@ async def delete_account(session: AsyncSession, user: User) -> None:
     )
     await session.execute(
         delete(TwoFactorSettings).where(TwoFactorSettings.owner_id == owner_id)
+    )
+    await session.execute(
+        delete(PushSubscription).where(PushSubscription.owner_id == owner_id)
+    )
+    await session.execute(
+        delete(UserSettings).where(UserSettings.owner_id == owner_id)
     )
     await session.execute(delete(User).where(User.id == owner_id))

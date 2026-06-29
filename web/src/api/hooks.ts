@@ -216,3 +216,55 @@ export function useDeleteSnapshot() {
       qc.invalidateQueries({ queryKey: ["snapshots", vars.id] }),
   });
 }
+
+// ----- reminders & web push (ADR-001) -----
+export function useSettings(enabled = true) {
+  return useQuery({ queryKey: ["settings"], queryFn: api.getSettings, enabled });
+}
+
+export function useUpdateSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Parameters<typeof api.updateSettings>[0]) => api.updateSettings(patch),
+    onSuccess: (data) => qc.setQueryData(["settings"], data),
+  });
+}
+
+export function usePushDevices(enabled = true) {
+  return useQuery({ queryKey: ["push-devices"], queryFn: api.listPushDevices, enabled });
+}
+
+export function useDeletePushDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deletePushDevice(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["push-devices"] }),
+  });
+}
+
+export function useReminders(itemId: string | null) {
+  return useQuery({
+    queryKey: ["reminders", itemId],
+    queryFn: () => api.listReminders(itemId as string),
+    enabled: !!itemId,
+  });
+}
+
+export function useCreateReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { itemId: string; fireAt: string }) =>
+      api.createReminder(vars.itemId, vars.fireAt),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({ queryKey: ["reminders", vars.itemId] }),
+  });
+}
+
+export function useDeleteReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; itemId: string }) => api.deleteReminder(vars.id),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({ queryKey: ["reminders", vars.itemId] }),
+  });
+}

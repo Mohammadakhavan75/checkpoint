@@ -49,6 +49,17 @@ if (legalPage) {
   // Keep all tabs of this browser in sync the instant data changes.
   setupCrossTabSync(queryClient);
 
+  // Register the Web Push service worker (ADR-001). Guarded so unsupported
+  // browsers (and iOS Safari outside an installed PWA) silently skip it; the
+  // reminder UI handles "push unavailable here" on its own.
+  if ("serviceWorker" in navigator && "PushManager" in window) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        /* best-effort; reminders degrade to in-app when this fails */
+      });
+    });
+  }
+
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>

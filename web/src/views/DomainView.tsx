@@ -49,14 +49,16 @@ function BacklogRow({
       </div>
       <div className="acts">
         <StateSelect item={item} onChange={(s) => onState(item.id, s)} />
+        {/* Amber = the action this screen wants next: starting. Compiling is
+            preparation, so it stays quiet (REDESIGN_V1 §WS-3). */}
         <button
-          className="btn"
+          className="btn amber"
           title="Start a session now — skip compiling"
           onClick={() => onFastExecute(item.id, item.compiled)}
         >
           ⚡ Go
         </button>
-        <button className="btn amber" onClick={() => onCompile(item.id)}>
+        <button className="btn" onClick={() => onCompile(item.id)}>
           {item.compiled ? "Recompile" : "Compile"}
         </button>
       </div>
@@ -112,7 +114,7 @@ function ContainerGroup({
         </div>
         <div className="acts">
           <StateSelect item={item} onChange={(s) => onState(item.id, s)} />
-          <button className="btn amber" onClick={() => onCompile(item.id)}>
+          <button className="btn" onClick={() => onCompile(item.id)}>
             Edit phases
           </button>
         </div>

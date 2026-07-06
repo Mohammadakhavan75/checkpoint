@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useDomains } from "../api/hooks";
-import { RULES } from "../constants";
 import { UserMenu } from "./UserMenu";
 
 // Sentinel for the default "park in the reservoir" capture target.
@@ -16,13 +15,7 @@ export function Header({
 }) {
   const [text, setText] = useState("");
   const [target, setTarget] = useState(RESERVOIR);
-  const [ruleIdx, setRuleIdx] = useState(0);
   const domains = useDomains();
-
-  useEffect(() => {
-    const id = setInterval(() => setRuleIdx((i) => (i + 1) % RULES.length), 6000);
-    return () => clearInterval(id);
-  }, []);
 
   function submit() {
     if (!text.trim()) return;
@@ -42,9 +35,9 @@ export function Header({
       <span className="brand">
         CHECK<b>//</b>POINT
       </span>
-      <div className="ticker mono">
-        <b>RULE</b> · {RULES[ruleIdx]}
-      </div>
+      {/* Flexible gap where the RULE ticker used to live — the header's widest
+          slot now spends itself on nothing (REDESIGN_V1 §WS-1). */}
+      <div className="headgap" />
       <div className="cap">
         <span>CAP&gt;</span>
         <input

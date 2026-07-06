@@ -114,10 +114,10 @@ export function Sidebar({
 
       <div className="sect">
         <h4>
-          Reservoir
+          Parked
           <button
             className="addbtn"
-            title="Add a brain rot"
+            title="Park an idea"
             onClick={() => setAddingIdea((v) => !v)}
           >
             ＋
@@ -138,7 +138,7 @@ export function Sidebar({
           className={`navbtn ${tab === "reservoir" ? "on" : ""}`}
           onClick={() => onNav("reservoir")}
         >
-          ~ Brain Rots<span className="cnt">{reservoir.data?.length ?? 0}</span>
+          ~ Reservoir<span className="cnt">{reservoir.data?.length ?? 0}</span>
         </button>
         <button
           className={`navbtn ${tab === "trash" ? "on" : ""}`}

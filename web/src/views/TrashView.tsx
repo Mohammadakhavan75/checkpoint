@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEmptyTrash, useItems, usePermanentlyDeleteItem, useRestoreItem } from "../api/hooks";
 import { Loading } from "../components/atoms";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ViewHead } from "../components/ViewHead";
 
 const TTL_DAYS = 30;
 
@@ -27,14 +28,16 @@ export function TrashView() {
 
   return (
     <>
-      <div className="viewhead">
-        <h1>TRASH</h1>
-        <span className="sub">// deleted · auto-cleared after 30 days</span>
-      </div>
-      <p className="lead">
-        Deleted tasks rest here for <b>30 days</b> — restore one to where it was, or remove it for
-        good. After 30 days it's deleted automatically.
-      </p>
+      <ViewHead
+        title="TRASH"
+        sub="// deleted · auto-cleared after 30 days"
+        why={
+          <>
+            Deleted tasks rest here for <b>30 days</b> — restore one to where it was, or remove it
+            for good. After 30 days it&apos;s deleted automatically.
+          </>
+        }
+      />
       {list.length > 0 && (
         <div className="domain-tools" aria-label="Trash actions">
           <button className="btn danger" onClick={() => setEmptyAll(true)} disabled={emptyTrash.isPending}>

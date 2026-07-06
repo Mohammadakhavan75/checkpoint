@@ -51,9 +51,7 @@ header{
 .brand b{color:var(--amber)}
 .led{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2.6s infinite}
 @keyframes blink{0%,92%,100%{opacity:1}95%{opacity:.25}}
-.ticker{flex:1;min-width:0;overflow:hidden;border-left:1px solid var(--line);padding-left:16px;color:var(--faint);
-  font-family:'JetBrains Mono';font-size:12px;white-space:nowrap}
-.ticker b{color:var(--dim);font-weight:500}
+.headgap{flex:1;min-width:0} /* breathing room where the RULE ticker used to live */
 .cap{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line2);
   border-radius:7px;padding:6px 8px 6px 12px;min-width:340px}
 .cap span{color:var(--amber);font-family:'JetBrains Mono';font-weight:700;font-size:12px}
@@ -169,10 +167,15 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .sym{font-family:'JetBrains Mono';width:16px;text-align:center;font-weight:700}
 
 /* ===== views ===== */
-.viewhead{display:flex;align-items:flex-end;gap:14px;margin-bottom:4px}
+.viewhead{display:flex;align-items:flex-end;gap:14px;margin-bottom:16px}
 .viewhead h1{font-family:'JetBrains Mono';font-weight:800;font-size:24px;margin:0;letter-spacing:.5px}
 .viewhead .sub{color:var(--faint);font-size:12.5px;font-family:'JetBrains Mono';margin-bottom:3px}
-.lead{color:var(--dim);max-width:760px;margin:8px 0 22px;font-size:13.5px}
+/* "?" disclosure on a view header — reveals the view's philosophy paragraph */
+.whybtn{font-family:'JetBrains Mono';font-size:11px;line-height:1;color:var(--faint);
+  width:18px;height:18px;border:1px solid var(--line2);border-radius:50%;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;margin-bottom:4px}
+.whybtn:hover,.whybtn[aria-expanded="true"]{color:var(--amber);border-color:var(--amber2)}
+.lead{color:var(--dim);max-width:760px;margin:-6px 0 22px;font-size:13.5px}
 .domain-tools{display:flex;align-items:center;justify-content:flex-start;margin:10px 0 12px}
 .domain-filter{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:10.5px;
   letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
@@ -601,7 +604,6 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   .exec{grid-template-columns:1fr}
   .session .stage{grid-template-columns:1fr}
   .session .clockwrap{border-right:none;border-bottom:1px solid var(--line)}
-  .ticker{display:none}
   .cap{min-width:0;flex:1}
 }
 
@@ -629,7 +631,6 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
     display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
     font-size:18px;color:var(--dim);background:var(--panel2);border:1px solid var(--line2);border-radius:8px
   }
-  .ticker{display:none}
   .usermenu{margin-left:auto}
   .usertrigger .uname{display:none} /* avatar-only on phones; full name is in the menu */
   .cap{order:1;flex-basis:100%;min-width:0}

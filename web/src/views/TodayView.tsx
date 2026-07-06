@@ -7,6 +7,7 @@ import { ContainerCard } from "../components/ContainerCard";
 import { NudgeOptInLine } from "../components/NudgeOptInLine";
 import { ResumeCard } from "../components/ResumeCard";
 import { UnitRow } from "../components/UnitRow";
+import { ViewHead } from "../components/ViewHead";
 
 export function TodayView({
   onStart,
@@ -56,14 +57,12 @@ export function TodayView({
 
   return (
     <>
-      <div className="viewhead">
-        <h1>TODAY</h1>
-        <span className="sub">// executable units only</span>
-      </div>
-      <p className="lead">
-        Nothing vague is allowed to compete here. Every row has already been compiled into a
-        resumable unit with a concrete first action — so starting is safe, not dangerous.
-      </p>
+      <ViewHead
+        title="TODAY"
+        sub="// executable units only"
+        why="Nothing vague is allowed to compete here. Every row has already been compiled into a
+        resumable unit with a concrete first action — so starting is safe, not dangerous."
+      />
       {showCard && (
         <ResumeCard
           letter

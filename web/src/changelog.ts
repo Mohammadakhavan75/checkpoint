@@ -15,6 +15,19 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.21.0",
+    date: "2026-07-06",
+    title: "A quieter Checkpoint",
+    notes: [
+      "Every screen sheds its instruction manual: view intros now live behind a small “?” next to the title, the rule ticker is gone, and rows no longer repeat what their position already says. Your tasks are the loudest thing on the page again.",
+      "Closing a session no longer hides it — the checkpoint form opens over your live session, so your notes stay visible while you write the receipt from them, and going back returns you to an untouched timer.",
+      "Capture stays out of your way: dropping a thought no longer yanks you to the reservoir — the capture bar flashes where it landed and you keep working.",
+      "Settings grew up: two-step verification, reminders, calendar and account deletion moved from the avatar dropdown into a proper Settings screen.",
+      "Calendar events now read as what they are — a mirror of your calendar, not tasks pretending to be startable.",
+      "Under the hood for everyone: dialogs close on Escape and keep keyboard focus inside, form fields have clearly visible borders, and small tap targets grew to finger size.",
+    ],
+  },
+  {
     version: "0.20.0",
     date: "2026-06-29",
     title: "Reminders that reach you",

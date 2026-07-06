@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useSaveCheckpoint, useSetDaily } from "../api/hooks";
 import type { CheckpointSaved, Outcome } from "../types";
+import { useModalA11y } from "./useModalA11y";
 
 export function CheckpointModal({
   id,
@@ -30,6 +31,13 @@ export function CheckpointModal({
   const [err, setErr] = useState("");
   const [more, setMore] = useState(false);
   const full = !trimmed || more;
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  // Escape = Back while the form is open. Once the receipt is saved (the
+  // placement choice), Escape does nothing — the task needs a home.
+  useModalA11y(modalRef, () => {
+    if (!saved) onBack();
+  });
 
   // Done means finished — there is no next step, so the resume fields
   // (resume from / do-not-redo) don't apply.
@@ -75,16 +83,21 @@ export function CheckpointModal({
     const toResumable = saved.outcome === "active";
     const dest = toResumable ? "Resumable" : "Ready to GO!";
     return (
-      <div className="scrim">
-        <div className="modal">
+      <div className="scrim above-session">
+        <div
+          className="modal"
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ckpt-placement-title"
+        >
           <header>
             <span className="ic">⊟</span>
-            <h3>Checkpoint saved / where to next?</h3>
+            <h3 id="ckpt-placement-title">Checkpoint saved / where to next?</h3>
           </header>
           <div className="pad">
             <div className="note">
-              Session closed and the receipt is written. Move this task into <b>{dest}</b> to
-              clear it off Today, or keep it on Today to pick up again soon.
+              Receipt saved — where should this task wait?
             </div>
             <div className="placement">
               <button className="btn amber" disabled={daily.isPending} onClick={() => place(false)}>
@@ -101,17 +114,23 @@ export function CheckpointModal({
   }
 
   return (
-    <div className="scrim">
-      <div className="modal">
+    <div className="scrim above-session">
+      <div
+        className="modal"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ckpt-title"
+      >
         <header>
           <span className="ic">⊟</span>
-          <h3>Checkpoint / receipt</h3>
+          <h3 id="ckpt-title">Checkpoint / receipt</h3>
         </header>
         <div className="pad">
           <div className="note">
             {isDone
-              ? "Record how it ended so future-you trusts it's finished. This is mandatory to close."
-              : "Externalize the state so future-you resumes without rebuilding context. This is mandatory to close."}
+              ? "Record how it ended — this receipt is the proof."
+              : "Write where you stopped — future-you starts here."}
           </div>
           {full && (
             <div className="field">

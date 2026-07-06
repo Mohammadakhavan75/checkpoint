@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCompile, useDeleteItem, useItem } from "../api/hooks";
 import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ReminderControl } from "./ReminderControl";
+import { useModalA11y } from "./useModalA11y";
 
 // <input type="datetime-local"> speaks local wall-clock "YYYY-MM-DDTHH:mm";
 // the API speaks ISO-8601 with offset. Convert at the boundary.
@@ -43,6 +44,18 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const [endAt, setEndAt] = useState("");
   const [ready, setReady] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  // Escape = Cancel (an explicit key, unlike the guarded backdrop click);
+  // ignored while the delete confirm is stacked on top. The first render is a
+  // loading shell, so initial focus waits for `ready`.
+  useModalA11y(
+    modalRef,
+    () => {
+      if (!confirmDelete) onClose();
+    },
+    ready && !isLoading,
+  );
 
   useEffect(() => {
     if (!item || ready) return;
@@ -176,20 +189,22 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     {/* No backdrop-click close: compiling is data entry, and an accidental
         click outside the box shouldn't discard the work. Use ✕ or Cancel. */}
     <div className="scrim">
-      <div className="modal">
+      <div
+        className="modal"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compile-title"
+      >
         <header>
           <span className="ic">⚙</span>
-          <h3>Compile task</h3>
-          <button className="x" onClick={onClose}>
+          <h3 id="compile-title">Compile task</h3>
+          <button className="x" onClick={onClose} aria-label="Close">
             ×
           </button>
         </header>
         <div className="pad">
-          <div className="note">
-            Classify the task — that sets its <b>mode</b>. A{" "}
-            <b style={{ color: "var(--orange)" }}>Time trap</b> is broken into phases; everything
-            else gets a single first action.
-          </div>
+          <div className="note">Classify the task — that sets how you&apos;ll run it.</div>
 
           <div className="field">
             <label>Task</label>
@@ -248,8 +263,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
           {cont ? (
             <div className="field">
               <label>
-                Phases <span className="req">*</span> — a container is worked through its phases, not
-                directly
+                Phases <span className="req">*</span>
               </label>
               <div className="subs">
                 {phases.length ? (
@@ -288,10 +302,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               >
                 ＋ Add phase
               </button>
-              <div className="hint">
-                Each phase becomes its own startable unit. A phase with a first action goes straight
-                to Ready to GO.
-              </div>
+              <div className="hint">Each phase becomes its own startable task.</div>
             </div>
           ) : (
             <div className="field">
@@ -300,7 +311,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               </label>
               <input
                 value={firstAction}
-                placeholder="the exact first thing to open / run / read / write"
+                placeholder="first thing to open or run"
                 onChange={(e) => setFirstAction(e.target.value)}
               />
               <div className="hint">
@@ -324,16 +335,16 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
           </div>
 
           <div className="field">
-            <label>Risk (likely expansion points)</label>
+            <label>Risk (optional)</label>
             <input
               value={risk}
-              placeholder="known unknowns — optional"
+              placeholder="known unknowns"
               onChange={(e) => setRisk(e.target.value)}
             />
           </div>
 
           <div className="field">
-            <label>Schedule (optional) — surfaces this task in Today / Ready by date</label>
+            <label>Schedule (optional)</label>
             <div className="schedule-grid">
               <label className="sched-cell">
                 <span>Deadline</span>
@@ -361,13 +372,12 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               </label>
             </div>
             <div className="hint">
-              Due today (or overdue) and starting today pull into <b>Today</b>; the next{" "}
-              {7} days show in <b>Ready to GO</b>.
+              Due or starting today → <b>Today</b>; next 7 days → <b>Ready to GO</b>.
             </div>
           </div>
 
           <div className="field">
-            <label>Reminder (optional) — a gentle ping, only if you feel up to it</label>
+            <label>Reminder (optional)</label>
             <ReminderControl itemId={item.id} startAt={item.start_at} deadline={item.deadline} />
           </div>
         </div>

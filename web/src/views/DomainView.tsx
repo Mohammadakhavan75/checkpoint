@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { useItems, useSetState } from "../api/hooks";
 import { Chip, Loading, Marker, ModeChip, StateSelect } from "../components/atoms";
+import { ViewHead } from "../components/ViewHead";
 import { STATE_ORDER, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
 
@@ -42,29 +43,22 @@ function BacklogRow({
       <div className="ttl">
         <div className="name">{item.title}</div>
         <div className="meta">
-          {item.compiled ? (
-            <span style={{ color: "var(--dim)" }}>compiled</span>
-          ) : (
-            <span style={{ color: "var(--orange)" }}>not compiled</span>
-          )}
           <ModeChip mode={item.mode} />
-          {item.daily ? (
-            <span style={{ color: "var(--amber)" }}>on today</span>
-          ) : item.compiled ? (
-            <span style={{ color: "var(--cyan)" }}>ready to go</span>
-          ) : null}
+          {item.daily && <span style={{ color: "var(--amber)" }}>on today</span>}
         </div>
       </div>
       <div className="acts">
         <StateSelect item={item} onChange={(s) => onState(item.id, s)} />
+        {/* Amber = the action this screen wants next: starting. Compiling is
+            preparation, so it stays quiet (REDESIGN_V1 §WS-3). */}
         <button
-          className="btn"
+          className="btn amber"
           title="Start a session now — skip compiling"
           onClick={() => onFastExecute(item.id, item.compiled)}
         >
           ⚡ Go
         </button>
-        <button className="btn amber" onClick={() => onCompile(item.id)}>
+        <button className="btn" onClick={() => onCompile(item.id)}>
           {item.compiled ? "Recompile" : "Compile"}
         </button>
       </div>
@@ -107,7 +101,6 @@ function ContainerGroup({
         <div className="ttl">
           <div className="name">{item.title}</div>
           <div className="meta">
-            <span style={{ color: "var(--violet)" }}>container</span>
             <ModeChip mode="Plan" />
             <Chip state={item.state} />
             <span className="prog">
@@ -116,16 +109,12 @@ function ContainerGroup({
             <span className="mono" style={{ fontSize: 11, color: "var(--dim)" }}>
               {done}/{total} phases
             </span>
-            {item.daily ? (
-              <span style={{ color: "var(--amber)" }}>on today</span>
-            ) : item.compiled ? (
-              <span style={{ color: "var(--cyan)" }}>ready to go</span>
-            ) : null}
+            {item.daily && <span style={{ color: "var(--amber)" }}>on today</span>}
           </div>
         </div>
         <div className="acts">
           <StateSelect item={item} onChange={(s) => onState(item.id, s)} />
-          <button className="btn amber" onClick={() => onCompile(item.id)}>
+          <button className="btn" onClick={() => onCompile(item.id)}>
             Edit phases
           </button>
         </div>
@@ -232,10 +221,18 @@ export function DomainView({
 
   return (
     <>
-      <div className="viewhead">
-        <h1>{domain}</h1>
-        <span className="sub">// domain backlog</span>
-      </div>
+      <ViewHead
+        title={domain}
+        sub="// domain backlog"
+        why={
+          <>
+            An inventory of possible work states — not a todo list. Set each item&apos;s state. The
+            dangerous state is{" "}
+            <b style={{ color: "var(--yellow)" }}>important-but-undefined</b>: compile it, defer
+            it, or kill it.
+          </>
+        }
+      />
       <div className="domain-tools" aria-label="Domain filters">
         <label className="domain-filter">
           <span>Status</span>
@@ -251,11 +248,6 @@ export function DomainView({
           </select>
         </label>
       </div>
-      <p className="lead">
-        An inventory of possible work states — not a todo list. Set each item's state. The
-        dangerous state is <b style={{ color: "var(--yellow)" }}>important-but-undefined</b>:
-        compile it, defer it, or kill it.
-      </p>
       {visibleItems.length ? (
         <>
           <div className="backlog-group">

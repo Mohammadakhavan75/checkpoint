@@ -116,43 +116,55 @@ export function UnitRow({
               <span>{item.domain}</span>
               {item.parent_id && <span style={{ color: "var(--violet)" }}>↳ phase</span>}
               {!isEvent && <ModeChip mode={item.mode} />}
-              <Chip state={item.state} />
+              {/* Mirrored events have no lifecycle — a state chip on a meeting
+                  is noise (REDESIGN_V1 §WS-7) */}
+              {!isEvent && <Chip state={item.state} />}
               {isEvent ? <EventTimeChip item={item} /> : <ScheduleChip item={item} />}
             </div>
           </div>
-          <div className="acts">
-            {ctx === "today" ? (
-              <button className="btn amber" onClick={() => onStart(item.id)}>
-                {resumable ? "⟲ Resume" : "▸ Start"}
+          {/* Read-only mirror: events can't be started or compiled — the only
+              action is the Google Calendar link in the body. */}
+          {!isEvent && (
+            <div className="acts">
+              {ctx === "today" ? (
+                <button className="btn amber" onClick={() => onStart(item.id)}>
+                  {resumable ? "⟲ Resume" : "▸ Start"}
+                </button>
+              ) : (
+                <button className="btn amber" onClick={() => onToDaily(item.id)}>
+                  → Today
+                </button>
+              )}
+              <button className="btn" onClick={() => onEdit(item.id)}>
+                Edit
               </button>
-            ) : (
-              <button className="btn amber" onClick={() => onToDaily(item.id)}>
-                → Today
-              </button>
-            )}
-            <button className="btn" onClick={() => onEdit(item.id)}>
-              Edit
-            </button>
-          </div>
+            </div>
+          )}
         </div>
         {isEvent ? (
           <EventBody item={item} />
-        ) : (
-          <div className="exec">
-            <div>
-              <div className="k">First action</div>
-              <div className="v">{f.firstAction || "—"}</div>
-            </div>
-            <div>
-              <div className="k">Description</div>
-              <div className="v">{f.description || "—"}</div>
-            </div>
+        ) : f.firstAction || f.description ? (
+          // Empty fields render nothing — a labeled "—" is pure noise
+          // (REDESIGN_V1 §WS-2). A lone cell spans the full row.
+          <div className={`exec ${f.firstAction && f.description ? "" : "solo"}`}>
+            {f.firstAction && (
+              <div>
+                <div className="k">First action</div>
+                <div className="v">{f.firstAction}</div>
+              </div>
+            )}
+            {f.description && (
+              <div>
+                <div className="k">Description</div>
+                <div className="v">{f.description}</div>
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
         {cp && (
           <div className="resume">
-            ⟲ RESUME FROM <b>{cp.resume_from || f.resumeFrom}</b> · do not redo:{" "}
-            {cp.do_not_redo || "—"}
+            ⟲ RESUME FROM <b>{cp.resume_from || f.resumeFrom}</b>
+            {cp.do_not_redo && <> · do not redo: {cp.do_not_redo}</>}
           </div>
         )}
       </div>

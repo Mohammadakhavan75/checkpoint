@@ -4,6 +4,7 @@ import { useItems, useSetDaily } from "../api/hooks";
 import { Loading } from "../components/atoms";
 import { ContainerCard } from "../components/ContainerCard";
 import { UnitRow } from "../components/UnitRow";
+import { ViewHead } from "../components/ViewHead";
 
 export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
   const { data, isLoading } = useItems("ready");
@@ -18,10 +19,16 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
   const list = category === "all" ? items : items.filter((i) => i.domain === category);
   return (
     <>
-      <div className="viewhead">
-        <h1>READY TO GO!</h1>
-        <span className="sub">// compiled · waiting to be activated</span>
-      </div>
+      <ViewHead
+        title="READY TO GO!"
+        sub="// compiled · waiting"
+        why={
+          <>
+            Every task here is already a resumable unit. When you&apos;re ready to work one, pull
+            it into <b>Today</b>.
+          </>
+        }
+      />
       {categories.length > 1 && (
         <div className="domain-tools" aria-label="Ready filters">
           <label className="domain-filter">
@@ -37,10 +44,6 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
           </label>
         </div>
       )}
-      <p className="lead">
-        Every task here is already a resumable unit. When you're ready to work one, pull it into{" "}
-        <b>Today</b>.
-      </p>
       <div className="rows">
         {list.length ? (
           list.map((item, idx) =>

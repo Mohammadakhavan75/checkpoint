@@ -1,5 +1,6 @@
 import { useDeleteItem, useDomains, useItems, usePromote } from "../api/hooks";
 import { Loading } from "../components/atoms";
+import { ViewHead } from "../components/ViewHead";
 import type { Tab } from "../types";
 
 export function ReservoirView({ onNav }: { onNav: (tab: Tab, domain?: string) => void }) {
@@ -16,14 +17,16 @@ export function ReservoirView({ onNav }: { onNav: (tab: Tab, domain?: string) =>
 
   return (
     <>
-      <div className="viewhead">
-        <h1>BRAIN ROTS</h1>
-        <span className="sub">// curiosity reservoir</span>
-      </div>
-      <p className="lead">
-        Attractive ideas live here <em>before</em> they become commitments. They never reach{" "}
-        <b>Today</b> until promoted into a domain and compiled into a concrete artifact.
-      </p>
+      <ViewHead
+        title="RESERVOIR"
+        sub="// where brain rots wait"
+        why={
+          <>
+            Attractive ideas live here <em>before</em> they become commitments. They never reach{" "}
+            <b>Today</b> until promoted into a domain and compiled into a concrete artifact.
+          </>
+        }
+      />
       <div className="rows">
         {list.length ? (
           list.map((item, idx) => (
@@ -33,10 +36,6 @@ export function ReservoirView({ onNav }: { onNav: (tab: Tab, domain?: string) =>
               </span>
               <div className="ttl">
                 <div className="name">{item.title}</div>
-                <div className="meta">
-                  <span>parked idea</span>
-                  <span>not a daily task</span>
-                </div>
               </div>
               <div className="acts">
                 <select

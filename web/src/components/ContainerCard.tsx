@@ -41,7 +41,6 @@ export function ContainerCard({
           <div className="name">{item.title}</div>
           <div className="meta">
             <span>{item.domain}</span>
-            <span style={{ color: "var(--violet)" }}>container</span>
             <ModeChip mode="Plan" />
             <Chip state={item.state} />
             <span className="prog">

@@ -166,10 +166,11 @@ export function App() {
         <CalendarReauthBanner />
         <Header
           onMenuToggle={() => setNavOpen((v) => !v)}
-          onCapture={(text, captureDomain) => {
-            capture.mutate({ text, domain: captureDomain });
-            if (captureDomain) nav("domain", captureDomain);
-            else setTab("reservoir");
+          // Capture never navigates — you stay where you are and the capture
+          // bar flashes the destination (REDESIGN_V1 §WS-5). The sidebar count
+          // bump (query invalidation) is the second confirmation.
+          onCapture={async (text, captureDomain) => {
+            await capture.mutateAsync({ text, domain: captureDomain });
           }}
         />
         <div className="body">

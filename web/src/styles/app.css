@@ -54,7 +54,9 @@ header{
 .headgap{flex:1;min-width:0} /* breathing room where the RULE ticker used to live */
 .cap{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line2);
   border-radius:7px;padding:6px 8px 6px 12px;min-width:340px}
-.cap span{color:var(--amber);font-family:'JetBrains Mono';font-weight:700;font-size:12px}
+.cap span{color:var(--amber);font-family:'JetBrains Mono';font-weight:700;font-size:12px;white-space:nowrap}
+.cap span.capflash{color:var(--green)} /* capture landed — bar announces the destination */
+.cap span.capflash.err{color:var(--red)}
 /* min-width:0 — an input's intrinsic width (~175px at the 16px coarse-pointer
    size) would otherwise floor the row and overflow phone viewports */
 .cap input{flex:1;min-width:0;background:none;border:none;outline:none;font-size:13px}

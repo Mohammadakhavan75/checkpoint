@@ -1,16 +1,13 @@
 import { useItems } from "../api/hooks";
-import { useAuth } from "../auth";
 import { Loading } from "../components/atoms";
 import { ResumeCard } from "../components/ResumeCard";
 import { ViewHead } from "../components/ViewHead";
 
 // The shelf of everything past-you left mid-flight: every task whose last
-// checkpoint said "continue", off Today. Each one is a "Dear future you" letter
-// card — the same warm return framing as the Today welcome, but for the whole
-// set instead of just the freshest.
+// checkpoint said "continue", off Today. Plain receipt cards — the letter
+// greeting stays unique to the Today return moment (REDESIGN_V1 §WS-2).
 export function ResumableView({ onStart }: { onStart: (id: string) => void }) {
   const { data, isLoading } = useItems("resumable");
-  const { user } = useAuth();
 
   if (isLoading) return <Loading />;
   const list = (data ?? []).filter((i) => i.latest_checkpoint);
@@ -28,8 +25,6 @@ export function ResumableView({ onStart }: { onStart: (id: string) => void }) {
           list.map((item) => (
             <ResumeCard
               key={item.id}
-              letter
-              userName={user?.name}
               title={item.title}
               checkpoint={item.latest_checkpoint!}
               onResume={() => onStart(item.id)}

@@ -83,8 +83,7 @@ export function CheckpointModal({
           </header>
           <div className="pad">
             <div className="note">
-              Session closed and the receipt is written. Move this task into <b>{dest}</b> to
-              clear it off Today, or keep it on Today to pick up again soon.
+              Receipt saved — where should this task wait?
             </div>
             <div className="placement">
               <button className="btn amber" disabled={daily.isPending} onClick={() => place(false)}>
@@ -110,8 +109,8 @@ export function CheckpointModal({
         <div className="pad">
           <div className="note">
             {isDone
-              ? "Record how it ended so future-you trusts it's finished. This is mandatory to close."
-              : "Externalize the state so future-you resumes without rebuilding context. This is mandatory to close."}
+              ? "Record how it ended — this receipt is the proof."
+              : "Write where you stopped — future-you starts here."}
           </div>
           {full && (
             <div className="field">

@@ -137,22 +137,28 @@ export function UnitRow({
         </div>
         {isEvent ? (
           <EventBody item={item} />
-        ) : (
-          <div className="exec">
-            <div>
-              <div className="k">First action</div>
-              <div className="v">{f.firstAction || "—"}</div>
-            </div>
-            <div>
-              <div className="k">Description</div>
-              <div className="v">{f.description || "—"}</div>
-            </div>
+        ) : f.firstAction || f.description ? (
+          // Empty fields render nothing — a labeled "—" is pure noise
+          // (REDESIGN_V1 §WS-2). A lone cell spans the full row.
+          <div className={`exec ${f.firstAction && f.description ? "" : "solo"}`}>
+            {f.firstAction && (
+              <div>
+                <div className="k">First action</div>
+                <div className="v">{f.firstAction}</div>
+              </div>
+            )}
+            {f.description && (
+              <div>
+                <div className="k">Description</div>
+                <div className="v">{f.description}</div>
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
         {cp && (
           <div className="resume">
-            ⟲ RESUME FROM <b>{cp.resume_from || f.resumeFrom}</b> · do not redo:{" "}
-            {cp.do_not_redo || "—"}
+            ⟲ RESUME FROM <b>{cp.resume_from || f.resumeFrom}</b>
+            {cp.do_not_redo && <> · do not redo: {cp.do_not_redo}</>}
           </div>
         )}
       </div>

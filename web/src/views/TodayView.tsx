@@ -116,8 +116,7 @@ export function TodayView({
               </button>
             </form>
             <div className="empty-hint">
-              It becomes a session; closing the session writes the checkpoint your next visit
-              starts from. Or pull a compiled task in from <b>Ready to GO!</b>
+              Closing the session writes the checkpoint your next visit starts from.
             </div>
             <NudgeOptInLine />
           </div>

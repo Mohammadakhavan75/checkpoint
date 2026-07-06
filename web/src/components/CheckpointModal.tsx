@@ -75,7 +75,7 @@ export function CheckpointModal({
     const toResumable = saved.outcome === "active";
     const dest = toResumable ? "Resumable" : "Ready to GO!";
     return (
-      <div className="scrim">
+      <div className="scrim above-session">
         <div className="modal">
           <header>
             <span className="ic">⊟</span>
@@ -100,7 +100,7 @@ export function CheckpointModal({
   }
 
   return (
-    <div className="scrim">
+    <div className="scrim above-session">
       <div className="modal">
         <header>
           <span className="ic">⊟</span>

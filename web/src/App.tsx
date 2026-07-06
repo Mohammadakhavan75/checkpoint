@@ -208,7 +208,10 @@ export function App() {
 
       {compileId && <CompileModal id={compileId} onClose={() => setCompileId(null)} />}
 
-      {sessionId && sessionItem && !checkpointOpen && (
+      {/* The session stays mounted while the checkpoint form is open — the
+          notes remain visible behind the receipt being written from them, and
+          Back returns with the timer/vitals intact (REDESIGN_V1 §WS-4). */}
+      {sessionId && sessionItem && (
         <SessionOverlay
           item={sessionItem}
           onAbandon={() => setSessionId(null)}

@@ -47,10 +47,15 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
 
   const modalRef = useRef<HTMLDivElement>(null);
   // Escape = Cancel (an explicit key, unlike the guarded backdrop click);
-  // ignored while the delete confirm is stacked on top.
-  useModalA11y(modalRef, () => {
-    if (!confirmDelete) onClose();
-  });
+  // ignored while the delete confirm is stacked on top. The first render is a
+  // loading shell, so initial focus waits for `ready`.
+  useModalA11y(
+    modalRef,
+    () => {
+      if (!confirmDelete) onClose();
+    },
+    ready && !isLoading,
+  );
 
   useEffect(() => {
     if (!item || ready) return;

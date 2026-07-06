@@ -9,13 +9,27 @@ const FOCUSABLE =
  *  modal that swaps its subtree (e.g. checkpoint form → placement choice)
  *  keeps working; `onClose` is read through a ref so the handler always sees
  *  the caller's latest state. */
-export function useModalA11y(ref: RefObject<HTMLElement | null>, onClose: () => void) {
+export function useModalA11y(
+  ref: RefObject<HTMLElement | null>,
+  onClose: () => void,
+  // Modals that first render a loading shell (no focusables) pass their
+  // ready flag here so initial focus lands once the real form exists.
+  active = true,
+) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
 
   useEffect(() => {
-    ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    if (!active) return;
+    const el = ref.current;
+    if (!el) return;
+    // Land on the first form field (the work), not the header ✕.
+    const field = el.querySelector<HTMLElement>("input,textarea,select");
+    (field ?? el.querySelector<HTMLElement>(FOCUSABLE))?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const el = ref.current;
       if (!el) return;

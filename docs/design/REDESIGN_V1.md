@@ -176,7 +176,7 @@ Implementation order = commit order. Each WS is one reviewable commit.
 
 **a11y (all pre-measured in the critiques):**
 1. `CompileModal` + `CheckpointModal`: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` (header `h3` id), Escape handler (Compile: Escape = Cancel; Checkpoint: Escape = Back). New tiny hook `useModalA11y(ref, onClose)` shared by both — also traps Tab within the modal and focuses the first focusable on mount.
-2. Input border contrast: new token `--line3:#4b586a` (≥3:1 on `--ink` — verify computationally) applied to form-control borders only: `.field input/textarea/select, .addinput, .cap, .empty-cap input, .composer-title, .bridge input, .subrow input, .pomostep`. Leave decorative hairlines (`--line`, `--line2`) untouched.
+2. Input border contrast: new token `--line3:#5a6a82` (measured 3.54:1 on ink, 3.30 on panel, 3.14 on panel2 — `#4b586a` from the first draft only reached 2.69) applied to form-control borders only: `.field input/textarea/select, .addinput, .cap, .empty-cap input, .composer-title, .bridge input, .subrow input, .pomostep`. Leave decorative hairlines (`--line`, `--line2`) untouched.
 3. `pointer:coarse` additions: `.rc-dismiss, .linkbtn, .ctxmore, .morebtn, .acct-delete-link, .rmc-trigger, .nudge-optin-btn, .whybtn` → `min-height:44px` (inline-flex + padding).
 4. Reduced-motion: extend the existing guard to `.led`, `.ckl .slash` pulse.
 5. `--faint` on `--panel2` measured 4.29:1 — where faint text sits on panel2 at <14px (`.cap kbd`, `.rmnd-state`), use `--dim` instead.

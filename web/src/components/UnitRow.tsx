@@ -116,24 +116,30 @@ export function UnitRow({
               <span>{item.domain}</span>
               {item.parent_id && <span style={{ color: "var(--violet)" }}>↳ phase</span>}
               {!isEvent && <ModeChip mode={item.mode} />}
-              <Chip state={item.state} />
+              {/* Mirrored events have no lifecycle — a state chip on a meeting
+                  is noise (REDESIGN_V1 §WS-7) */}
+              {!isEvent && <Chip state={item.state} />}
               {isEvent ? <EventTimeChip item={item} /> : <ScheduleChip item={item} />}
             </div>
           </div>
-          <div className="acts">
-            {ctx === "today" ? (
-              <button className="btn amber" onClick={() => onStart(item.id)}>
-                {resumable ? "⟲ Resume" : "▸ Start"}
+          {/* Read-only mirror: events can't be started or compiled — the only
+              action is the Google Calendar link in the body. */}
+          {!isEvent && (
+            <div className="acts">
+              {ctx === "today" ? (
+                <button className="btn amber" onClick={() => onStart(item.id)}>
+                  {resumable ? "⟲ Resume" : "▸ Start"}
+                </button>
+              ) : (
+                <button className="btn amber" onClick={() => onToDaily(item.id)}>
+                  → Today
+                </button>
+              )}
+              <button className="btn" onClick={() => onEdit(item.id)}>
+                Edit
               </button>
-            ) : (
-              <button className="btn amber" onClick={() => onToDaily(item.id)}>
-                → Today
-              </button>
-            )}
-            <button className="btn" onClick={() => onEdit(item.id)}>
-              Edit
-            </button>
-          </div>
+            </div>
+          )}
         </div>
         {isEvent ? (
           <EventBody item={item} />

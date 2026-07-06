@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCompile, useDeleteItem, useItem } from "../api/hooks";
 import { CLASS_MODE, QUAD } from "../constants";
 import type { CompilePayload, PhaseInput, Procedure, Scope } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ReminderControl } from "./ReminderControl";
+import { useModalA11y } from "./useModalA11y";
 
 // <input type="datetime-local"> speaks local wall-clock "YYYY-MM-DDTHH:mm";
 // the API speaks ISO-8601 with offset. Convert at the boundary.
@@ -43,6 +44,13 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const [endAt, setEndAt] = useState("");
   const [ready, setReady] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  // Escape = Cancel (an explicit key, unlike the guarded backdrop click);
+  // ignored while the delete confirm is stacked on top.
+  useModalA11y(modalRef, () => {
+    if (!confirmDelete) onClose();
+  });
 
   useEffect(() => {
     if (!item || ready) return;
@@ -176,11 +184,17 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     {/* No backdrop-click close: compiling is data entry, and an accidental
         click outside the box shouldn't discard the work. Use ✕ or Cancel. */}
     <div className="scrim">
-      <div className="modal">
+      <div
+        className="modal"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compile-title"
+      >
         <header>
           <span className="ic">⚙</span>
-          <h3>Compile task</h3>
-          <button className="x" onClick={onClose}>
+          <h3 id="compile-title">Compile task</h3>
+          <button className="x" onClick={onClose} aria-label="Close">
             ×
           </button>
         </header>

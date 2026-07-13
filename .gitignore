@@ -24,3 +24,6 @@ test-results/
 .runtime/
 postgres-data/
 graphify-out/
+.mcp.json
+mcp/.venv/
+mcp/.env

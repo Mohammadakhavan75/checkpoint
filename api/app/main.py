@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import ai, auth, checkpoints, domains, integrations, items, reminders, snapshots
+from .api import agent, ai, auth, checkpoints, domains, integrations, items, reminders, snapshots
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,7 @@ app.include_router(snapshots.router, prefix="/api/items", tags=["snapshots"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(integrations.router, prefix="/api/integrations", tags=["integrations"])
 app.include_router(reminders.router, prefix="/api", tags=["reminders"])
+app.include_router(agent.router, prefix="/api/agent", tags=["agent"])
 
 
 @app.get("/api/health", tags=["health"])

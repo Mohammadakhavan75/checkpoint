@@ -186,3 +186,6 @@ checkpoint/
 
 `/api/ai/*` is mounted but stubbed (`501`) — a clean seam for later resume-summary (SSE) and
 compile-assist endpoints. The checkpoint schema is already an ideal LLM context payload.
+
+Agent access now exists via the local MCP server (`mcp/`) and PAT-authenticated `/api/agent/*`
+routes — see [docs/product/OBJECT_PERMANENCE_MCP.md](docs/product/OBJECT_PERMANENCE_MCP.md).

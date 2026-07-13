@@ -15,6 +15,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.0",
+    date: "2026-07-13",
+    title: "Your agent can hold the thread too",
+    notes: [
+      "Checkpoint now speaks to AI coding agents, not just to you. Claude Code (or any MCP-capable assistant) can orient itself on your open work, read a container's phases and receipts, and leave its own checkpoint before it runs out of room — so a session that dies mid-task resumes cleanly instead of losing everything.",
+      "Agents only ever write receipts, never decisions: they can park a stray idea in the reservoir or in a domain you already have, but compiling, promoting, and reorganizing stay entirely yours.",
+      "Access is a personal access token you mint yourself from the command line — nothing new to look at in the app, and nothing an agent can reach beyond its own small, PAT-only door.",
+    ],
+  },
+  {
     version: "0.21.0",
     date: "2026-07-06",
     title: "A quieter Checkpoint",

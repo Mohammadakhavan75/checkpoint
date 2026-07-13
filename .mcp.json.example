@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "checkpoint": {
+      "command": "mcp/.venv/bin/python",
+      "args": ["mcp/checkpoint_mcp.py"],
+      "env": {
+        "CHECKPOINT_API_BASE": "http://localhost:8000/api",
+        "CHECKPOINT_PAT": "${CHECKPOINT_PAT}"
+      }
+    }
+  }
+}

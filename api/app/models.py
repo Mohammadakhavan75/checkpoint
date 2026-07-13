@@ -455,3 +455,46 @@ class UserSettings(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+
+class PersonalAccessToken(Base):
+    """A long-lived bearer credential for the agent API (`/api/agent/*`).
+
+    Minted by the owner via CLI (`python -m app.pat`), shown once, stored as a
+    SHA-256 hash. PATs deliberately bypass the interactive login (and 2FA), so
+    they are valid ONLY on the agent router — never on the main API — and are
+    revocable row-by-row. See docs/product/OBJECT_PERMANENCE_MCP.md.
+    """
+
+    __tablename__ = "personal_access_tokens"
+    __table_args__ = (
+        UniqueConstraint("token_hash", name="uq_pats_token_hash"),
+        Index("ix_pats_owner", "owner_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    # human label, e.g. "claude-code-macbook"
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    # sha256 hex of the full raw token; the raw token is never stored
+    token_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    # first characters of the raw token (identification/revocation display only)
+    token_prefix: Mapped[str] = mapped_column(Text, nullable=False)
+    # reserved for v1 granular scopes; constant "agent" in v0
+    scopes: Mapped[str] = mapped_column(
+        Text, nullable=False, default="agent", server_default="agent"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

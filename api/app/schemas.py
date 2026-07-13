@@ -419,3 +419,74 @@ class SettingsUpdate(BaseModel):
     quiet_hours_start: Optional[str] = None
     quiet_hours_end: Optional[str] = None
     time_zone: Optional[str] = None
+
+
+# ----- agent API (MCP v0) -----
+class AgentPhaseOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    state: str
+    compiled: bool
+    first_action: str = ""
+    latest_checkpoint: Optional[CheckpointOut] = None
+
+
+class AgentItemSummary(BaseModel):
+    id: uuid.UUID
+    title: str
+    domain: str
+    state: str
+    compiled: bool
+    is_parent: bool = False
+    phases_total: int = 0
+    phases_done: int = 0
+    latest_checkpoint: Optional[CheckpointOut] = None
+
+
+class AgentOrientOut(BaseModel):
+    user_name: str
+    server_time: datetime
+    protocol: str
+    domains: list[str] = Field(default_factory=list)
+    reservoir_count: int = 0
+    items: list[AgentItemSummary] = Field(default_factory=list)
+
+
+class AgentSnapshotOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    title: Optional[str] = None
+    note: Optional[str] = None
+    created_at: datetime
+
+
+class AgentItemDetail(BaseModel):
+    id: uuid.UUID
+    title: str
+    domain: str
+    state: str
+    mode: Optional[str] = None
+    compiled: bool
+    procedure: Optional[str] = None
+    scope: Optional[str] = None
+    description: str = ""
+    first_action: str = ""
+    deadline: Optional[datetime] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    phases: list[AgentPhaseOut] = Field(default_factory=list)
+    checkpoints: list[CheckpointOut] = Field(default_factory=list)
+    snapshots: list[AgentSnapshotOut] = Field(default_factory=list)
+
+
+class AgentCaptureRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
+    # Optional existing domain name; omitted = Reservoir. The agent may not
+    # invent domains — validated against the user's Domain registry.
+    domain: Optional[str] = None
+
+
+class AgentCaptureOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    domain: str
+    state: str

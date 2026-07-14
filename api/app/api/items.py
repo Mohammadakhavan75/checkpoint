@@ -81,22 +81,24 @@ def _day_window(tz_name: str | None) -> tuple[datetime, datetime, datetime]:
 
 
 def _today_clause(day0: datetime, day1: datetime):
-    """Items that belong in Today: manually pulled, starting today, or due
-    today / overdue. Each branch guards its time column against NULL so the OR
-    stays a clean boolean (no three-valued surprises)."""
+    """Items that belong in Today: manually pulled, starting today, ending
+    today, or due today / overdue. Each branch guards its time column against
+    NULL so the OR stays a clean boolean (no three-valued surprises)."""
     return or_(
         Item.daily.is_(True),
         and_(Item.start_at.is_not(None), Item.start_at >= day0, Item.start_at < day1),
+        and_(Item.end_at.is_not(None), Item.end_at >= day0, Item.end_at < day1),
         and_(Item.deadline.is_not(None), Item.deadline < day1, Item.state != "done"),
     )
 
 
 def _ready_clause(day1: datetime, horizon: datetime):
     """Items "on deck" for Ready: already-compiled units, or anything scheduled
-    to start / fall due within the upcoming horizon (but not yet today)."""
+    to start / end / fall due within the upcoming horizon (but not yet today)."""
     return or_(
         Item.compiled.is_(True),
         and_(Item.start_at.is_not(None), Item.start_at >= day1, Item.start_at < horizon),
+        and_(Item.end_at.is_not(None), Item.end_at >= day1, Item.end_at < horizon),
         and_(Item.deadline.is_not(None), Item.deadline >= day1, Item.deadline < horizon),
     )
 
@@ -129,7 +131,7 @@ def _sched_key(item: Item) -> tuple[int, datetime]:
     """Sort key: scheduled rows first by soonest start/deadline, then the rest
     by creation time. The leading flag keeps the two groups from comparing
     across each other."""
-    when = item.start_at or item.deadline
+    when = item.start_at or item.deadline or item.end_at
     return (0, when) if when is not None else (1, item.created_at)
 
 

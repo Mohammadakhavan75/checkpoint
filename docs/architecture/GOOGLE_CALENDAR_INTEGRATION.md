@@ -219,11 +219,12 @@ Let `[day0, day1)` = the user's local "today" in `connection.time_zone`; `horizo
 **Today** = union of:
 - `daily = true` (manual pull — unchanged), **plus**
 - `start_at ∈ [day0, day1)` (happening today — events and timed tasks), **plus**
+- `end_at ∈ [day0, day1)` (ending today — covers tasks scheduled with only an end time), **plus**
 - `deadline < day1 and state ∉ (done, killed)` (due today **or overdue**).
 
 **Ready to GO!** = union of:
 - existing: `compiled = true and daily = false and state ∉ (killed, done)`, **plus**
-- `start_at ∈ [day1, horizon)` or `deadline ∈ [day1, horizon)` (on deck, not yet today),
+- `start_at ∈ [day1, horizon)` or `end_at ∈ [day1, horizon)` or `deadline ∈ [day1, horizon)` (on deck, not yet today),
 
 minus anything already in Today. All excluding `state='killed'`. Top-level/container nesting and
 the leaf-checkpoint behavior in `_serialize_top_level` are preserved. Mirrored events are leaves

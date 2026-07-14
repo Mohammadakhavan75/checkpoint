@@ -1,5 +1,5 @@
 import type { Item } from "../types";
-import { Chip, Marker, ModeChip } from "./atoms";
+import { Chip, Marker, ModeChip, ScheduleChip } from "./atoms";
 
 // A container (parent task) as it appears in Ready to GO and Today: the whole
 // thing moves as one unit, with its phases nested underneath. In Ready it can
@@ -43,6 +43,7 @@ export function ContainerCard({
             <span>{item.domain}</span>
             <ModeChip mode="Plan" />
             <Chip state={item.state} />
+            <ScheduleChip item={item} />
             <span className="prog">
               <span className="bar" style={{ width: `${pct}%` }} />
             </span>

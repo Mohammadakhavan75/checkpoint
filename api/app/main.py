@@ -66,7 +66,7 @@ async def lifespan(_app: FastAPI):
                 pass
 
 
-app = FastAPI(title="Checkpoint API", version="0.16.0", lifespan=lifespan)
+app = FastAPI(title="Checkpoint API", version="0.22.2", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

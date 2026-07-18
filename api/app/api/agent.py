@@ -44,10 +44,14 @@ router = APIRouter()
 # Returned by orient so every session re-reads the working agreement.
 PROTOCOL = (
     "Checkpoint agent protocol: work one phase at a time. After finishing a "
-    "phase, immediately save_checkpoint on that phase (outcome=done) with a "
-    "concrete resume_from (file paths, commands, ids — never vague prose). "
-    "When stopping or interrupted mid-work, save_checkpoint with outcome "
-    "active/blocked/deferred and a next_action. Park stray ideas with "
+    "phase, immediately save_checkpoint on that phase (outcome=done) — never "
+    "batch phases into one receipt. If the item has no phases, checkpoint "
+    "outcome=active at natural seams (implementation compiles, tests pass) so "
+    "an interrupted session still leaves a trail. A done receipt records what "
+    "happened: what_changed is required (do_not_redo when relevant). When "
+    "stopping or interrupted mid-work, save_checkpoint with outcome "
+    "active/blocked/deferred, a concrete resume_from (file paths, commands, "
+    "ids — never vague prose), and a next_action. Park stray ideas with "
     "capture. Never reorganize the backlog; compiling is the human's job."
 )
 
@@ -238,6 +242,16 @@ async def agent_checkpoint(
     item = await get_item(session, item_id, user.id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Item not found")
+    # A done receipt is the record of what happened, not a bare state flip.
+    # Agent-surface rule only — the human's web flow stays toll-free.
+    if payload.outcome == "done" and not (payload.what_changed or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "A done receipt must record what happened — fill what_changed "
+                "(and do_not_redo when relevant), then retry."
+            ),
+        )
     checkpoint = await save_checkpoint(session, item, payload, user.id)
     await session.commit()
     await session.refresh(checkpoint)

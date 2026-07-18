@@ -24,6 +24,15 @@ export const CHANGELOG: Release[] = [
     ],
   },
   {
+    version: "0.22.1",
+    date: "2026-07-14",
+    title: "Fixed: end times were getting lost",
+    notes: [
+      "A task scheduled with only an end time (no start) now shows up in Today the moment that end time falls today — it used to sit invisible until you also gave it a start time.",
+      "Scheduled times are now visible on every compiled task card, including multi-phase ones, which previously showed no time at all.",
+    ],
+  },
+  {
     version: "0.22.0",
     date: "2026-07-13",
     title: "Your agent can hold the thread too",

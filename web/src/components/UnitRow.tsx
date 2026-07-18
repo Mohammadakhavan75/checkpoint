@@ -1,5 +1,5 @@
 import type { Item } from "../types";
-import { Chip, Marker, ModeChip } from "./atoms";
+import { Chip, Marker, ModeChip, ScheduleChip } from "./atoms";
 
 function fmtWhen(iso: string, allDay = false): string {
   const d = new Date(iso);
@@ -58,23 +58,6 @@ function EventBody({ item }: { item: Item }) {
       </div>
     </div>
   );
-}
-
-// A small schedule chip for a Today/Ready row: overdue deadlines glow red,
-// upcoming deadlines/start times stay slate. Deadline wins over start time.
-function ScheduleChip({ item }: { item: Item }) {
-  if (item.deadline) {
-    const overdue = item.state !== "done" && new Date(item.deadline).getTime() < Date.now();
-    return (
-      <span className={`chip due ${overdue ? "overdue" : ""}`}>
-        {overdue ? "overdue" : "due"} {fmtWhen(item.deadline)}
-      </span>
-    );
-  }
-  if (item.start_at) {
-    return <span className="chip due">{fmtWhen(item.start_at, item.all_day)}</span>;
-  }
-  return null;
 }
 
 export function UnitRow({

@@ -1190,6 +1190,24 @@ Remove `mcp/`, `.mcp.json.example`, the CLAUDE.md section; delete
 `main.py`, and the schema section; `alembic downgrade -1`. Nothing else depends on
 any of it.
 
+## 8.5 Amendments
+
+**2026-07-18 — leaf-item seams + done receipts must carry a record.** First real
+run exposed two protocol gaps: an item *without phases* gave the per-phase
+discipline nothing to bite on (the agent finished the whole task and wrote one
+thin receipt), and a `done` outcome could be a bare state flip (empty
+`resume_from`/`next_action` by design, `what_changed` left null — renders as "no
+checkpoint" in the UI). Changes, applied to `PROTOCOL` (api/app/api/agent.py),
+the `save_checkpoint` tool docstring (mcp/checkpoint_mcp.py), and CLAUDE.md:
+
+1. **Leaf rule:** items without phases are checkpointed `outcome=active` at
+   natural seams (implementation compiles, tests pass) so an interrupted
+   session still leaves a trail.
+2. **Done is a record:** the agent endpoint now rejects (422)
+   `outcome=done` without a non-empty `what_changed`. Agent surface only — the
+   human web flow stays toll-free (a forced note is an exit toll; the letter
+   spec's rule).
+
 ## 9. Non-goals (v0) / parking lot
 
 - **No OAuth 2.1 / remote (HTTP) MCP transport / claude.ai & ChatGPT web

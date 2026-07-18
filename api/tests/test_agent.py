@@ -269,7 +269,11 @@ async def test_agent_checkpoint_moves_state_and_rolls_up(auth_client, sessionmak
     r1 = await auth_client.post(
         f"/api/agent/items/{phase1_id}/checkpoints",
         headers=bearer(pat),
-        json={"outcome": "done", "last_state": "finished phase 1"},
+        json={
+            "outcome": "done",
+            "last_state": "finished phase 1",
+            "what_changed": "phase 1 implemented",
+        },
     )
     assert r1.status_code == 201
 
@@ -282,7 +286,11 @@ async def test_agent_checkpoint_moves_state_and_rolls_up(auth_client, sessionmak
     r2 = await auth_client.post(
         f"/api/agent/items/{phase2_id}/checkpoints",
         headers=bearer(pat),
-        json={"outcome": "done", "last_state": "finished phase 2"},
+        json={
+            "outcome": "done",
+            "last_state": "finished phase 2",
+            "what_changed": "phase 2 implemented",
+        },
     )
     assert r2.status_code == 201
 
@@ -306,6 +314,40 @@ async def test_agent_checkpoint_validation(auth_client, sessionmaker_, user, pat
         json={"outcome": "active", "last_state": "stuck"},
     )
     assert response.status_code == 422
+
+
+async def test_agent_done_requires_what_changed(auth_client, sessionmaker_, user, pat):
+    async with sessionmaker_() as s:
+        item = Item(
+            owner_id=user.id, title="leaf2", domain="Research", state="active", fields={}
+        )
+        s.add(item)
+        await s.commit()
+        item_id = item.id
+
+    bare = await auth_client.post(
+        f"/api/agent/items/{item_id}/checkpoints",
+        headers=bearer(pat),
+        json={"outcome": "done", "last_state": "finished"},
+    )
+    assert bare.status_code == 422
+    assert "what_changed" in bare.json()["detail"]
+
+    async with sessionmaker_() as s:
+        untouched = await s.get(Item, item_id)
+        assert untouched.state == "active"  # the rejected receipt changed nothing
+
+    full = await auth_client.post(
+        f"/api/agent/items/{item_id}/checkpoints",
+        headers=bearer(pat),
+        json={
+            "outcome": "done",
+            "last_state": "finished",
+            "what_changed": "implemented and verified end-time surfacing",
+        },
+    )
+    assert full.status_code == 201
+    assert full.json()["what_changed"] == "implemented and verified end-time surfacing"
 
 
 async def test_agent_checkpoint_trashed_item_404(auth_client, sessionmaker_, user, pat):

@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.2",
+    date: "2026-07-18",
+    title: "Done now leaves a receipt",
+    notes: [
+      "An agent can no longer mark work done with an empty receipt: finishing anything through the agent door now requires writing down what actually changed, so a completed task reads as a record, not a bare state flip. Your own checkpoint form is untouched — no new required fields for you.",
+      "Agents working an item without phases now checkpoint at natural seams (implementation compiles, tests pass), so a session that dies mid-task leaves a trail even on single-step work.",
+    ],
+  },
+  {
     version: "0.22.0",
     date: "2026-07-13",
     title: "Your agent can hold the thread too",

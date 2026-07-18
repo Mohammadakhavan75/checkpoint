@@ -86,8 +86,11 @@ async def save_checkpoint(
     """Write the receipt that lets the NEXT session (human or agent) resume
     without re-deriving context. Call it (a) immediately after finishing each
     phase — outcome='done' — never batching several phases into one receipt,
-    and (b) whenever work stops before it is finished — outcome='active' (will
-    continue), 'blocked' (needs something), or 'deferred' (parked).
+    (b) on items WITHOUT phases, at natural seams mid-work (implementation
+    compiles, tests pass) — outcome='active' — so an interrupted session still
+    leaves a trail, and (c) whenever work stops before it is finished —
+    outcome='active' (will continue), 'blocked' (needs something), or
+    'deferred' (parked).
 
     item_id: the exact item/phase worked on (checkpoint the PHASE, not its
     container — the container rolls up automatically).
@@ -97,8 +100,10 @@ async def save_checkpoint(
     file paths, function names, commands, ids. Never vague prose like
     "continue the feature".
     next_action: the single first move for the next session.
-    what_changed / problems / do_not_redo: optional but valuable — decisions
-    made, surprises hit, work that must not be repeated."""
+    what_changed: REQUIRED when outcome='done' — a done receipt is the record
+    of what happened, not a bare state flip.
+    problems / do_not_redo: optional but valuable — surprises hit, work that
+    must not be repeated."""
     body: dict[str, Any] = {"outcome": outcome, "last_state": last_state}
     for key, value in (
         ("resume_from", resume_from),

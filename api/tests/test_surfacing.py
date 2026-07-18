@@ -45,6 +45,20 @@ async def test_start_today_surfaces_in_today(client):
     assert iid in await _ids(client, "today")
 
 
+async def test_end_today_surfaces_in_today(client):
+    iid = await _capture(client, "ends today")
+    await client.patch(f"/api/items/{iid}", json={"end_at": _now().isoformat()})
+    assert iid in await _ids(client, "today")
+
+
+async def test_future_end_is_in_ready_not_today(client):
+    iid = await _capture(client, "ends soon")
+    soon = (_now() + timedelta(days=3)).isoformat()
+    await client.patch(f"/api/items/{iid}", json={"end_at": soon})
+    assert iid in await _ids(client, "ready")
+    assert iid not in await _ids(client, "today")
+
+
 async def test_future_start_is_in_ready_not_today(client):
     iid = await _capture(client, "starts soon")
     soon = (_now() + timedelta(days=3)).isoformat()

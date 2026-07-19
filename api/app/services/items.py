@@ -36,7 +36,9 @@ async def get_children(
     result = await session.execute(
         select(Item)
         .where(Item.parent_id == parent_id, Item.owner_id == owner_id)
-        .order_by(Item.created_at)
+        # position carries the user-chosen phase order; created_at only breaks
+        # ties (e.g. legacy rows all at the default 0) so order stays stable.
+        .order_by(Item.position, Item.created_at)
     )
     return list(result.scalars().all())
 
@@ -210,8 +212,14 @@ async def _reconcile_phases(
     phases: list[PhaseInput],
     owner_id: uuid.UUID,
 ) -> None:
-    """Create/update/delete phase children of a container (prototype: reconcileSubs)."""
+    """Create/update/delete phase children of a container (prototype: reconcileSubs).
+
+    ``phases`` arrives in the user's chosen order; each kept phase records its
+    index as ``position`` so reordering in the Compile modal persists (children
+    are read back in position order by get_children).
+    """
     keep: set[uuid.UUID] = set()
+    position = 0
     for phase in phases:
         title = (phase.title or "").strip()
         if not title:
@@ -225,6 +233,7 @@ async def _reconcile_phases(
         if child is not None:
             child.title = title
             child.domain = parent.domain
+            child.position = position
             child.fields = {**(child.fields or {}), "firstAction": first_action, "description": title}
             child.compiled = bool(first_action)
             if child.compiled and child.state in ("idea", "needsdef"):
@@ -238,6 +247,7 @@ async def _reconcile_phases(
                 parent_id=parent.id,
                 title=title,
                 domain=parent.domain,
+                position=position,
                 state="active" if first_action else "needsdef",
                 mode="Do",
                 daily=False,
@@ -254,6 +264,7 @@ async def _reconcile_phases(
             session.add(new_child)
             await session.flush()
             keep.add(new_child.id)
+        position += 1
 
     for child in await get_children(session, parent.id, owner_id):
         if child.id not in keep:

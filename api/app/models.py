@@ -168,6 +168,13 @@ class Item(Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("items.id", ondelete="CASCADE"), nullable=True
     )
+    # Sibling order among a container's phases. Set from the phase array on
+    # compile (services/items._reconcile_phases); children are read back in
+    # (position, created_at) order so a reorder in the Compile modal sticks.
+    # Top-level items don't use it (all default 0).
+    position: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     domain: Mapped[str] = mapped_column(Text, nullable=False)
     state: Mapped[str] = mapped_column(Text, nullable=False)

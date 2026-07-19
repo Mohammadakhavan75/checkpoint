@@ -130,6 +130,19 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
     setPhases((prev) => prev.map((x, i) => (i === k ? { ...x, [field]: val } : x)));
   }
 
+  // Reorder phases by swapping with the neighbour. The array order is the plan
+  // order: it drives the numbering here and the persisted position on compile,
+  // so this works whether the phases are new or loaded from existing children.
+  function movePhase(k: number, dir: -1 | 1) {
+    setPhases((prev) => {
+      const j = k + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[k], next[j]] = [next[j], next[k]];
+      return next;
+    });
+  }
+
   function toggleSubtasks() {
     setSubtasks((s) => {
       const next = !s;
@@ -285,7 +298,26 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
                       />
                       <button
                         className="btn ghost"
+                        title="move up"
+                        aria-label="Move phase up"
+                        disabled={k === 0}
+                        onClick={() => movePhase(k, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        className="btn ghost"
+                        title="move down"
+                        aria-label="Move phase down"
+                        disabled={k === phases.length - 1}
+                        onClick={() => movePhase(k, 1)}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        className="btn ghost"
                         title="remove"
+                        aria-label="Remove phase"
                         onClick={() => setPhases((prev) => prev.filter((_, i) => i !== k))}
                       >
                         ×

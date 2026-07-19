@@ -15,6 +15,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.5",
+    date: "2026-07-19",
+    title: "Reorder phases",
+    notes: [
+      "You can now change the order of a container's phases: use the ↑ / ↓ controls on each phase row in Compile. It works both while you're first breaking a task into phases and later — reopen Edit phases on a compiled container and the new order sticks.",
+    ],
+  },
+  {
     version: "0.22.4",
     date: "2026-07-19",
     title: "Cleaner classify grid",

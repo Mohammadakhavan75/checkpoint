@@ -1,5 +1,6 @@
 import { useDeleteItem, useDomains, useItems, usePromote } from "../api/hooks";
 import { Loading } from "../components/atoms";
+import { Dropdown } from "../components/Dropdown";
 import { ViewHead } from "../components/ViewHead";
 import type { Tab } from "../types";
 
@@ -38,11 +39,10 @@ export function ReservoirView({ onNav }: { onNav: (tab: Tab, domain?: string) =>
                 <div className="name">{item.title}</div>
               </div>
               <div className="acts">
-                <select
-                  className="btn"
+                <Dropdown
                   value=""
-                  onChange={(e) => {
-                    const choice = e.target.value;
+                  ariaLabel="Promote to a domain"
+                  onChange={(choice) => {
                     if (!choice) return;
                     if (choice === "__new__") {
                       const name = window.prompt("New domain name:")?.trim();
@@ -51,15 +51,12 @@ export function ReservoirView({ onNav }: { onNav: (tab: Tab, domain?: string) =>
                       promoteTo(item.id, choice);
                     }
                   }}
-                >
-                  <option value="">→ Promote to…</option>
-                  {(domains.data ?? []).map((d) => (
-                    <option key={d.name} value={d.name}>
-                      {d.name}
-                    </option>
-                  ))}
-                  <option value="__new__">＋ New domain…</option>
-                </select>
+                  options={[
+                    { value: "", label: "→ Promote to…" },
+                    ...(domains.data ?? []).map((d) => ({ value: d.name, label: d.name })),
+                    { value: "__new__", label: "＋ New domain…" },
+                  ]}
+                />
                 <button className="btn ghost" onClick={() => del.mutate(item.id)}>
                   ✕
                 </button>

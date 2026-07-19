@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useItems, useSetDaily } from "../api/hooks";
 import { Loading } from "../components/atoms";
 import { ContainerCard } from "../components/ContainerCard";
+import { Dropdown } from "../components/Dropdown";
 import { UnitRow } from "../components/UnitRow";
 import { ViewHead } from "../components/ViewHead";
 
@@ -33,14 +34,15 @@ export function ReadyView({ onEdit }: { onEdit: (id: string) => void }) {
         <div className="domain-tools" aria-label="Ready filters">
           <label className="domain-filter">
             <span>Category</span>
-            <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="all">All</option>
-              {categories.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              value={category}
+              onChange={setCategory}
+              ariaLabel="Category filter"
+              options={[
+                { value: "all", label: "All" },
+                ...categories.map((name) => ({ value: name, label: name })),
+              ]}
+            />
           </label>
         </div>
       )}

@@ -170,6 +170,48 @@ async def test_compile_reconcile_keeps_and_drops(session, user):
     assert children[0].title == "A2"
 
 
+async def test_compile_reorders_phases_by_array_position(session, user):
+    item = await _add(session, user, title="cluster", domain="HPC", state="needsdef")
+    await compile_item(
+        session,
+        item,
+        CompileRequest(
+            procedure="known",
+            scope="unbounded",
+            phases=[
+                PhaseInput(title="A", firstAction="a"),
+                PhaseInput(title="B", firstAction="b"),
+                PhaseInput(title="C", firstAction="c"),
+            ],
+        ),
+        user.id,
+    )
+    children = await get_children(session, item.id, user.id)
+    assert [c.title for c in children] == ["A", "B", "C"]
+    assert [c.position for c in children] == [0, 1, 2]
+    by_title = {c.title: c for c in children}
+
+    # recompile with the same phases in a new order — children read back in the
+    # new order with positions renumbered from the array index.
+    await compile_item(
+        session,
+        item,
+        CompileRequest(
+            procedure="known",
+            scope="unbounded",
+            phases=[
+                PhaseInput(id=by_title["C"].id, title="C", firstAction="c"),
+                PhaseInput(id=by_title["A"].id, title="A", firstAction="a"),
+                PhaseInput(id=by_title["B"].id, title="B", firstAction="b"),
+            ],
+        ),
+        user.id,
+    )
+    reordered = await get_children(session, item.id, user.id)
+    assert [c.title for c in reordered] == ["C", "A", "B"]
+    assert [c.position for c in reordered] == [0, 1, 2]
+
+
 async def test_save_checkpoint_sets_state_and_clears_daily(session, user):
     item = await _add(session, user, title="t", domain="DDWS", state="active", daily=True)
     cp = await save_checkpoint(

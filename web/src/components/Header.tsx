@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 
 import { useDomains } from "../api/hooks";
+import { Dropdown } from "./Dropdown";
 import { UserMenu } from "./UserMenu";
 
 // Sentinel for the default "park in the reservoir" capture target.
@@ -75,19 +76,17 @@ export function Header({
             if (e.key === "Enter") submit();
           }}
         />
-        <select
-          className="cap-target"
+        <Dropdown
+          className="cap"
           title="Where this lands — the reservoir, or straight into a domain"
+          ariaLabel="Capture target"
           value={target}
-          onChange={(e) => setTarget(e.target.value)}
-        >
-          <option value={RESERVOIR}>~ Reservoir</option>
-          {(domains.data ?? []).map((d) => (
-            <option key={d.name} value={d.name}>
-              → {d.name}
-            </option>
-          ))}
-        </select>
+          onChange={setTarget}
+          options={[
+            { value: RESERVOIR, label: "~ Reservoir" },
+            ...(domains.data ?? []).map((d) => ({ value: d.name, label: `→ ${d.name}` })),
+          ]}
+        />
         <kbd onClick={submit}>↵</kbd>
       </div>
       <UserMenu />

@@ -1,5 +1,6 @@
 import { MODE_HINTS, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
+import { Dropdown } from "./Dropdown";
 
 export function Chip({ state }: { state: ItemState }) {
   const s = STATES[state];
@@ -35,18 +36,18 @@ export function StateSelect({
   item: Item;
   onChange: (state: ItemState) => void;
 }) {
+  const options = (Object.keys(STATES) as ItemState[]).map((k) => ({
+    value: k,
+    label: `${STATES[k].sym} ${STATES[k].label}`,
+    color: STATES[k].color,
+  }));
   return (
-    <select
-      className="btn"
+    <Dropdown
       value={item.state}
-      onChange={(e) => onChange(e.target.value as ItemState)}
-    >
-      {(Object.keys(STATES) as ItemState[]).map((k) => (
-        <option key={k} value={k}>
-          {STATES[k].sym} {STATES[k].label}
-        </option>
-      ))}
-    </select>
+      options={options}
+      onChange={(v) => onChange(v as ItemState)}
+      ariaLabel="Change state"
+    />
   );
 }
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { useItems, useSetState } from "../api/hooks";
 import { Chip, Loading, Marker, ModeChip, StateSelect } from "../components/atoms";
+import { Dropdown } from "../components/Dropdown";
 import { ViewHead } from "../components/ViewHead";
 import { STATE_ORDER, STATES } from "../constants";
 import type { Item, ItemState } from "../types";
@@ -236,16 +237,12 @@ export function DomainView({
       <div className="domain-tools" aria-label="Domain filters">
         <label className="domain-filter">
           <span>Status</span>
-          <select
+          <Dropdown
             value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value as DomainStateFilter)}
-          >
-            {STATE_FILTERS.map((filter) => (
-              <option key={filter.value} value={filter.value}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setStateFilter(v as DomainStateFilter)}
+            ariaLabel="Status filter"
+            options={STATE_FILTERS.map((filter) => ({ value: filter.value, label: filter.label }))}
+          />
         </label>
       </div>
       {visibleItems.length ? (

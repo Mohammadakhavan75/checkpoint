@@ -15,6 +15,39 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.6",
+    date: "2026-07-19",
+    title: "Dropdowns match the app",
+    notes: [
+      "Every dropdown — capture target, checkpoint outcome, the state and status pickers, the category filter and the promote menu — now opens a Checkpoint-styled list instead of the browser's default popup, so the choices match the app's dark/mono look and are fully keyboard-navigable.",
+    ],
+  },
+  {
+    version: "0.22.5",
+    date: "2026-07-19",
+    title: "Reorder phases",
+    notes: [
+      "You can now change the order of a container's phases: use the ↑ / ↓ controls on each phase row in Compile. It works both while you're first breaking a task into phases and later — reopen Edit phases on a compiled container and the new order sticks.",
+    ],
+  },
+  {
+    version: "0.22.4",
+    date: "2026-07-19",
+    title: "Cleaner classify grid",
+    notes: [
+      "The procedure × scope grid you use to classify a task now shows one clear action per square (Execute normally, Scout · map · define, Make subtask, To be defined), centered — no more doubled-up label and archetype name crowding each button.",
+    ],
+  },
+  {
+    version: "0.22.3",
+    date: "2026-07-19",
+    title: "Fewer required fields",
+    notes: [
+      "Compiling a task now only asks you to classify it — description, first action, and phases are all optional. Name the quadrant and you can compile.",
+      "The checkpoint form no longer forces any field: jot down as much or as little as you want and save. (Agents still owe a real receipt — that door is unchanged.)",
+    ],
+  },
+  {
     version: "0.22.2",
     date: "2026-07-18",
     title: "Done now leaves a receipt",

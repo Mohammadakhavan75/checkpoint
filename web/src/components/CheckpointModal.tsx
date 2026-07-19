@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 
 import { useSaveCheckpoint, useSetDaily } from "../api/hooks";
 import type { CheckpointSaved, Outcome } from "../types";
+import { Dropdown } from "./Dropdown";
 import { useModalA11y } from "./useModalA11y";
 
 export function CheckpointModal({
@@ -13,7 +14,7 @@ export function CheckpointModal({
   id: string;
   onBack: () => void;
   onSaved: (cp: CheckpointSaved) => void;
-  // First-run (tutorial bridge) sessions: only the three required fields,
+  // First-run (tutorial bridge) sessions: only the three core fields,
   // everything else behind a "more" disclosure.
   trimmed?: boolean;
 }) {
@@ -28,7 +29,6 @@ export function CheckpointModal({
   const [problems, setProblems] = useState("");
   const [resumeFrom, setResumeFrom] = useState("");
   const [doNotRedo, setDoNotRedo] = useState("");
-  const [err, setErr] = useState("");
   const [more, setMore] = useState(false);
   const full = !trimmed || more;
 
@@ -42,13 +42,10 @@ export function CheckpointModal({
   // Done means finished — there is no next step, so the resume fields
   // (resume from / do-not-redo) don't apply.
   const isDone = outcome === "done";
-  const ok = !!(lastState.trim() && (isDone || resumeFrom.trim()));
 
+  // No gate: on the human web flow every field is optional, so a receipt can
+  // always be saved (the agent surface is the one that enforces the fields).
   async function submit() {
-    if (!ok) {
-      setErr(isDone ? "⚠ fill last state" : "⚠ fill last state · resume from");
-      return;
-    }
     const cp = await save.mutateAsync({
       id,
       payload: {
@@ -135,18 +132,21 @@ export function CheckpointModal({
           {full && (
             <div className="field">
               <label>Outcome</label>
-              <select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
-                <option value="active">↻ Continue later (still active)</option>
-                <option value="deferred">→ Deferred</option>
-                <option value="blocked">! Blocked</option>
-                <option value="done">✓ Done</option>
-              </select>
+              <Dropdown
+                value={outcome}
+                onChange={(v) => setOutcome(v as Outcome)}
+                ariaLabel="Outcome"
+                options={[
+                  { value: "active", label: "↻ Continue later (still active)" },
+                  { value: "deferred", label: "→ Deferred" },
+                  { value: "blocked", label: "! Blocked" },
+                  { value: "done", label: "✓ Done" },
+                ]}
+              />
             </div>
           )}
           <div className="field">
-            <label>
-              Last state <span className="req">*</span>
-            </label>
+            <label>Last state</label>
             <input
               value={lastState}
               placeholder="where things stand right now"
@@ -183,9 +183,7 @@ export function CheckpointModal({
                 </div>
                 <div className="grid2">
                   <div className="field">
-                    <label>
-                      Resume from <span className="req">*</span>
-                    </label>
+                    <label>Resume from</label>
                     <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
                   </div>
                   <div className="field">
@@ -198,9 +196,7 @@ export function CheckpointModal({
           ) : (
             <>
               <div className="field">
-                <label>
-                  Resume from <span className="req">*</span>
-                </label>
+                <label>Resume from</label>
                 <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
               </div>
               <button className="morebtn" type="button" onClick={() => setMore(true)}>
@@ -210,11 +206,10 @@ export function CheckpointModal({
           )}
         </div>
         <footer>
-          <span className="gate" style={{ color: err ? "var(--red)" : undefined }}>
-            {err ||
-              (isDone
-                ? "⚠ last state is required"
-                : "⚠ last state · resume from are required")}
+          <span className="gate">
+            {isDone
+              ? "Record how it ended — or just save the receipt."
+              : "Note where you stopped — every field is optional."}
           </span>
           <button className="btn" onClick={onBack}>
             Back

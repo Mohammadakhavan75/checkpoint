@@ -101,25 +101,20 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const paralysis = procedure === "unknown" && scope === "unbounded";
   const nSubs = phases.filter((p) => p.title.trim()).length;
 
-  const gateOk = (() => {
-    if (!mode || !description.trim()) return false;
-    if (cont) return phases.some((p) => p.title.trim());
-    return !!firstAction.trim();
-  })();
+  // Classifying to a real mode is the only thing needed to compile; every other
+  // field (description, first action, phases) is optional. The unknown+unbounded
+  // quadrant has no mode (paralysis / TBD), so it still can't compile.
+  const gateOk = !!mode;
 
   let gateTxt: string;
   let gateCls = "";
   if (gateOk) {
-    gateTxt = cont ? `✓ valid container · ${nSubs} phase${nSubs > 1 ? "s" : ""}` : "✓ valid resumable unit";
+    gateTxt = cont ? `✓ valid container · ${nSubs} phase${nSubs !== 1 ? "s" : ""}` : "✓ valid resumable unit";
     gateCls = "ok";
   } else if (paralysis) {
     gateTxt = "⚠ unknown + unbounded — to be defined together (TBD)";
-  } else if (!mode) {
-    gateTxt = "⚠ classify the task above to set its mode";
-  } else if (cont) {
-    gateTxt = "⚠ add at least one phase (needs a title)";
   } else {
-    gateTxt = "⚠ fill the required (*) fields";
+    gateTxt = "⚠ classify the task above to set its mode";
   }
 
   function pickClass(p: Procedure, s: Scope) {
@@ -249,9 +244,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
           </div>
 
           <div className="field">
-            <label>
-              Description <span className="req">*</span>
-            </label>
+            <label>Description (optional)</label>
             <textarea
               rows={2}
               placeholder="what is this task, in your own words"
@@ -262,9 +255,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
 
           {cont ? (
             <div className="field">
-              <label>
-                Phases <span className="req">*</span>
-              </label>
+              <label>Phases (optional)</label>
               <div className="subs">
                 {phases.length ? (
                   phases.map((p, k) => (
@@ -306,9 +297,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
             </div>
           ) : (
             <div className="field">
-              <label>
-                First action <span className="req">*</span>
-              </label>
+              <label>First action (optional)</label>
               <input
                 value={firstAction}
                 placeholder="first thing to open or run"
@@ -325,7 +314,7 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
               <div className="hint">A phase can't be split again — subtasks are one level deep.</div>
             ) : isTrap ? (
               <div className="hint" style={{ color: "var(--orange)" }}>
-                Time trap → breaking into phases is required.
+                Time trap → best broken into phases.
               </div>
             ) : (
               <button className="btn ghost" onClick={toggleSubtasks}>

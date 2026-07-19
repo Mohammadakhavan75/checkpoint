@@ -242,6 +242,19 @@ async def agent_checkpoint(
     item = await get_item(session, item_id, user.id)
     if item is None or item.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Item not found")
+    # The resume contract used to live on CheckpointCreate, but the human web
+    # flow is now toll-free; the ledger enforces it on the agent surface only,
+    # so an agent receipt still points the next session somewhere concrete.
+    if not (payload.last_state or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail="last_state is required — one line on where things stand.",
+        )
+    if payload.outcome != "done" and not (payload.resume_from or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail="resume_from is required unless outcome is done.",
+        )
     # A done receipt is the record of what happened, not a bare state flip.
     # Agent-surface rule only — the human's web flow stays toll-free.
     if payload.outcome == "done" and not (payload.what_changed or "").strip():

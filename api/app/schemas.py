@@ -146,7 +146,11 @@ class SeenVersionRequest(BaseModel):
 # ----- checkpoints -----
 class CheckpointCreate(BaseModel):
     outcome: OutcomeLiteral
-    last_state: str = Field(min_length=1)
+    # Toll-free by design: every text field is optional here so an interrupted
+    # human session can still drop a bare receipt. The ledger's resume contract
+    # (last_state always, resume_from unless done) is re-imposed on the agent
+    # surface in api/agent.py — see the "Agent-surface rule only" guards there.
+    last_state: str = ""
     what_changed: Optional[str] = None
     problems: Optional[str] = None
     # A "done" outcome has no next step, so the resume point only applies to
@@ -154,13 +158,6 @@ class CheckpointCreate(BaseModel):
     next_action: Optional[str] = None
     resume_from: Optional[str] = None
     do_not_redo: Optional[str] = None
-
-    @model_validator(mode="after")
-    def _require_resume_fields_unless_done(self) -> "CheckpointCreate":
-        if self.outcome != "done":
-            if not (self.resume_from and self.resume_from.strip()):
-                raise ValueError("resume_from is required unless outcome is done")
-        return self
 
 
 class CheckpointOut(BaseModel):

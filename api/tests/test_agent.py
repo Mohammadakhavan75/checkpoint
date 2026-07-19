@@ -308,12 +308,23 @@ async def test_agent_checkpoint_validation(auth_client, sessionmaker_, user, pat
         await s.commit()
         item_id = item.id
 
+    # non-done receipt with no resume_from is rejected on the agent surface
     response = await auth_client.post(
         f"/api/agent/items/{item_id}/checkpoints",
         headers=bearer(pat),
         json={"outcome": "active", "last_state": "stuck"},
     )
     assert response.status_code == 422
+
+    # empty last_state is rejected too — the web flow relaxes this, the agent
+    # ledger does not (the rule moved from the schema to the agent endpoint).
+    response = await auth_client.post(
+        f"/api/agent/items/{item_id}/checkpoints",
+        headers=bearer(pat),
+        json={"outcome": "active", "last_state": "  ", "resume_from": "x"},
+    )
+    assert response.status_code == 422
+    assert "last_state" in response.json()["detail"]
 
 
 async def test_agent_done_requires_what_changed(auth_client, sessionmaker_, user, pat):

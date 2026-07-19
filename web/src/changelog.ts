@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.3",
+    date: "2026-07-19",
+    title: "Fewer required fields",
+    notes: [
+      "Compiling a task now only asks you to classify it — description, first action, and phases are all optional. Name the quadrant and you can compile.",
+      "The checkpoint form no longer forces any field: jot down as much or as little as you want and save. (Agents still owe a real receipt — that door is unchanged.)",
+    ],
+  },
+  {
     version: "0.22.2",
     date: "2026-07-18",
     title: "Done now leaves a receipt",

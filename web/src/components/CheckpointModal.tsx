@@ -13,7 +13,7 @@ export function CheckpointModal({
   id: string;
   onBack: () => void;
   onSaved: (cp: CheckpointSaved) => void;
-  // First-run (tutorial bridge) sessions: only the three required fields,
+  // First-run (tutorial bridge) sessions: only the three core fields,
   // everything else behind a "more" disclosure.
   trimmed?: boolean;
 }) {
@@ -28,7 +28,6 @@ export function CheckpointModal({
   const [problems, setProblems] = useState("");
   const [resumeFrom, setResumeFrom] = useState("");
   const [doNotRedo, setDoNotRedo] = useState("");
-  const [err, setErr] = useState("");
   const [more, setMore] = useState(false);
   const full = !trimmed || more;
 
@@ -42,13 +41,10 @@ export function CheckpointModal({
   // Done means finished — there is no next step, so the resume fields
   // (resume from / do-not-redo) don't apply.
   const isDone = outcome === "done";
-  const ok = !!(lastState.trim() && (isDone || resumeFrom.trim()));
 
+  // No gate: on the human web flow every field is optional, so a receipt can
+  // always be saved (the agent surface is the one that enforces the fields).
   async function submit() {
-    if (!ok) {
-      setErr(isDone ? "⚠ fill last state" : "⚠ fill last state · resume from");
-      return;
-    }
     const cp = await save.mutateAsync({
       id,
       payload: {
@@ -144,9 +140,7 @@ export function CheckpointModal({
             </div>
           )}
           <div className="field">
-            <label>
-              Last state <span className="req">*</span>
-            </label>
+            <label>Last state</label>
             <input
               value={lastState}
               placeholder="where things stand right now"
@@ -183,9 +177,7 @@ export function CheckpointModal({
                 </div>
                 <div className="grid2">
                   <div className="field">
-                    <label>
-                      Resume from <span className="req">*</span>
-                    </label>
+                    <label>Resume from</label>
                     <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
                   </div>
                   <div className="field">
@@ -198,9 +190,7 @@ export function CheckpointModal({
           ) : (
             <>
               <div className="field">
-                <label>
-                  Resume from <span className="req">*</span>
-                </label>
+                <label>Resume from</label>
                 <input value={resumeFrom} onChange={(e) => setResumeFrom(e.target.value)} />
               </div>
               <button className="morebtn" type="button" onClick={() => setMore(true)}>
@@ -210,11 +200,10 @@ export function CheckpointModal({
           )}
         </div>
         <footer>
-          <span className="gate" style={{ color: err ? "var(--red)" : undefined }}>
-            {err ||
-              (isDone
-                ? "⚠ last state is required"
-                : "⚠ last state · resume from are required")}
+          <span className="gate">
+            {isDone
+              ? "Record how it ended — or just save the receipt."
+              : "Note where you stopped — every field is optional."}
           </span>
           <button className="btn" onClick={onBack}>
             Back

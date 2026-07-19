@@ -92,16 +92,24 @@ async def test_capture_promote_compile_ready_today_flow(client):
     assert any(i["id"] == iid for i in r.json())
 
 
-async def test_checkpoint_required_fields_and_history(client):
+async def test_checkpoint_fields_optional_on_web(client):
+    # The human web flow is toll-free: a bare receipt (empty last_state, no
+    # resume_from on a non-done outcome) is accepted and stored as "" in the
+    # non-null columns. The agent surface is the one that re-imposes the fields.
+    r = await client.post("/api/items", json={"title": "bare", "domain": "DDWS", "state": "active"})
+    bare_id = r.json()["id"]
+    r = await client.post(
+        f"/api/items/{bare_id}/checkpoints",
+        json={"outcome": "active", "last_state": ""},
+    )
+    assert r.status_code == 201
+    assert r.json()["last_state"] == ""
+    assert r.json()["resume_from"] == ""
+
+
+async def test_checkpoint_history(client):
     r = await client.post("/api/items", json={"title": "work", "domain": "DDWS", "state": "active"})
     iid = r.json()["id"]
-
-    # missing last_state -> 422
-    r = await client.post(
-        f"/api/items/{iid}/checkpoints",
-        json={"outcome": "active", "last_state": "", "next_action": "n", "resume_from": "r"},
-    )
-    assert r.status_code == 422
 
     r = await client.post(
         f"/api/items/{iid}/checkpoints",
@@ -127,12 +135,13 @@ async def test_done_checkpoint_needs_no_resume_fields(client):
     r = await client.post("/api/items", json={"title": "work", "domain": "DDWS", "state": "active"})
     iid = r.json()["id"]
 
-    # non-done outcomes still require the resume fields
+    # non-done outcomes no longer require the resume fields on the web flow
     r = await client.post(
         f"/api/items/{iid}/checkpoints",
         json={"outcome": "active", "last_state": "midway"},
     )
-    assert r.status_code == 422
+    assert r.status_code == 201
+    assert r.json()["resume_from"] == ""
 
     # done has no next step — last_state alone is enough
     r = await client.post(

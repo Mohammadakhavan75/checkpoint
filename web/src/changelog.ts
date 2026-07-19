@@ -15,6 +15,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.6",
+    date: "2026-07-19",
+    title: "Dropdowns match the app",
+    notes: [
+      "Every dropdown — capture target, checkpoint outcome, the state and status pickers, the category filter and the promote menu — now opens a Checkpoint-styled list instead of the browser's default popup, so the choices match the app's dark/mono look and are fully keyboard-navigable.",
+    ],
+  },
+  {
     version: "0.22.5",
     date: "2026-07-19",
     title: "Reorder phases",

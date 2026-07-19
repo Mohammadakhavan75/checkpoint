@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 
 import { useSaveCheckpoint, useSetDaily } from "../api/hooks";
 import type { CheckpointSaved, Outcome } from "../types";
+import { Dropdown } from "./Dropdown";
 import { useModalA11y } from "./useModalA11y";
 
 export function CheckpointModal({
@@ -131,12 +132,17 @@ export function CheckpointModal({
           {full && (
             <div className="field">
               <label>Outcome</label>
-              <select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
-                <option value="active">↻ Continue later (still active)</option>
-                <option value="deferred">→ Deferred</option>
-                <option value="blocked">! Blocked</option>
-                <option value="done">✓ Done</option>
-              </select>
+              <Dropdown
+                value={outcome}
+                onChange={(v) => setOutcome(v as Outcome)}
+                ariaLabel="Outcome"
+                options={[
+                  { value: "active", label: "↻ Continue later (still active)" },
+                  { value: "deferred", label: "→ Deferred" },
+                  { value: "blocked", label: "! Blocked" },
+                  { value: "done", label: "✓ Done" },
+                ]}
+              />
             </div>
           )}
           <div className="field">

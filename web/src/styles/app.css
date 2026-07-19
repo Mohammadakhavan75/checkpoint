@@ -190,6 +190,32 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   color:var(--text);font-family:'JetBrains Mono';font-size:11.5px;padding:6px 28px 6px 9px;outline:none}
 .domain-filter select:focus{border-color:var(--amber)}
 
+/* Checkpoint-styled select — components/Dropdown.tsx. Native <select> can't
+   style its option popup, so it always broke the app's dark/mono language;
+   this trigger + listbox does. The contextual rules below mirror the sizing of
+   the selects each dropdown replaces. */
+.dd{position:relative;display:inline-block;width:100%}
+.dd-trigger{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  font-family:'JetBrains Mono';font-size:11.5px;padding:6px 11px;border-radius:6px;text-align:left;
+  border:1px solid var(--line2);color:var(--dim);background:var(--panel2);cursor:pointer}
+.dd-trigger:hover{color:var(--text);border-color:var(--text)}
+.dd-trigger[aria-expanded="true"]{border-color:var(--amber);color:var(--text)}
+.dd-value{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-caret{flex:none;font-size:9px;opacity:.7}
+.dd-menu{position:absolute;z-index:120;top:calc(100% + 4px);left:0;min-width:100%;
+  max-width:min(320px,calc(100vw - 24px));max-height:264px;overflow:auto;margin:0;padding:4px;
+  list-style:none;background:var(--panel);border:1px solid var(--line2);border-radius:8px;
+  box-shadow:0 14px 34px -14px rgba(0,0,0,.75)}
+.dd-option{white-space:normal;word-break:break-word;font-family:'JetBrains Mono';font-size:11.5px;
+  line-height:1.35;padding:7px 9px;border-radius:5px;color:var(--dim);cursor:pointer}
+.dd-option.active{background:var(--panel2);color:var(--text)}
+.dd-option.sel{color:var(--text);font-weight:600}
+.acts .dd{width:122px}
+.field .dd-trigger{background:var(--ink);border-color:var(--line3);border-radius:7px;font-size:13px;padding:9px 11px}
+.domain-filter .dd-trigger{background:var(--panel2);border-color:var(--line3);color:var(--text)}
+.dd.cap{max-width:150px}
+.dd.cap .dd-trigger{background:var(--panel);border-color:var(--line3);border-radius:5px;font-size:11px;padding:4px 8px}
+
 .tabbar{display:flex;gap:4px;margin:0 0 18px;border-bottom:1px solid var(--line)}
 .tab{padding:9px 16px;font-family:'JetBrains Mono';font-size:12.5px;color:var(--faint);
   border-bottom:2px solid transparent;margin-bottom:-1px}

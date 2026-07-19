@@ -77,7 +77,9 @@ export function Header({
           }}
         />
         <Dropdown
-          className="cap"
+          // NOT "cap" — that is the capture bar's own class (min-width:340px,
+          // its own border/background), which the dropdown would inherit.
+          className="cap-target"
           title="Where this lands — the reservoir, or straight into a domain"
           ariaLabel="Capture target"
           value={target}

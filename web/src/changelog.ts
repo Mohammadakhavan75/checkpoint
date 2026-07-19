@@ -15,6 +15,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.7",
+    date: "2026-07-19",
+    title: "Dropdown popups sit on top",
+    notes: [
+      "An open dropdown no longer slides underneath the cards below it — the popup now floats above everything and flips upward when it would run off the bottom of the screen.",
+      "The capture bar's target picker is back to its intended size instead of stretching across the bar.",
+    ],
+  },
+  {
     version: "0.22.6",
     date: "2026-07-19",
     title: "Dropdowns match the app",

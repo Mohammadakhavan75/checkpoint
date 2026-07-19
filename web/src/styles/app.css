@@ -64,8 +64,7 @@ header{
 .cap input::placeholder{color:var(--faint)}
 .cap kbd{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);border:1px solid var(--line2);
   padding:1px 5px;border-radius:4px;cursor:pointer} /* dim, not faint: 4.5:1 on panel2 */
-.cap-target{background:var(--panel);color:var(--dim);border:1px solid var(--line3);border-radius:5px;
-  font-family:'JetBrains Mono';font-size:11px;padding:2px 4px;outline:none;cursor:pointer;max-width:120px}
+/* the capture target picker — see .dd.cap-target below */
 /* user menu (header avatar + profile panel) */
 .usermenu{position:relative}
 .usertrigger{display:flex;align-items:center;gap:9px}
@@ -202,7 +201,10 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .dd-trigger[aria-expanded="true"]{border-color:var(--amber);color:var(--text)}
 .dd-value{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dd-caret{flex:none;font-size:9px;opacity:.7}
-.dd-menu{position:absolute;z-index:120;top:calc(100% + 4px);left:0;min-width:100%;
+/* Portalled to <body> and pinned in viewport coords (see Dropdown.tsx): a row
+   card painted after the open row used to cover an absolutely-placed menu, and
+   modal/session overflow clipped it. left/top/bottom/min-width come inline. */
+.dd-menu{position:fixed;z-index:1000;
   max-width:min(320px,calc(100vw - 24px));max-height:264px;overflow:auto;margin:0;padding:4px;
   list-style:none;background:var(--panel);border:1px solid var(--line2);border-radius:8px;
   box-shadow:0 14px 34px -14px rgba(0,0,0,.75)}
@@ -213,8 +215,10 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
 .acts .dd{width:122px}
 .field .dd-trigger{background:var(--ink);border-color:var(--line3);border-radius:7px;font-size:13px;padding:9px 11px}
 .domain-filter .dd-trigger{background:var(--panel2);border-color:var(--line3);color:var(--text)}
-.dd.cap{max-width:150px}
-.dd.cap .dd-trigger{background:var(--panel);border-color:var(--line3);border-radius:5px;font-size:11px;padding:4px 8px}
+/* Sits inside the capture bar, so it takes only the width its labels need —
+   the input beside it keeps the rest. */
+.dd.cap-target{flex:none;width:134px;min-width:0}
+.dd.cap-target .dd-trigger{background:var(--panel);border-color:var(--line3);border-radius:5px;font-size:11px;padding:4px 8px}
 
 .tabbar{display:flex;gap:4px;margin:0 0 18px;border-bottom:1px solid var(--line)}
 .tab{padding:9px 16px;font-family:'JetBrains Mono';font-size:12.5px;color:var(--faint);
@@ -621,7 +625,7 @@ main{overflow:auto;padding:22px 26px 26px;min-width:0}
   /* 16px form text stops iOS Safari auto-zooming the page on focus */
   input,textarea,select,
   .cap input,.field input,.field textarea,.field select,
-  .addinput,.subrow input,.cap-target,select.btn,.pomostep input{font-size:16px}
+  .addinput,.subrow input,select.btn,.pomostep input{font-size:16px}
   /* ≥44px hit areas */
   button.btn{min-height:44px}
   .btn{padding:10px 14px}

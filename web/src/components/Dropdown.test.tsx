@@ -30,8 +30,9 @@ function render(value: string, onChange: (v: string) => void) {
 }
 
 const trigger = () => container.querySelector(".dd-trigger") as HTMLButtonElement;
-const menu = () => container.querySelector(".dd-menu");
-const optionEls = () => Array.from(container.querySelectorAll(".dd-option")) as HTMLElement[];
+// The menu is portalled to <body>, so it is never inside `container`.
+const menu = () => document.querySelector(".dd-menu");
+const optionEls = () => Array.from(document.querySelectorAll(".dd-option")) as HTMLElement[];
 
 function fire(el: Element, type: string, init: Record<string, unknown> = {}) {
   act(() => {
@@ -87,6 +88,15 @@ describe("Dropdown", () => {
     fire(trigger(), "keydown", { key: "Escape" });
     expect(menu()).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  // Regression: an absolutely-positioned menu sat inside the row, so any card
+  // painted after it covered the popup. It must escape to <body>.
+  it("renders the open menu in a body portal, outside the trigger's subtree", () => {
+    render("a", vi.fn());
+    fire(trigger(), "click");
+    expect(menu()!.parentElement).toBe(document.body);
+    expect(container.contains(menu())).toBe(false);
   });
 
   it("closes on an outside mousedown", () => {

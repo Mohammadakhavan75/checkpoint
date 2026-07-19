@@ -165,16 +165,26 @@ export function CompileModal({ id, onClose }: { id: string; onClose: () => void 
   const Cell = ({ p, s }: { p: Procedure; s: Scope }) => {
     const q = QUAD[`${p}|${s}`];
     const sel = procedure === p && scope === s;
+    // One clear action title per button, centered. The archetype name (q.n,
+    // e.g. "Time trap") lives only in the hint under the matrix now — the
+    // buttons carry the imperative you act on, not a second label.
     return (
       <div
         className={`cell ${sel ? "sel" : ""}`}
-        style={{ color: q.c, padding: 10 }}
+        style={{
+          color: q.c,
+          padding: 10,
+          minHeight: 46,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
         onClick={() => pickClass(p, s)}
       >
-        <span className="tag" style={{ fontSize: 9 }}>
+        <span className="tag" style={{ fontSize: 11, marginBottom: 0 }}>
           {q.t}
         </span>
-        <h5 style={{ color: "var(--text)", fontSize: 12 }}>{q.n}</h5>
       </div>
     );
   };

@@ -15,6 +15,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.22.4",
+    date: "2026-07-19",
+    title: "Cleaner classify grid",
+    notes: [
+      "The procedure × scope grid you use to classify a task now shows one clear action per square (Execute normally, Scout · map · define, Make subtask, To be defined), centered — no more doubled-up label and archetype name crowding each button.",
+    ],
+  },
+  {
     version: "0.22.3",
     date: "2026-07-19",
     title: "Fewer required fields",
